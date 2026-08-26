@@ -161,3 +161,82 @@
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 11px !important;
 }
+
+/* ─── DreamDEX Cyber Elements & 3D Utilities ─── */
+@keyframes marquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee 35s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scanBeam {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(200%); opacity: 0; }
+}
+
+.scanner-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #A78BFA, transparent);
+  animation: scanBeam 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Cybernetic Corner Brackets */
+.cyber-card {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.cyber-card::before,
+.cyber-card::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+  opacity: 0.4;
+  transition: opacity 0.25s ease, border-color 0.25s ease;
+}
+
+.cyber-card::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #7C3AED;
+  border-left: 2px solid #7C3AED;
+}
+
+.cyber-card::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid #7C3AED;
+  border-right: 2px solid #7C3AED;
+}
+
+.cyber-card:hover::before,
+.cyber-card:hover::after {
+  opacity: 1;
+  border-color: #A78BFA;
+}
+
+/* 3D Perspective Container */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.transform-3d {
+  transform-style: preserve-3d;
+}
+

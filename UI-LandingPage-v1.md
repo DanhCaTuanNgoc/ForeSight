@@ -57,7 +57,7 @@ Thiết kế kết hợp giữa phong cách **Dark Cybernetic** của DreamDEX v
 * **Vị trí:** Đặt ngay dưới Header hoặc sát đỉnh trang.
 * **Hành vi:** Chạy mượt mà (`linear marquee animation`) với hiệu ứng fade mờ 2 bên mép (`mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent)`).
 * **Nội dung:** 
-  * `BTC-0-26AUG26`: $0.62 `[+14.2% Spike]`
+  * `BTC-0-26AUG26`: $0.62 `[+14.21 Spike]`
   * `ETH-STRIKE-2.5K`: $0.48 `[-3.5%]`
   * `SOMI/USDso`: $0.109 `[Somnia Native]`
   * `FED-RATE-CUT`: $0.78 `[High RAG Volume]`
