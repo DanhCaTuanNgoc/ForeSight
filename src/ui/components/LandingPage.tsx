@@ -203,46 +203,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
       {/* ─── Dynamic 3D Cyber Background Canvas & Atmosphere ─────────── */}
       <CyberBackground />
 
-      {/* ─── Top Marquee Ticker Tape (DreamDEX Inspired) ──────────────── */}
-      <div className="w-full bg-[#0D0D14]/90 backdrop-blur-md border-b border-[#1F1F2E] overflow-hidden py-1.5 z-50 text-[11px] font-mono select-none">
-        <div className="relative flex items-center">
-          <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
-            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
-              <div
-                key={idx}
-                className="inline-flex items-center gap-2 px-3 py-0.5 rounded-md bg-[#13131D]/90 border border-[#232336] hover:border-violet-400 cursor-pointer transition-all hover:shadow-[0_0_12px_rgba(124,58,237,0.3)]"
-                onClick={onLaunchTerminal}
-              >
-                <span className="text-gray-400 font-medium">{item.pair}</span>
-                <span className="text-white font-bold">{item.prob}</span>
-                <span
-                  className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${
-                    item.isUp ? "text-emerald-400 neon-glow-emerald" : "text-rose-400"
-                  }`}
-                >
-                  {item.isUp ? "▲" : "▼"} {item.change}
-                </span>
-                {item.spike && (
-                  <span className="ml-1 text-[9px] px-1.5 py-0.2 rounded bg-violet-950/80 text-violet-300 border border-violet-500 animate-pulse shadow-[0_0_8px_rgba(167,139,250,0.6)]">
-                    ⚡ SPIKE
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Navigation Header ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 h-14 bg-[#0A0A0F]/85 backdrop-blur-xl border-b border-[#1F1F2E] px-6 lg:px-12 flex items-center justify-between">
+      {/* ─── Fixed Navigation Header ───────────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-[#07070A]/90 backdrop-blur-xl border-b border-[#1F1F2E] px-6 lg:px-12 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-3.5">
-          <ForeSightLogo size={40} animated={true} />
+          <ForeSightLogo size={46} animated={true} />
           <div className="flex items-center gap-2">
-            <span className="font-mono font-black text-lg text-white tracking-widest neon-glow-violet">
+            <span className="font-mono font-black text-xl text-white tracking-widest neon-glow-violet">
               FORESIGHT
             </span>
-            <span className="text-[10px] font-mono text-violet-300 bg-violet-950/90 border border-violet-500/50 px-1.5 py-0.5 rounded font-semibold shadow-[0_0_8px_rgba(124,58,237,0.4)]">
+            <span className="text-[10px] font-mono text-violet-300 bg-violet-950/90 border border-violet-500/50 px-2 py-0.5 rounded font-bold shadow-[0_0_10px_rgba(124,58,237,0.4)]">
               TERMINAL
             </span>
           </div>
@@ -286,6 +256,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
           </button>
         </div>
       </header>
+
+      {/* ─── Top Marquee Ticker Tape (Positioned Below Fixed Header) ────── */}
+      <div className="w-full bg-[#0D0D14]/90 backdrop-blur-md border-b border-[#1F1F2E] overflow-hidden py-1.5 z-40 text-[11px] font-mono select-none mt-16">
+        <div className="relative flex items-center">
+          <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
+            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
+              <div
+                key={idx}
+                className="inline-flex items-center gap-2 px-3 py-0.5 rounded-md bg-[#13131D]/90 border border-[#232336] hover:border-violet-400 cursor-pointer transition-all hover:shadow-[0_0_12px_rgba(124,58,237,0.3)]"
+                onClick={onLaunchTerminal}
+              >
+                <span className="text-gray-400 font-medium">{item.pair}</span>
+                <span className="text-white font-bold">{item.prob}</span>
+                <span
+                  className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${
+                    item.isUp ? "text-emerald-400 neon-glow-emerald" : "text-rose-400"
+                  }`}
+                >
+                  {item.isUp ? "▲" : "▼"} {item.change}
+                </span>
+                {item.spike && (
+                  <span className="ml-1 text-[9px] px-1.5 py-0.2 rounded bg-violet-950/80 text-violet-300 border border-violet-500 animate-pulse shadow-[0_0_8px_rgba(167,139,250,0.6)]">
+                    ⚡ SPIKE
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* ─── 3D Interactive Hero Section ──────────────────────────────── */}
       <section
