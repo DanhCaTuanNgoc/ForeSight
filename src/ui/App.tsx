@@ -2,17 +2,15 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Header } from "./components/Header.js";
 import { MarketTicker } from "./components/MarketTicker.js";
 import { MarketStats } from "./components/MarketStats.js";
-import { PriceChart } from "./components/PriceChart.js";
-import { DepthChart } from "./components/DepthChart.js";
-import { EventTimeline } from "./components/EventTimeline.js";
-import { Heatmap } from "./components/Heatmap.js";
-import { ActivityTable } from "./components/ActivityTable.js";
+import { PriceChart, type CanvasVisualMode } from "./components/PriceChart.js";
 import { ContextPanel } from "./components/ContextPanel.js";
 import { DualDebateModal } from "./components/DualDebateModal.js";
 import { ScenarioSimulator } from "./components/ScenarioSimulator.js";
 import { LandingPage } from "./components/LandingPage.js";
 import { WalletModal } from "./components/WalletModal.js";
+import { ThesisHealthMonitor, type PositionRecord } from "./components/ThesisHealthMonitor.js";
 import { WalletProvider, useWallet } from "./context/WalletContext.js";
+import { sound } from "./utils/sound-fx.js";
 import { Search } from "lucide-react";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
@@ -28,16 +26,6 @@ export interface Market {
   volume24h?: number;
   midPrice?: number;
   underlyingAsset?: string;
-}
-
-export interface Position {
-  id: string;
-  symbol: string;
-  outcome: string;
-  amount: number;
-  entryPrice: number;
-  timestamp: number;
-  status: "OPEN" | "SETTLED";
 }
 
 const FALLBACK_MARKETS: Market[] = [
@@ -98,7 +86,8 @@ function ForeSightTerminalApp() {
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [timeRange, setTimeRange] = useState<"15m" | "1H" | "4H" | "1D">("1H");
-  const [positions, setPositions] = useState<Position[]>([]);
+  const [visualMode, setVisualMode] = useState<CanvasVisualMode>("probability");
+  const [positions, setPositions] = useState<PositionRecord[]>([]);
   const [news, setNews] = useState<any[]>([]);
   const [debate, setDebate] = useState<any>(null);
   const [debateLoading, setDebateLoading] = useState<boolean>(false);
@@ -160,7 +149,7 @@ function ForeSightTerminalApp() {
     if (!selectedMarket) setSelectedMarket(FALLBACK_MARKETS[0]);
   }, [selectedMarket]);
 
-  // 3. Fetch Positions (Aware of wallet address if connected)
+  // 3. Fetch Positions
   const fetchPositions = useCallback(async () => {
     try {
       const url = wallet.address
@@ -239,6 +228,7 @@ function ForeSightTerminalApp() {
       });
       const data = await res.json();
       if (data.success) {
+        sound.playSuccessChime();
         showToast(`Swept and claimed ${data.claimedCount || 1} settled positions!`, "success");
         await fetchPositions();
         await wallet.refreshBalance();
@@ -301,6 +291,7 @@ function ForeSightTerminalApp() {
   );
 
   const activeMarket = selectedMarket || markets[0] || FALLBACK_MARKETS[0];
+  const activeSymbol = activeMarket.underlyingAsset || activeMarket.symbol;
 
   // ─── If Landing Page is Active ───────────────────────────────────────────────
   if (activeTab === "landing") {
@@ -312,9 +303,9 @@ function ForeSightTerminalApp() {
     );
   }
 
-  // ─── Else Render Full Trading Terminal ──────────────────────────────────────
+  // ─── Else Render All-in-One Zero-Scroll Single-Screen Cockpit ───────────────
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-[#E2E8F0] flex flex-col font-sans selection:bg-violet-600 selection:text-white">
+    <div className="h-screen w-screen bg-[#0A0A0F] text-[#E2E8F0] flex flex-col font-sans selection:bg-violet-600 selection:text-white overflow-hidden">
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -338,20 +329,20 @@ function ForeSightTerminalApp() {
         onConnectWallet={() => wallet.openWalletModal()}
       />
 
-      {/* 2. Scrolling Market Ticker */}
+      {/* 2. Scrolling Market Ticker (Sub-Second Somnia L1 Tape) */}
       <MarketTicker />
 
-      {/* 3. Main Dashboard Layout (3-Column Dense Exchange Layout) */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* ── LEFT COLUMN: Market Navigator ───────────────────────────── */}
-        <aside className="hidden lg:flex flex-col w-60 xl:w-64 border-r border-[#2A2A3D] bg-[#0E0E16] flex-shrink-0">
+      {/* 3. Main Bento Box Workspace (Zero-Scroll 3 Columns) */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
+        {/* ── LEFT COLUMN: Market Navigator & Live Radar ──────────────── */}
+        <aside className="w-56 xl:w-60 border-r border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
           {/* Search Bar */}
-          <div className="p-3 border-b border-[#2A2A3D]">
-            <div className="flex items-center bg-[#141420] border border-[#2A2A3D] rounded px-2.5 py-1.5 gap-2">
+          <div className="p-2.5 border-b border-[#222234]">
+            <div className="flex items-center bg-[#13131F] border border-[#222234] rounded px-2 py-1 gap-1.5">
               <Search className="w-3.5 h-3.5 text-gray-500" />
               <input
                 type="text"
-                placeholder="Search markets..."
+                placeholder="Search event..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent text-xs text-gray-200 placeholder-gray-600 outline-none w-full font-mono"
@@ -359,15 +350,15 @@ function ForeSightTerminalApp() {
             </div>
           </div>
 
-          <div className="px-3 py-2 border-b border-[#2A2A3D]/60 flex items-center justify-between">
-            <span className="stat-label">PREDICTION MARKETS</span>
+          <div className="px-3 py-1.5 border-b border-[#222234] flex items-center justify-between">
+            <span className="stat-label text-[10px]">MARKET RADAR</span>
             <span className="text-[10px] font-mono text-violet-400">
               {filteredMarkets.length} LIVE
             </span>
           </div>
 
-          {/* Market List items */}
-          <div className="flex-1 overflow-y-auto divide-y divide-[#2A2A3D]/30 custom-scrollbar">
+          {/* Market List */}
+          <div className="flex-1 overflow-y-auto divide-y divide-[#1F1F2E] custom-scrollbar">
             {filteredMarkets.map((m) => {
               const isSelected = activeMarket.id === m.id;
               const prob = m.probability ?? 50;
@@ -376,10 +367,13 @@ function ForeSightTerminalApp() {
               return (
                 <button
                   key={m.id}
-                  onClick={() => setSelectedMarket(m)}
-                  className={`w-full text-left p-3 transition-colors duration-150 flex flex-col gap-1 ${
+                  onClick={() => {
+                    sound.playClick();
+                    setSelectedMarket(m);
+                  }}
+                  className={`w-full text-left p-2.5 transition-colors flex flex-col gap-0.5 ${
                     isSelected
-                      ? "bg-violet-950/25 border-l-2 border-violet-500"
+                      ? "bg-violet-950/30 border-l-2 border-violet-500"
                       : "hover:bg-[#151522]"
                   }`}
                 >
@@ -400,13 +394,13 @@ function ForeSightTerminalApp() {
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-gray-400 line-clamp-2 leading-tight">
+                  <p className="text-[10px] text-gray-400 line-clamp-1 leading-tight">
                     {m.question}
                   </p>
 
-                  <div className="mt-1 flex items-center justify-between text-[10px] text-gray-500 font-mono">
-                    <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "—"}</span>
-                    <span>Ask: ${m.bestAsk ? m.bestAsk.toFixed(2) : "—"}</span>
+                  <div className="flex items-center justify-between text-[9px] text-gray-500 font-mono pt-0.5">
+                    <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</span>
+                    <span className="text-gray-600">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
                   </div>
                 </button>
               );
@@ -414,74 +408,69 @@ function ForeSightTerminalApp() {
           </div>
         </aside>
 
-        {/* ── CENTER COLUMN: Primary Chart & Technical Analytics ──────── */}
-        <main className="flex-1 overflow-y-auto flex flex-col min-w-0 bg-[#0A0A0F]">
-          {/* Market Header Stats */}
+        {/* ── CENTER COLUMN: Visual Intelligence Canvas + Decision Stress Test ── */}
+        <main className="flex-1 flex flex-col min-w-0 bg-[#0A0A0F] overflow-hidden">
+          {/* Header Stats Bar */}
           <MarketStats market={activeMarket} serverMode={health?.mode} />
 
-          {/* Chart + Simulator + Secondary Panels */}
-          <div className="p-4 space-y-4 max-w-7xl">
-            {/* Primary Interactive Chart */}
-            <PriceChart
-              symbol={activeMarket.underlyingAsset || activeMarket.symbol}
-              timeRange={timeRange}
-              onTimeRangeChange={setTimeRange}
-              currentPrice={activeMarket.probability}
-            />
-
-            {/* Deterministic Scenario Simulator */}
-            <ScenarioSimulator
-              market={activeMarket}
-              prefillOutcome={prefillOutcome}
-              prefillTargetExit={prefillTargetExit}
-              onTrade={handleExecuteTrade}
-              isSubmitting={isSubmittingOrder}
-              showToast={showToast}
-            />
-
-            {/* Event Timeline (What Happened?) */}
-            <EventTimeline symbol={activeMarket.underlyingAsset || activeMarket.symbol} />
-
-            {/* Bottom Row: Depth Chart + Recent Activity + Heatmap */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              <DepthChart
-                symbol={activeMarket.underlyingAsset || activeMarket.symbol}
-                midPrice={activeMarket.midPrice || 0.50}
+          {/* Unified Visual Board (Scroll-Free Bento Split) */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
+            {/* Top Half: Multi-Mode Visual Intelligence Canvas */}
+            <div className="flex-shrink-0">
+              <PriceChart
+                symbol={activeSymbol}
+                timeRange={timeRange}
+                onTimeRangeChange={setTimeRange}
+                currentPrice={activeMarket.probability}
+                activeVisualMode={visualMode}
+                onVisualModeChange={setVisualMode}
               />
-              <ActivityTable
-                positions={positions}
-                onClaim={handleClaimAll}
-                isClaiming={isClaiming}
+            </div>
+
+            {/* Bottom Half: Deterministic Decision Stress Test & 1-Click CLOB */}
+            <div className="flex-shrink-0">
+              <ScenarioSimulator
+                market={activeMarket}
+                prefillOutcome={prefillOutcome}
+                prefillTargetExit={prefillTargetExit}
+                onTrade={handleExecuteTrade}
+                isSubmitting={isSubmittingOrder}
+                showToast={showToast}
               />
-              <div className="md:col-span-2 xl:col-span-1">
-                <Heatmap />
-              </div>
             </div>
           </div>
         </main>
 
-        {/* ── RIGHT COLUMN: RAG Intelligence & Market Context ─────────── */}
-        <aside className="hidden 2xl:flex flex-col w-80 border-l border-[#2A2A3D] bg-[#0E0E16] flex-shrink-0 overflow-y-auto custom-scrollbar">
+        {/* ── RIGHT COLUMN: Dual AI Arena & Grounded RAG Evidence ──────── */}
+        <aside className="w-72 xl:w-80 border-l border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
           <ContextPanel
-            symbol={activeMarket.underlyingAsset || activeMarket.symbol}
+            symbol={activeSymbol}
             debate={debate}
             debateLoading={debateLoading}
             news={news}
             onViewDebate={() => setIsDebateModalOpen(true)}
-            onSimulate={({ outcome, capital }) => {
+            onSimulate={({ outcome }) => {
               setPrefillOutcome(outcome);
-              showToast(`Loaded ${outcome} scenario into simulator!`, "success");
+              showToast(`Synced ${outcome} strategy to decision simulator!`, "success");
             }}
           />
         </aside>
       </div>
 
-      {/* Dual AI Agent Arena Modal */}
+      {/* 4. Bottom Dock: Live Thesis Health Monitor & 1-Click Auto Claim Sweeper */}
+      <ThesisHealthMonitor
+        positions={positions}
+        onClaimAll={handleClaimAll}
+        isClaiming={isClaiming}
+        activeSymbol={activeSymbol}
+      />
+
+      {/* Dual AI Agent Arena Full Modal */}
       <DualDebateModal
         isOpen={isDebateModalOpen}
         onClose={() => setIsDebateModalOpen(false)}
         spike={null}
-        symbol={activeMarket.underlyingAsset || activeMarket.symbol}
+        symbol={activeSymbol}
         onLoadScenario={(outcome, targetExit) => {
           setPrefillOutcome(outcome);
           setPrefillTargetExit(targetExit);
