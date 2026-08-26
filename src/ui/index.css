@@ -240,3 +240,15 @@
   transform-style: preserve-3d;
 }
 
+@keyframes laserSweep {
+  0% { transform: translateY(-100vh); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+.animate-laserSweep {
+  animation: laserSweep 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+

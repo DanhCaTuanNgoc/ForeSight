@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { CyberBackground } from "./CyberBackground.js";
 import {
   Zap,
   TrendingUp,
@@ -71,9 +72,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
   return (
     <div className="min-h-screen bg-[#07070A] text-[#E2E8F0] font-sans selection:bg-violet-600 selection:text-white relative overflow-hidden flex flex-col">
-      {/* Background Cyber Grid & Glow */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1F1F2E14_1px,transparent_1px),linear-gradient(to_bottom,#1F1F2E14_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] pointer-events-none" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[850px] h-[400px] bg-gradient-to-b from-violet-600/20 via-purple-900/10 to-transparent blur-[120px] pointer-events-none" />
+      {/* ─── Dynamic 3D Cyber Background Canvas & Atmosphere ─────────── */}
+      <CyberBackground />
 
       {/* ─── Top Marquee Ticker Tape (DreamDEX Inspired) ──────────────── */}
       <div className="w-full bg-[#0D0D14] border-b border-[#1F1F2E] overflow-hidden py-1.5 z-50 text-[11px] font-mono select-none">
