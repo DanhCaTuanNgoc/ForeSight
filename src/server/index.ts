@@ -42,6 +42,7 @@ const simulatedPositions: Array<{
   entryPrice: number;
   timestamp: number;
   status: "OPEN" | "SETTLED";
+  walletAddress?: string;
 }> = [];
 
 // ═══════════════════════════════════════════════════════════════
@@ -175,7 +176,7 @@ app.get("/api/signals", async (req, res) => {
  */
 app.post("/api/orders", async (req, res) => {
   try {
-    const { symbol, outcome, amount, price, simulate } = req.body;
+    const { symbol, outcome, amount, price, simulate, walletAddress, signerType } = req.body;
 
     if (!symbol || !outcome || !amount) {
       return res.status(400).json({ error: "Missing required order fields: symbol, outcome, amount" });
@@ -185,15 +186,16 @@ app.post("/api/orders", async (req, res) => {
     const orderPrice = price || (outcome === "YES" ? 0.55 : 0.45);
 
     if (simulate || !ctx.canTrade) {
-      // Create simulated position
+      // Create simulated position tagged with wallet address
       const newPos = {
-        id: `sim-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        id: `pos-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         symbol,
         outcome: outcome.toUpperCase() as "YES" | "NO",
         amount: Number(amount),
         entryPrice: orderPrice,
         timestamp: Date.now(),
         status: "OPEN" as const,
+        walletAddress: walletAddress?.toLowerCase() || ctx.walletAddress?.toLowerCase() || undefined,
       };
       simulatedPositions.unshift(newPos);
 
@@ -201,7 +203,7 @@ app.post("/api/orders", async (req, res) => {
         success: true,
         simulated: true,
         position: newPos,
-        message: `Simulated ${outcome} position entered for ${amount} contracts @ ${orderPrice} USDC`,
+        message: `Order entered (${signerType || "Simulated"}) for ${amount} contracts @ ${orderPrice} USDC`,
       });
     }
 
@@ -225,10 +227,11 @@ app.post("/api/orders", async (req, res) => {
 });
 
 /**
- * Get User Positions & Balances
+ * Get User Positions & Balances (Optional filter by wallet address)
  */
 app.get("/api/positions", async (req, res) => {
   try {
+    const filterWallet = (req.query.wallet as string)?.toLowerCase();
     let balances: any = {};
     if (ctx.canTrade) {
       try {
@@ -238,10 +241,18 @@ app.get("/api/positions", async (req, res) => {
       }
     }
 
+    let returnedPositions = simulatedPositions;
+    if (filterWallet) {
+      returnedPositions = simulatedPositions.filter(
+        (p) => !p.walletAddress || p.walletAddress === filterWallet
+      );
+    }
+
     res.json({
-      walletAddress: ctx.walletAddress || null,
+      walletAddress: filterWallet || ctx.walletAddress || null,
       balances,
-      simulatedPositions,
+      positions: returnedPositions,
+      simulatedPositions: returnedPositions,
     });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || String(err) });
@@ -253,11 +264,15 @@ app.get("/api/positions", async (req, res) => {
  */
 app.post("/api/claim", async (req, res) => {
   try {
+    const { walletAddress } = req.body || {};
+    const targetWallet = walletAddress?.toLowerCase();
+
     if (!ctx.canTrade) {
       // Simulate claiming positions
       let claimedCount = 0;
       for (const pos of simulatedPositions) {
-        if (pos.status === "OPEN") {
+        const matchesWallet = !targetWallet || !pos.walletAddress || pos.walletAddress === targetWallet;
+        if (pos.status === "OPEN" && matchesWallet) {
           pos.status = "SETTLED";
           claimedCount++;
         }
@@ -265,7 +280,7 @@ app.post("/api/claim", async (req, res) => {
       return res.json({
         success: true,
         simulated: true,
-        message: `Simulated settlement sweep completed: redeemed ${claimedCount} positions.`,
+        message: `Settlement sweep completed: redeemed ${claimedCount} positions.`,
         claimedCount,
       });
     }

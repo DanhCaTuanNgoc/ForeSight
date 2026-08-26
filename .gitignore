@@ -30,3 +30,14 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Internal Project Details, Planning & Strategy Docs
+Project-Details*.md
+Plan-Tracking*.md
+UI-*.md
+Improve-Suggestion*.md
+Demo-Video-Script*.md
+DreamDEX-SDK-Feedback*.md
+*-Details.md
+*-Tracking.md
+*-Feedback.md

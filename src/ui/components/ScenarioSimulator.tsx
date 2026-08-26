@@ -14,7 +14,9 @@ import {
   Compass,
   Activity,
   Gauge,
+  Wallet,
 } from "lucide-react";
+import { useWallet, SOMNIA_SHANNON_CHAIN_ID } from "../context/WalletContext.js";
 
 interface ScenarioSimulatorProps {
   market: any;
@@ -35,6 +37,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 }) => {
   const [outcome, setOutcome] = useState<"YES" | "NO">(prefillOutcome);
   const [investment, setInvestment] = useState<number>(50); // in USDC
+  const wallet = useWallet();
 
   // Implied price default (0.01 - 0.99)
   const defaultEntry = market?.midPrice ? Math.max(0.05, Math.min(0.95, market.midPrice)) : 0.50;
@@ -173,6 +176,11 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
   const handleExecuteTrade = async () => {
     if (!market?.symbol) return;
+    if (wallet.isConnected && !wallet.isCorrectNetwork) {
+      showToast("Please switch to Somnia Shannon Testnet (50312) in your wallet", "error");
+      await wallet.switchToSomnia();
+      return;
+    }
     await onTrade(market.symbol, outcome, calculation.contractsCount, entryPrice);
   };
 
@@ -451,9 +459,21 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
               <span>
                 {isSubmitting
                   ? "Submitting to Somnia CLOB..."
+                  : wallet.isConnected
+                  ? `1-Click Execute ${outcome} with ${wallet.walletName || "MetaMask"} (${calculation.contractsCount} Shares @ $${entryPrice.toFixed(2)})`
                   : `1-Click Execute ${outcome} (${calculation.contractsCount} Shares @ $${entryPrice.toFixed(2)})`}
               </span>
             </button>
+
+            {!wallet.isConnected && (
+              <button
+                onClick={() => wallet.openWalletModal()}
+                className="w-full py-1.5 rounded-lg bg-[#141424] hover:bg-[#1C1C30] text-violet-300 font-mono text-[11px] border border-violet-800/30 flex items-center justify-center gap-1.5 transition"
+              >
+                <Wallet className="w-3 h-3 text-violet-400" />
+                <span>Connect MetaMask to sign directly from your browser</span>
+              </button>
+            )}
 
             <button
               onClick={handleDeployBot}

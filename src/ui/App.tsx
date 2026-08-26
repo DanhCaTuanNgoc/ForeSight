@@ -11,6 +11,8 @@ import { ContextPanel } from "./components/ContextPanel.js";
 import { DualDebateModal } from "./components/DualDebateModal.js";
 import { ScenarioSimulator } from "./components/ScenarioSimulator.js";
 import { LandingPage } from "./components/LandingPage.js";
+import { WalletModal } from "./components/WalletModal.js";
+import { WalletProvider, useWallet } from "./context/WalletContext.js";
 import { Search } from "lucide-react";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
@@ -89,7 +91,7 @@ const FALLBACK_MARKETS: Market[] = [
   },
 ];
 
-export default function App() {
+function ForeSightTerminalApp() {
   const [activeTab, setActiveTab] = useState<string>("landing");
   const [health, setHealth] = useState<any>(null);
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -108,6 +110,8 @@ export default function App() {
   const [prefillOutcome, setPrefillOutcome] = useState<"YES" | "NO">("YES");
   const [prefillTargetExit, setPrefillTargetExit] = useState<number | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const wallet = useWallet();
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToastMessage({ msg, type });
@@ -156,18 +160,22 @@ export default function App() {
     if (!selectedMarket) setSelectedMarket(FALLBACK_MARKETS[0]);
   }, [selectedMarket]);
 
-  // 3. Fetch Positions
+  // 3. Fetch Positions (Aware of wallet address if connected)
   const fetchPositions = useCallback(async () => {
     try {
-      const res = await fetch("/api/positions");
+      const url = wallet.address
+        ? `/api/positions?wallet=${encodeURIComponent(wallet.address)}`
+        : "/api/positions";
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        setPositions(Array.isArray(data) ? data : data.positions || []);
+        const list = Array.isArray(data) ? data : data.positions || data.simulatedPositions || [];
+        setPositions(list);
       }
     } catch {
       // Keep default
     }
-  }, []);
+  }, [wallet.address]);
 
   // 4. Fetch News
   const fetchNews = useCallback(async () => {
@@ -213,15 +221,27 @@ export default function App() {
     }
   }, [selectedMarket, fetchDebate]);
 
+  // Re-fetch positions when wallet changes
+  useEffect(() => {
+    fetchPositions();
+  }, [wallet.address, fetchPositions]);
+
   // Sweep & Claim All Winnings
   const handleClaimAll = async () => {
     setIsClaiming(true);
     try {
-      const res = await fetch("/api/claim", { method: "POST" });
+      const res = await fetch("/api/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          walletAddress: wallet.address,
+        }),
+      });
       const data = await res.json();
       if (data.success) {
         showToast(`Swept and claimed ${data.claimedCount || 1} settled positions!`, "success");
         await fetchPositions();
+        await wallet.refreshBalance();
       } else {
         showToast(data.error || "No claimable settled positions found.", "error");
       }
@@ -250,15 +270,19 @@ export default function App() {
           outcome,
           amount,
           price,
+          walletAddress: wallet.address,
+          signerType: wallet.isConnected ? wallet.walletName : "SIMULATION",
         }),
       });
       const data = await res.json();
       if (data.success) {
+        const signerLabel = wallet.isConnected ? `[${wallet.shortAddress}]` : "[Simulated]";
         showToast(
-          `Order executed: ${amount.toFixed(1)} ${outcome} contracts on ${symbol}`,
+          `Order executed ${signerLabel}: ${amount.toFixed(1)} ${outcome} contracts on ${symbol}`,
           "success"
         );
         await fetchPositions();
+        await wallet.refreshBalance();
       } else {
         showToast(data.error || "Order execution failed", "error");
       }
@@ -280,7 +304,12 @@ export default function App() {
 
   // ─── If Landing Page is Active ───────────────────────────────────────────────
   if (activeTab === "landing") {
-    return <LandingPage onLaunchTerminal={() => setActiveTab("markets")} />;
+    return (
+      <>
+        <LandingPage onLaunchTerminal={() => setActiveTab("markets")} />
+        <WalletModal />
+      </>
+    );
   }
 
   // ─── Else Render Full Trading Terminal ──────────────────────────────────────
@@ -306,9 +335,7 @@ export default function App() {
         onTabChange={setActiveTab}
         onClaimAll={handleClaimAll}
         isClaiming={isClaiming}
-        onConnectWallet={() =>
-          showToast("MetaMask / Viem integration active in next step!", "success")
-        }
+        onConnectWallet={() => wallet.openWalletModal()}
       />
 
       {/* 2. Scrolling Market Ticker */}
@@ -461,6 +488,17 @@ export default function App() {
           showToast(`Applied ${outcome} strategy with target ${Math.round(targetExit * 100)}% to simulator!`);
         }}
       />
+
+      {/* Web3 Wallet Connection Modal */}
+      <WalletModal />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <WalletProvider>
+      <ForeSightTerminalApp />
+    </WalletProvider>
   );
 }
