@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { CyberBackground } from "./CyberBackground.js";
+import { ForeSightLogo } from "./ForeSightLogo.js";
 import {
   Zap,
   TrendingUp,
@@ -235,12 +236,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
       {/* ─── Navigation Header ─────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 h-14 bg-[#0A0A0F]/85 backdrop-blur-xl border-b border-[#1F1F2E] px-6 lg:px-12 flex items-center justify-between">
         {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 via-purple-600 to-indigo-500 flex items-center justify-center shadow-[0_0_16px_rgba(124,58,237,0.5)]">
-            <Zap className="w-4 h-4 text-white animate-pulse" />
-          </div>
+        <div className="flex items-center gap-3.5">
+          <ForeSightLogo size={40} animated={true} />
           <div className="flex items-center gap-2">
-            <span className="font-mono font-black text-base text-white tracking-widest neon-glow-violet">
+            <span className="font-mono font-black text-lg text-white tracking-widest neon-glow-violet">
               FORESIGHT
             </span>
             <span className="text-[10px] font-mono text-violet-300 bg-violet-950/90 border border-violet-500/50 px-1.5 py-0.5 rounded font-semibold shadow-[0_0_8px_rgba(124,58,237,0.4)]">
@@ -876,10 +875,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
       {/* ─── Footer ────────────────────────────────────────────────────── */}
       <footer className="mt-auto border-t border-[#1F1F2E] bg-[#07070A]/90 backdrop-blur-md px-6 lg:px-12 py-8 text-xs font-mono text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center text-white font-bold text-[10px] shadow-[0_0_8px_rgba(124,58,237,0.6)]">
-            F
-          </div>
+        <div className="flex items-center gap-2.5">
+          <ForeSightLogo size={22} animated={false} />
           <span className="text-gray-300 font-bold">FORESIGHT TERMINAL</span>
           <span>•</span>
           <span>Somnia × DreamDEX Hackathon</span>

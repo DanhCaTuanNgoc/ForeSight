@@ -1,5 +1,6 @@
 import React from "react";
-import { Zap, Settings, Menu, X, Coins } from "lucide-react";
+import { Settings, Menu, X, Coins } from "lucide-react";
+import { ForeSightLogo } from "./ForeSightLogo.js";
 
 interface HeaderProps {
   health?: any;
@@ -35,26 +36,24 @@ export const Header: React.FC<HeaderProps> = ({
     : "";
 
   return (
-    <header className="sticky top-0 z-50 h-12 bg-[#111118] border-b border-[#2A2A3D] px-4 flex items-center justify-between">
+    <header className="sticky top-0 z-50 h-13 bg-[#111118]/95 backdrop-blur-md border-b border-[#2A2A3D] px-4 flex items-center justify-between">
       {/* Left: Brand / Logo */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3.5">
         <button
           onClick={() => onTabChange("landing")}
-          className="flex items-center gap-2 hover:opacity-90 transition text-left"
+          className="flex items-center gap-2.5 hover:opacity-90 transition text-left group"
         >
-          <div className="w-6 h-6 rounded-md bg-gradient-to-tr from-violet-600 to-purple-400 flex items-center justify-center shadow-sm shadow-purple-500/20">
-            <Zap className="w-3.5 h-3.5 text-white" />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="font-mono font-bold text-[14px] text-white tracking-wider">
+          <ForeSightLogo size={34} animated={true} />
+          <div className="flex items-center gap-2">
+            <span className="font-mono font-black text-[15px] text-white tracking-widest group-hover:text-violet-300 transition-colors">
               FORESIGHT
             </span>
-            <span className="text-[10px] font-mono text-violet-400 bg-violet-950/60 border border-violet-700/40 px-1.5 py-0.2 rounded font-semibold">
-              INTEL
+            <span className="text-[10px] font-mono text-violet-300 bg-violet-950/80 border border-violet-500/40 px-1.5 py-0.5 rounded font-semibold shadow-[0_0_8px_rgba(124,58,237,0.3)]">
+              TERMINAL
             </span>
           </div>
         </button>
-        <div className="flex items-center gap-1.5 pl-2 border-l border-[#2A2A3D]">
+        <div className="flex items-center gap-1.5 pl-3 border-l border-[#2A2A3D]">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>

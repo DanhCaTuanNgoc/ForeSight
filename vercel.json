@@ -1,11 +1,10 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build:ui",
   "outputDirectory": "dist-ui",
+  "framework": "vite",
+  "cleanUrls": true,
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "http://localhost:3001/api/$1"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
