@@ -251,4 +251,70 @@
   animation: laserSweep 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* ─── Neon Text & Number Glows ─── */
+.neon-glow-violet {
+  text-shadow: 0 0 16px rgba(167, 139, 250, 0.7), 0 0 32px rgba(124, 58, 237, 0.4);
+}
+.neon-glow-emerald {
+  text-shadow: 0 0 16px rgba(16, 185, 129, 0.7), 0 0 32px rgba(5, 150, 105, 0.4);
+}
+.neon-glow-cyan {
+  text-shadow: 0 0 16px rgba(6, 182, 212, 0.7), 0 0 32px rgba(8, 145, 178, 0.4);
+}
+.neon-glow-rose {
+  text-shadow: 0 0 16px rgba(244, 63, 94, 0.7), 0 0 32px rgba(225, 29, 72, 0.4);
+}
+
+/* ─── Rotating Border Beam ─── */
+@keyframes borderBeam {
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+
+.border-beam-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.border-beam-container::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(90deg, transparent 40%, #A78BFA 50%, #06B6D4 60%, transparent 70%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  background-size: 200% 200%;
+  animation: borderRotate 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes borderRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ─── Floating Badges ─── */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1deg); }
+}
+
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(8px) rotate(-1deg); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 6s ease-in-out infinite;
+}
+
+
 
