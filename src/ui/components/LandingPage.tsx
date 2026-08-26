@@ -503,8 +503,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   </div>
                 </div>
 
-                {/* Interactive Slider */}
+                {/* Decision Stress Test & Interactive Slider */}
                 <div className="space-y-2 pt-1 border-t border-[#1F1F2E]">
+                  {/* Trajectory Velocity Coverage & Break Hint */}
+                  <div className="grid grid-cols-2 gap-1.5 font-mono text-[10px]">
+                    <div className="bg-[#12121E] px-2 py-1 rounded border border-[#232336] flex items-center justify-between">
+                      <span className="text-gray-400">Velocity Coverage:</span>
+                      <span className="font-bold text-emerald-400">1.28× Req ✓</span>
+                    </div>
+                    <div className="bg-[#181115] px-2 py-1 rounded border border-rose-900/40 flex items-center justify-between">
+                      <span className="text-gray-400">Break Level:</span>
+                      <span className="font-bold text-rose-300">&lt; $108.8K</span>
+                    </div>
+                  </div>
+
                   <div className="flex items-center justify-between text-[10px] text-gray-400">
                     <span>Simulate Capital: <b className="text-white">${simCapital}</b></span>
                     <span>Target Exit: <b className="text-white">${simExitPrice.toFixed(2)}</b></span>
@@ -531,7 +543,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   onClick={onLaunchTerminal}
                   className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-lg text-[11px] font-bold transition-all shadow-[0_0_16px_rgba(124,58,237,0.4)] flex items-center justify-center gap-1.5"
                 >
-                  <span>Execute Scenario on Somnia</span>
+                  <span>Launch Decision Stress Test</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -648,14 +660,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 What If?
               </span>
               <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
-                Deterministic Scenario Simulator
+                Decision Stress Test & Trajectory
               </h3>
               <p className="text-xs text-gray-400 leading-relaxed font-light">
-                0ms zero-latency sliders for Capital, Entry Odds, and Target Take-Profit. Mathematical PnL calculations with zero guesswork.
+                Stress-test event trajectory feasibility (1.28× velocity coverage), pre-trade Thesis Break conditions, and 0ms deterministic PnL money math.
               </p>
             </div>
             <div className="text-[10px] font-mono text-gray-500 pt-2 border-t border-[#1F1F2E]">
-              Module 3 • Financial Modeling
+              Module 3 • Event Contract Reasoning
             </div>
           </div>
 

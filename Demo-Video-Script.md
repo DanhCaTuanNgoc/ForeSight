@@ -41,11 +41,13 @@
 
 ---
 
-### **Scene 4: STEP 3 & 4 — What If? & 1-Click Execution (1:40 – 2:10)**
-* **Visual:** Click *"Simulate Bull Strategy"*. The parameters transfer into the **Scenario Simulator**. Drag the **Capital Slider** ($50 USDC) and the **Target Take-Profit Slider** (75% Odds). Show the green PnL bar updating instantly (+$32.50 USDC, +65% ROI). Click **"1-Click Execute YES Order"**.
+### **Scene 4: STEP 3 & 4 — Decision Stress Test & 1-Click Execution (1:40 – 2:10)**
+* **Visual:** Click *"Simulate Bull Strategy"*. The parameters transfer into the **Decision Stress Test & Simulator**. Point to the **Path to Settlement** metrics: *Required Move (+0.73%), Time (23m), and Velocity Coverage (1.28× Required Pace ✓)*. Highlight the **Thesis Break Conditions** box (*Price < $108.8K, Momentum Reverses*). Drag the **Capital Slider** ($50 USDC) and **Target Exit Slider**. Green PnL bar updates with 0ms latency. Click **"1-Click Execute YES Order"**.
 * **Voiceover:**
-  > *"Step 3: What if I take this trade? Our **Deterministic Scenario Simulator** removes all guesswork. Simply slide your target take-profit odds to see your exact expected PnL, ROI, and breakeven point with zero latency.  
-  > Step 4: Ready to act? Execute with a single click directly onto the Somnia DreamDEX CLOB, or deploy the scenario as an automated take-profit bot!"*
+  > *"Step 3: What if? ForeSight turns binary gambling into a measurable decision trajectory with our **Decision Stress Test**.  
+  > In seconds, you see the exact Path to Settlement: required movement, time remaining, and our **Velocity Coverage Ratio** showing if current momentum can mathematically reach the strike.  
+  > Before you risk capital, our **Thesis Break Conditions** disclose the exact failure points that would invalidate your thesis.  
+  > Step 4: Ready to act? Slide your target exit to verify 0ms PnL, then execute directly to the Somnia DreamDEX CLOB in a single click!"*
 
 ---
 

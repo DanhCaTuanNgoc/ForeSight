@@ -132,6 +132,7 @@ Open **`http://localhost:3000`** in your browser.
 
 ## 📚 6. Hackathon Documentation & Deliverables
 
+* 🧠 **[Project Details & Full Architecture](Project-Details.md)**: Comprehensive guide on vision, problem-solving, 4-step loop, pros & cons, and roadmap.
 * 📖 **[Developer Feedback Report for Somnia & DreamDEX](DreamDEX-SDK-Feedback.md)**: Detailed feedback on SDK ergonomics, indexer subscriptions, and protocol improvements.
 * 🎬 **[Demo Video Script (2.5 Minutes)](Demo-Video-Script.md)**: Precise narrative, timed scenes, and voiceover script for judging submission.
 * 📋 **[Master Plan & Sprint Tracking](Plan-Tracking-v1.md)**: Detailed phase-by-phase execution tracking.

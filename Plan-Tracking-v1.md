@@ -28,7 +28,7 @@
 ### 🟢 MODULE 1: PROBABILITY TIMELINE (*"What Happened?"*)
 *Mục tiêu: Chuyển đổi dữ liệu xác suất thô thành câu chuyện trực quan với các mốc đột biến tương tác được.*
 
-| ID | Task / Công Việc | Chi Tiết Kỹ Thuật (Document-v1.md) | Trạng Thái |
+| ID | Task / Công Việc | Chi Tiết Kỹ Thuật (Project-Details.md) | Trạng Thái |
 | :--- | :--- | :--- | :---: |
 | **1.1** | **Biểu đồ vùng Area Chart** | Render đồ thị xác suất ($0\% \rightarrow 100\%$) theo các khung thời gian 15m, 1h, 4h bằng SVG/Canvas mượt mà. | `[x]` |
 | **1.2** | **Phát hiện & Đánh dấu Spike** | Tự động quét và gắn marker phát sáng tại các điểm biến động $\ge 10\%$ kèm nhãn timestamp. | `[x]` |
@@ -40,7 +40,7 @@
 ### 🧠 MODULE 2: CONTEXTUAL AI + EVIDENCE (*"What Changed?"*)
 *Mục tiêu: Cung cấp ngữ cảnh sự kiện xung quanh thời điểm biến động, có trích dẫn nguồn gốc minh bạch (RAG).*
 
-| ID | Task / Công Việc | Chi Tiết Kỹ Thuật (Document-v1.md) | Trạng Thái |
+| ID | Task / Công Việc | Chi Tiết Kỹ Thuật (Project-Details.md) | Trạng Thái |
 | :--- | :--- | :--- | :---: |
 | **2.1** | **Xác định Time Window $[T - 15m, T]$** | Tự động lấy khung giờ sự kiện xung quanh mốc Spike để truy xuất tin tức. | `[x]` |
 | **2.2** | **News Ingestion & Vector Storage** | Worker cào tin tức crypto & vĩ mô (CoinDesk, CoinTelegraph, Binance RSS) lưu Supabase. | `[x]` |
@@ -54,7 +54,7 @@
 ### 🎛️ MODULE 3: SCENARIO SIMULATOR (*"What If?"*)
 *Mục tiêu: Biến các phép tính tài chính phức tạp thành thanh trượt mô phỏng trực quan, chính xác 100% theo toán học.*
 
-| ID | Task / Công Việc | Chi Tiết Kỹ Thuật (Document-v1.md) | Trạng Thái |
+| ID | Task / Công Việc | Chi Tiết Kỹ Thuật (Project-Details.md) | Trạng Thái |
 | :--- | :--- | :--- | :---: |
 | **3.1** | **Toán học PnL Tất Định (Deterministic)** | $\text{Shares} = \frac{\text{Capital}}{\text{Entry Price}}$, $\text{Exit Value} = \text{Shares} \times \text{Exit Price}$, $\text{PnL} = \text{Exit Value} - \text{Capital}$. | `[x]` |
 | **3.2** | **Thanh trượt Interactive Sliders** | Kéo chọn Vốn ($5 \rightarrow $500), Giá Vào (Entry) và Giá Ra (Target Exit) với độ trễ 0ms. | `[x]` |
@@ -67,7 +67,7 @@
 ### ⚡ MODULE 4: STREAMLINED EXECUTION & WEB3 (*"What Do I Do?"*)
 *Mục tiêu: Kết nối trực tiếp từ hiểu biết đến hành động đặt lệnh trên Somnia CLOB mà không rời khỏi giao diện.*
 
-| ID | Task / Công Việc | Chi Tiết Kỹ Thuật (Document-v1.md) | Trạng Thái |
+| ID | Task / Công Việc | Chi Tiết Kỹ Thuật (Project-Details.md) | Trạng Thái |
 | :--- | :--- | :--- | :---: |
 | **4.1** | **1-Click Execution Buttons** | Nút `[Buy YES]` và `[Buy NO]` đặt ngay dưới Simulator kèm số lượng hợp đồng tính sẵn. | `[x]` |
 | **4.2** | **Tích hợp `@somnia-chain/markets-sdk`** | Gửi lệnh `createOrder` trực tiếp lên Somnia Shannon Testnet (`Chain ID: 50312`). | `[x]` |
