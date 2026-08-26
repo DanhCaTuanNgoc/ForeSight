@@ -1,0 +1,66 @@
+{
+  "name": "foresight-terminal",
+  "version": "0.1.0",
+  "description": "ForeSight: Autonomous AI Intelligence & Prediction Market Terminal on Somnia Network",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "build:ui": "vite build",
+    "server": "tsx src/server/index.ts",
+    "ui": "vite",
+    "start": "tsx src/server/index.ts",
+    "doctor": "tsx src/cli/doctor.ts",
+    "markets": "tsx src/cli/list-markets.ts",
+    "claim": "tsx src/cli/claim.ts",
+    "agent:starter": "tsx src/agents/strategies/starter-bot.ts",
+    "agent:maker": "tsx src/agents/strategies/market-maker.ts",
+    "agent:oracle": "tsx src/agents/strategies/oracle-follower.ts",
+    "agent:copilot": "tsx src/agents/strategies/ai-copilot.ts"
+  },
+  "dependencies": {
+    "@somnia-chain/markets-sdk": "^0.28.1",
+    "@supabase/supabase-js": "^2.109.0",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "lucide-react": "^1.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^3.10.1",
+    "viem": "^2.23.0",
+    "ws": "^8.18.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@types/ws": "^8.5.14",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "somnia",
+    "dreamdex",
+    "event-contracts",
+    "prediction-market",
+    "clob",
+    "trading-bot",
+    "ai-agent",
+    "hackathon"
+  ],
+  "author": "",
+  "license": "MIT"
+}

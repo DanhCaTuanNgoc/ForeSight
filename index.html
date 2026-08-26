@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://somnia.network/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ForeSight — Autonomous AI Prediction Terminal | Somnia</title>
+    <!-- Google Fonts: Inter + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              brand: {
+                primary:   '#7C3AED', // violet-600
+                secondary: '#6D28D9', // violet-700
+                accent:    '#A78BFA', // violet-400
+                light:     '#DDD6FE', // violet-200
+                dark:      '#0A0A0F',
+                surface:   '#111118',
+                card:      '#16161F',
+                cardHover: '#1C1C28',
+                border:    '#2A2A3D',
+                muted:     '#3A3A52',
+              }
+            },
+            animation: {
+              'ticker': 'ticker 40s linear infinite',
+              'pulse-slow': 'pulse 3s ease-in-out infinite',
+              'fade-in': 'fadeIn 0.2s ease-out',
+            },
+            keyframes: {
+              ticker: {
+                '0%': { transform: 'translateX(0)' },
+                '100%': { transform: 'translateX(-50%)' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(4px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-brand-dark text-[#E2E8F0] font-sans antialiased min-h-screen selection:bg-violet-600 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/ui/main.tsx"></script>
+  </body>
+</html>
