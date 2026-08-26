@@ -37,6 +37,132 @@ const TICKER_ITEMS = [
   { pair: "TRUMP Polymarket Arb", prob: "51.8%", change: "-1.2%", isUp: false, spike: false },
 ];
 
+const TECH_STACK_ROW_1 = [
+  {
+    name: "Somnia L1 Blockchain",
+    badge: "100K+ TPS",
+    desc: "Shannon Testnet (50312) with sub-second finality & reactive EVM",
+    icon: Zap,
+    iconColor: "text-purple-400",
+    iconBg: "bg-purple-950/80 border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.35)]",
+    badgeBg: "bg-purple-950/90 text-purple-300 border-purple-500/50",
+    hoverBorder: "hover:border-purple-500/60 hover:shadow-[0_0_25px_rgba(168,85,247,0.25)]",
+  },
+  {
+    name: "DreamDEX Event Contracts",
+    badge: "500+ Markets",
+    desc: "High-frequency on-chain binary prediction orderbook & liquidity pools",
+    icon: Layers,
+    iconColor: "text-cyan-400",
+    iconBg: "bg-cyan-950/80 border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.35)]",
+    badgeBg: "bg-cyan-950/90 text-cyan-300 border-cyan-500/50",
+    hoverBorder: "hover:border-cyan-500/60 hover:shadow-[0_0_25px_rgba(6,182,212,0.25)]",
+  },
+  {
+    name: "@somnia-chain/markets-sdk",
+    badge: "v0.28.1",
+    desc: "Direct TypeScript integration for market hydration & order placement",
+    icon: Code2,
+    iconColor: "text-blue-400",
+    iconBg: "bg-blue-950/80 border-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.35)]",
+    badgeBg: "bg-blue-950/90 text-blue-300 border-blue-500/50",
+    hoverBorder: "hover:border-blue-500/60 hover:shadow-[0_0_25px_rgba(59,130,246,0.25)]",
+  },
+  {
+    name: "Viem Web3 Engine",
+    badge: "Type-Safe",
+    desc: "Lightweight, blazing-fast client for Somnia RPC & wallet signatures",
+    icon: Terminal,
+    iconColor: "text-indigo-400",
+    iconBg: "bg-indigo-950/80 border-indigo-500/50 shadow-[0_0_12px_rgba(99,102,241,0.35)]",
+    badgeBg: "bg-indigo-950/90 text-indigo-300 border-indigo-500/50",
+    hoverBorder: "hover:border-indigo-500/60 hover:shadow-[0_0_25px_rgba(99,102,241,0.25)]",
+  },
+  {
+    name: "Prophecy Spot Oracles",
+    badge: "Real-Time",
+    desc: "Decentralized high-precision spot price feeds for binary settlements",
+    icon: Activity,
+    iconColor: "text-orange-400",
+    iconBg: "bg-orange-950/80 border-orange-500/50 shadow-[0_0_12px_rgba(249,115,22,0.35)]",
+    badgeBg: "bg-orange-950/90 text-orange-300 border-orange-500/50",
+    hoverBorder: "hover:border-orange-500/60 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)]",
+  },
+  {
+    name: "Settlement Sweeper",
+    badge: "Auto-Claim",
+    desc: "Batch redemption engine claiming stranded collateral in 1 click",
+    icon: ShieldCheck,
+    iconColor: "text-emerald-400",
+    iconBg: "bg-emerald-950/80 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.35)]",
+    badgeBg: "bg-emerald-950/90 text-emerald-300 border-emerald-500/50",
+    hoverBorder: "hover:border-emerald-500/60 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)]",
+  },
+];
+
+const TECH_STACK_ROW_2 = [
+  {
+    name: "Dual AI Debate Arena",
+    badge: "Bull vs Bear",
+    desc: "Alpha Bull vs Macro Bear consensus eliminating single-model hallucinations",
+    icon: Bot,
+    iconColor: "text-fuchsia-400",
+    iconBg: "bg-fuchsia-950/80 border-fuchsia-500/50 shadow-[0_0_12px_rgba(217,70,239,0.35)]",
+    badgeBg: "bg-fuchsia-950/90 text-fuchsia-300 border-fuchsia-500/50",
+    hoverBorder: "hover:border-fuchsia-500/60 hover:shadow-[0_0_25px_rgba(217,70,239,0.25)]",
+  },
+  {
+    name: "RAG News Evidence Pipeline",
+    badge: "100% Grounded",
+    desc: "Live Crypto & Macro RSS ingestion with transparent [View Sources] links",
+    icon: Sparkles,
+    iconColor: "text-amber-400",
+    iconBg: "bg-amber-950/80 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.35)]",
+    badgeBg: "bg-amber-950/90 text-amber-300 border-amber-500/50",
+    hoverBorder: "hover:border-amber-500/60 hover:shadow-[0_0_25px_rgba(245,158,11,0.25)]",
+  },
+  {
+    name: "Deterministic Scenario Engine",
+    badge: "0ms Latency",
+    desc: "Zero-latency mathematical modeling for PnL, ROI %, and Breakeven curves",
+    icon: Sliders,
+    iconColor: "text-rose-400",
+    iconBg: "bg-rose-950/80 border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.35)]",
+    badgeBg: "bg-rose-950/90 text-rose-300 border-rose-500/50",
+    hoverBorder: "hover:border-rose-500/60 hover:shadow-[0_0_25px_rgba(244,63,94,0.25)]",
+  },
+  {
+    name: "Supabase Cloud Database",
+    badge: "Postgres",
+    desc: "Time-series probability snapshots, spike indexing & strategy persistence",
+    icon: Database,
+    iconColor: "text-emerald-400",
+    iconBg: "bg-emerald-950/80 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.35)]",
+    badgeBg: "bg-emerald-950/90 text-emerald-300 border-emerald-500/50",
+    hoverBorder: "hover:border-emerald-500/60 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)]",
+  },
+  {
+    name: "React 19 & Vite 6",
+    badge: "Concurrent",
+    desc: "Sub-millisecond interactive UI rendering with TypeScript & Tailwind CSS",
+    icon: Boxes,
+    iconColor: "text-sky-400",
+    iconBg: "bg-sky-950/80 border-sky-500/50 shadow-[0_0_12px_rgba(56,189,248,0.35)]",
+    badgeBg: "bg-sky-950/90 text-sky-300 border-sky-500/50",
+    hoverBorder: "hover:border-sky-500/60 hover:shadow-[0_0_25px_rgba(56,189,248,0.25)]",
+  },
+  {
+    name: "Autonomous Bot Loops",
+    badge: "4 Strategies",
+    desc: "Market Maker, Oracle Follower, Starter Bot & Take-Profit Auto Execution",
+    icon: Cpu,
+    iconColor: "text-teal-400",
+    iconBg: "bg-teal-950/80 border-teal-500/50 shadow-[0_0_12px_rgba(20,184,166,0.35)]",
+    badgeBg: "bg-teal-950/90 text-teal-300 border-teal-500/50",
+    hoverBorder: "hover:border-teal-500/60 hover:shadow-[0_0_25px_rgba(20,184,166,0.25)]",
+  },
+];
+
 export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) => {
   // ─── 3D Mouse Parallax State ───────────────────────────────────────
   const heroRef = useRef<HTMLDivElement>(null);
@@ -124,12 +250,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
         </div>
 
         {/* Links */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-mono text-gray-400">
+        {/* <nav className="hidden md:flex items-center gap-6 text-xs font-mono text-gray-400">
           <a href="#hero-sandbox" className="hover:text-violet-300 transition-colors">
             Live Sandbox
           </a>
           <a href="#loop" className="hover:text-violet-300 transition-colors">
             4-Step Workflow
+          </a>
+          <a href="#tech-stack" className="hover:text-violet-300 transition-colors">
+            Tech Stack
           </a>
           <a href="#stats" className="hover:text-violet-300 transition-colors">
             Proof Metrics
@@ -140,7 +269,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
           <a href="#sdk" className="hover:text-violet-300 transition-colors">
             Developers
           </a>
-        </nav>
+        </nav> */}
 
         {/* Actions */}
         <div className="flex items-center gap-3 font-mono">
@@ -550,6 +679,90 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
             <div className="text-[10px] font-mono text-gray-500 pt-2 border-t border-[#1F1F2E]">
               Module 4 • On-Chain Execution
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Tech Stack Infinite Running Carousel ─────────────────────── */}
+      <section
+        id="tech-stack"
+        className="py-16 border-t border-[#1F1F2E] w-full relative z-10 overflow-hidden"
+      >
+        <div className="text-center max-w-3xl mx-auto mb-12 px-6">
+          <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
+            POWERED BY HYBRID INFRASTRUCTURE
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">
+            The ForeSight Technology Stack
+          </h2>
+          <p className="text-sm text-gray-400 mt-3 font-light max-w-2xl mx-auto">
+            Combining Somnia L1 sub-second finality, DreamDEX decentralized CLOB, and multi-agent RAG intelligence into a unified cognitive terminal.
+          </p>
+        </div>
+
+        {/* Marquee Row 1 (Left Scrolling) */}
+        <div className="w-full overflow-hidden marquee-mask py-1.5">
+          <div className="animate-marquee flex items-center gap-4 whitespace-nowrap">
+            {[...TECH_STACK_ROW_1, ...TECH_STACK_ROW_1].map((tech, idx) => {
+              const IconComp = tech.icon;
+              return (
+                <div
+                  key={idx}
+                  className={`cyber-card inline-flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-[#0E0E16]/90 border border-[#1F1F2E] backdrop-blur-md ${tech.hoverBorder} transition-all duration-200 group cursor-pointer select-none`}
+                  onClick={onLaunchTerminal}
+                >
+                  <div className={`w-8 h-8 rounded-lg ${tech.iconBg} border flex items-center justify-center font-mono font-bold text-xs flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                    <IconComp className={`w-4 h-4 ${tech.iconColor} group-hover:brightness-125`} />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-white font-mono group-hover:text-white transition-colors">
+                        {tech.name}
+                      </span>
+                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border font-semibold ${tech.badgeBg}`}>
+                        {tech.badge}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-400 font-light mt-0.5 max-w-[280px] truncate leading-tight">
+                      {tech.desc}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Marquee Row 2 (Right / Reverse Scrolling) */}
+        <div className="w-full overflow-hidden marquee-mask py-1.5 mt-3">
+          <div className="animate-marquee-reverse flex items-center gap-4 whitespace-nowrap">
+            {[...TECH_STACK_ROW_2, ...TECH_STACK_ROW_2].map((tech, idx) => {
+              const IconComp = tech.icon;
+              return (
+                <div
+                  key={idx}
+                  className={`cyber-card inline-flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-[#0E0E16]/90 border border-[#1F1F2E] backdrop-blur-md ${tech.hoverBorder} transition-all duration-200 group cursor-pointer select-none`}
+                  onClick={onLaunchTerminal}
+                >
+                  <div className={`w-8 h-8 rounded-lg ${tech.iconBg} border flex items-center justify-center font-mono font-bold text-xs flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                    <IconComp className={`w-4 h-4 ${tech.iconColor} group-hover:brightness-125`} />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-white font-mono group-hover:text-white transition-colors">
+                        {tech.name}
+                      </span>
+                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border font-semibold ${tech.badgeBg}`}>
+                        {tech.badge}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-400 font-light mt-0.5 max-w-[280px] truncate leading-tight">
+                      {tech.desc}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
