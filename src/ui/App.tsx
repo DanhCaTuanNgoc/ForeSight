@@ -97,6 +97,7 @@ function ForeSightTerminalApp() {
   // Modals & Interactive simulation state
   const [isDebateModalOpen, setIsDebateModalOpen] = useState<boolean>(false);
   const [prefillOutcome, setPrefillOutcome] = useState<"YES" | "NO">("YES");
+  const [prefillEntryPrice, setPrefillEntryPrice] = useState<number | undefined>(undefined);
   const [prefillTargetExit, setPrefillTargetExit] = useState<number | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
@@ -424,6 +425,11 @@ function ForeSightTerminalApp() {
                 currentPrice={activeMarket.probability}
                 activeVisualMode={visualMode}
                 onVisualModeChange={setVisualMode}
+                entryPrice={prefillEntryPrice || 0.55}
+                targetExitPrice={prefillTargetExit || 0.85}
+                onSetEntryPrice={(p) => setPrefillEntryPrice(p)}
+                onSetTargetExitPrice={(p) => setPrefillTargetExit(p)}
+                showToast={showToast}
               />
             </div>
 
@@ -432,6 +438,7 @@ function ForeSightTerminalApp() {
               <ScenarioSimulator
                 market={activeMarket}
                 prefillOutcome={prefillOutcome}
+                prefillEntryPrice={prefillEntryPrice}
                 prefillTargetExit={prefillTargetExit}
                 onTrade={handleExecuteTrade}
                 isSubmitting={isSubmittingOrder}

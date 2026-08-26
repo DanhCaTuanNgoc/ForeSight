@@ -21,6 +21,7 @@ import { useWallet, SOMNIA_SHANNON_CHAIN_ID } from "../context/WalletContext.js"
 interface ScenarioSimulatorProps {
   market: any;
   prefillOutcome?: "YES" | "NO";
+  prefillEntryPrice?: number;
   prefillTargetExit?: number;
   onTrade: (symbol: string, outcome: "YES" | "NO", amount: number, price?: number) => Promise<void>;
   isSubmitting: boolean;
@@ -30,6 +31,7 @@ interface ScenarioSimulatorProps {
 export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   market,
   prefillOutcome = "YES",
+  prefillEntryPrice,
   prefillTargetExit,
   onTrade,
   isSubmitting,
@@ -40,7 +42,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const wallet = useWallet();
 
   // Implied price default (0.01 - 0.99)
-  const defaultEntry = market?.midPrice ? Math.max(0.05, Math.min(0.95, market.midPrice)) : 0.50;
+  const defaultEntry = prefillEntryPrice || (market?.midPrice ? Math.max(0.05, Math.min(0.95, market.midPrice)) : 0.50);
   const [entryPrice, setEntryPrice] = useState<number>(defaultEntry);
 
   const defaultTarget =
@@ -52,8 +54,9 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
   React.useEffect(() => {
     if (prefillOutcome) setOutcome(prefillOutcome);
-    if (prefillTargetExit) setTargetExitPrice(prefillTargetExit);
-  }, [prefillOutcome, prefillTargetExit]);
+    if (prefillEntryPrice !== undefined) setEntryPrice(prefillEntryPrice);
+    if (prefillTargetExit !== undefined) setTargetExitPrice(prefillTargetExit);
+  }, [prefillOutcome, prefillEntryPrice, prefillTargetExit]);
 
   // ─── Layer 1 & 2: Path to Settlement & Decision Stress Test Math ──────
   const assetName = market?.underlyingAsset || (market?.symbol?.includes("BTC") ? "BTC" : market?.symbol?.includes("ETH") ? "ETH" : "SOMI");

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import {
   AreaChart,
   Area,
@@ -15,10 +15,17 @@ import {
   Zap,
   Layers,
   Flame,
-  Activity,
-  Radio,
   Clock,
-  Compass,
+  X,
+  Volume2,
+  CandlestickChart,
+  Split,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Target,
+  Crosshair,
+  MoveHorizontal,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
 import { DepthChart } from "./DepthChart.js";
@@ -27,10 +34,18 @@ import { EventTimeline } from "./EventTimeline.js";
 
 type TimeRange = "15m" | "1H" | "4H" | "1D";
 export type CanvasVisualMode = "probability" | "montecarlo" | "depth" | "heatmap" | "timeline";
+type VolatilityLevel = "low" | "normal" | "high";
+type CurveMode = "yes-only" | "dual";
+type RenderType = "area" | "candles";
 
 interface ChartDataPoint {
   time: string;
   price: number;
+  priceNo?: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
   volume?: number;
   isSpike?: boolean;
 }
@@ -43,49 +58,51 @@ interface PriceChartProps {
   currentPrice?: number;
   activeVisualMode?: CanvasVisualMode;
   onVisualModeChange?: (mode: CanvasVisualMode) => void;
+  entryPrice?: number;
+  targetExitPrice?: number;
+  onSetEntryPrice?: (p: number) => void;
+  onSetTargetExitPrice?: (p: number) => void;
+  showToast?: (msg: string, type?: "success" | "error") => void;
 }
 
 function generateMockData(range: TimeRange, baseProbability: number): ChartDataPoint[] {
-  const pointsMap: Record<TimeRange, number> = { "15m": 30, "1H": 60, "4H": 96, "1D": 48 };
+  const pointsMap: Record<TimeRange, number> = { "15m": 40, "1H": 75, "4H": 120, "1D": 60 };
   const points = pointsMap[range];
   let base = baseProbability / 100;
 
   return Array.from({ length: points }, (_, i) => {
+    const prev = base;
     base += (Math.random() - 0.48) * 0.015;
     base = Math.max(0.05, Math.min(0.97, base));
     const h = Math.floor(i / 4);
     const m = (i % 4) * 15;
-    const isSpike = i === Math.floor(points * 0.72); // place a spike marker
+    const isSpike = i === Math.floor(points * 0.72);
+
+    const high = Math.min(0.98, Math.max(prev, base) + Math.random() * 0.015);
+    const low = Math.max(0.02, Math.min(prev, base) - Math.random() * 0.015);
+
     return {
       time: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
       price: parseFloat(base.toFixed(4)),
+      priceNo: parseFloat((1 - base).toFixed(4)),
+      open: parseFloat(prev.toFixed(4)),
+      high: parseFloat(high.toFixed(4)),
+      low: parseFloat(low.toFixed(4)),
+      close: parseFloat(base.toFixed(4)),
       volume: Math.floor(Math.random() * 5000 + 500),
       isSpike,
     };
   });
 }
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  const price = payload[0]?.value as number;
-  const vol = payload[1]?.value as number | undefined;
-  return (
-    <div className="bg-[#111118]/95 border border-violet-500/50 rounded-lg p-2.5 text-xs font-mono shadow-[0_0_15px_rgba(124,58,237,0.4)] backdrop-blur-md">
-      <div className="text-gray-400 text-[10px] mb-1">{label} UTC</div>
-      <div className="text-white font-bold flex items-center justify-between gap-3">
-        <span>Implied Probability:</span>
-        <span className="text-violet-300 neon-glow-violet">{(price * 100).toFixed(2)}%</span>
-      </div>
-      {vol !== undefined && (
-        <div className="text-gray-400 text-[10px] mt-1 flex items-center justify-between">
-          <span>Volume:</span>
-          <span>{vol.toLocaleString()} tUSDC</span>
-        </div>
-      )}
-    </div>
-  );
-};
+// ─── Mode tab config ─────────────────────────────────────────────────────────
+const MODE_TABS: { mode: CanvasVisualMode; icon: React.ElementType; label: string; activeClass: string }[] = [
+  { mode: "probability", icon: TrendingUp, label: "Probability", activeClass: "bg-violet-600 text-white" },
+  { mode: "montecarlo", icon: Sparkles, label: "Monte Carlo", activeClass: "bg-cyan-600 text-white" },
+  { mode: "heatmap", icon: Flame, label: "Heatmap", activeClass: "bg-amber-600 text-white" },
+  { mode: "depth", icon: Layers, label: "Depth", activeClass: "bg-indigo-600 text-white" },
+  { mode: "timeline", icon: Clock, label: "Timeline", activeClass: "bg-emerald-600 text-white" },
+];
 
 export const PriceChart: React.FC<PriceChartProps> = ({
   symbol,
@@ -95,9 +112,44 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   currentPrice = 60,
   activeVisualMode: externalMode,
   onVisualModeChange,
+  entryPrice = 0.55,
+  targetExitPrice = 0.85,
+  onSetEntryPrice,
+  onSetTargetExitPrice,
+  showToast,
 }) => {
   const [internalMode, setInternalMode] = useState<CanvasVisualMode>("probability");
   const visualMode = externalMode || internalMode;
+
+  const [curveMode, setCurveMode] = useState<CurveMode>("dual");
+  const [renderType, setRenderType] = useState<RenderType>("area");
+  const [selectedSpike, setSelectedSpike] = useState<any | null>(null);
+  const [mcVolatility, setMcVolatility] = useState<VolatilityLevel>("normal");
+
+  // ─── Pro Zoom & Pan Dragging Engine (Binance / MEXC style) ───────────────────
+  const [zoomLevel, setZoomLevel] = useState<number>(1); // 1 = 1x (full), up to 5x
+  const [panOffset, setPanOffset] = useState<number>(0); // 0 = latest data on right
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStartX, setDragStartX] = useState<number>(0);
+  const [dragStartPan, setDragStartPan] = useState<number>(0);
+  const [hasDragged, setHasDragged] = useState<boolean>(false);
+
+  const chartWrapperRef = useRef<HTMLDivElement>(null);
+
+  // ─── Interactive Click Quick-Action Popover ────────────────────────────────
+  const [clickedAction, setClickedAction] = useState<{
+    price: number;
+    time: string;
+    xPercent: number;
+    yPercent: number;
+  } | null>(null);
+
+  // Hint text fadeout
+  const [showHint, setShowHint] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowHint(false), 8000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleModeChange = (mode: CanvasVisualMode) => {
     sound.playClick();
@@ -105,284 +157,685 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     else setInternalMode(mode);
   };
 
-  const data = useMemo(
+  const rawData = useMemo(
     () => (propData && propData.length > 0 ? propData : generateMockData(timeRange, currentPrice)),
     [propData, timeRange, currentPrice, symbol]
   );
 
+  // ─── Slicing Data Based on Zoom and Pan Offset ──────────────────────────────
+  const data = useMemo(() => {
+    if (zoomLevel <= 1 && panOffset === 0) return rawData;
+    const visibleCount = Math.max(8, Math.floor(rawData.length / zoomLevel));
+    const maxOffset = Math.max(0, rawData.length - visibleCount);
+    const clampedOffset = Math.max(0, Math.min(maxOffset, panOffset));
+    const end = rawData.length - clampedOffset;
+    const start = Math.max(0, end - visibleCount);
+    return rawData.slice(start, end);
+  }, [rawData, zoomLevel, panOffset]);
+
   const first = data[0]?.price ?? 0;
   const last = data[data.length - 1]?.price ?? 0;
+  const lastNo = 1 - last;
   const change = first > 0 ? ((last - first) / first) * 100 : 0;
   const isUp = change >= 0;
 
-  const yMin = Math.max(0, Math.min(...data.map((d) => d.price)) - 0.03);
-  const yMax = Math.min(1, Math.max(...data.map((d) => d.price)) + 0.03);
-
   const formatY = (v: number) => `${(v * 100).toFixed(0)}%`;
-  const step = Math.ceil(data.length / 6);
+  const step = Math.max(1, Math.ceil(data.length / 6));
   const formatX = (_: any, idx: number) => (idx % step === 0 ? data[idx]?.time ?? "" : "");
 
+  // ─── Zoom Handlers ─────────────────────────────────────────────────────────
+  const handleZoomIn = () => {
+    sound.playClick();
+    setZoomLevel((prev) => Math.min(5, Number((prev + 0.5).toFixed(1))));
+  };
+
+  const handleZoomOut = () => {
+    sound.playClick();
+    setZoomLevel((prev) => {
+      const next = Math.max(1, Number((prev - 0.5).toFixed(1)));
+      if (next === 1) setPanOffset(0);
+      return next;
+    });
+  };
+
+  const handleResetZoom = () => {
+    sound.playClick();
+    setZoomLevel(1);
+    setPanOffset(0);
+  };
+
+  // ─── Wheel Handler: Ctrl+Wheel or Direct Wheel for Zooming ──────────────────
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (visualMode !== "probability") return;
+
+    if (e.deltaY < 0) {
+      // Zoom in (scroll up)
+      setZoomLevel((prev) => Math.min(5, Number((prev + 0.25).toFixed(2))));
+    } else if (e.deltaY > 0) {
+      // Zoom out (scroll down)
+      setZoomLevel((prev) => {
+        const next = Math.max(1, Number((prev - 0.25).toFixed(2)));
+        if (next === 1) setPanOffset(0);
+        return next;
+      });
+    }
+  }, [visualMode]);
+
+  // ─── Drag to Pan Handlers (TradingView / Binance style) ──────────────────────
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only drag on primary left click
+    if (e.button !== 0 || visualMode !== "probability") return;
+    setIsDragging(true);
+    setDragStartX(e.clientX);
+    setDragStartPan(panOffset);
+    setHasDragged(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || visualMode !== "probability") return;
+    const deltaX = e.clientX - dragStartX;
+
+    if (Math.abs(deltaX) > 4) {
+      setHasDragged(true);
+      // Determine points shifted per pixel
+      const visibleCount = rawData.length / zoomLevel;
+      const chartWidth = chartWrapperRef.current?.clientWidth || 500;
+      const pointsPerPixel = visibleCount / chartWidth;
+
+      // Moving mouse right (deltaX > 0) shifts view to the LEFT (pan into past -> higher panOffset)
+      const shiftPoints = Math.round(deltaX * pointsPerPixel * 1.5);
+      const maxOffset = Math.max(0, rawData.length - Math.max(8, Math.floor(visibleCount)));
+      const newPan = Math.max(0, Math.min(maxOffset, dragStartPan + shiftPoints));
+      setPanOffset(newPan);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // ─── Chart Click Handler (Only opens if not dragging) ──────────────────────
+  const handleChartClick = (e: any) => {
+    if (hasDragged) {
+      setHasDragged(false);
+      return;
+    }
+
+    if (e && e.activePayload && e.activePayload[0]) {
+      const clickedPrice = Number(e.activePayload[0].value.toFixed(4));
+      const payloadTime = e.activePayload[0].payload?.time || "Selected Point";
+      sound.playClick();
+
+      const activeIdx = e.activeTooltipIndex !== undefined ? e.activeTooltipIndex : Math.floor(data.length / 2);
+      const xPercent = Math.min(80, Math.max(15, (activeIdx / Math.max(1, data.length - 1)) * 100));
+      const yPercent = Math.min(70, Math.max(25, (1 - clickedPrice) * 100));
+
+      setClickedAction({
+        price: clickedPrice,
+        time: payloadTime,
+        xPercent,
+        yPercent,
+      });
+    }
+  };
+
+  const applyEntry = (p: number) => {
+    if (onSetEntryPrice) {
+      sound.playSuccessChime();
+      onSetEntryPrice(Number(p.toFixed(2)));
+      if (showToast) {
+        showToast(`⚡ Entry Price set to $${p.toFixed(2)} (${Math.round(p * 100)}%)`, "success");
+      }
+    }
+    setClickedAction(null);
+  };
+
+  const applyTP = (p: number) => {
+    if (onSetTargetExitPrice) {
+      sound.playSuccessChime();
+      onSetTargetExitPrice(Number(p.toFixed(2)));
+      if (showToast) {
+        showToast(`🎯 Take-Profit (TP) set to $${p.toFixed(2)} (${Math.round(p * 100)}%)`, "success");
+      }
+    }
+    setClickedAction(null);
+  };
+
+  const handleInspectSpike = (d: ChartDataPoint) => {
+    sound.playSpikeAlert();
+    setSelectedSpike({
+      time: d.time,
+      price: d.price,
+      magnitude: "+14.2%",
+      velocity: "+0.142%/min",
+      summary: `Unusual repricing event on ${symbol}. Institutional spot bid walls on Somnia CLOB followed ETF net inflow reports.`,
+    });
+  };
+
+  const mcStats = useMemo(() => {
+    if (mcVolatility === "low") return { feasibility: 88.4, spread: 25, label: "Low Vol" };
+    if (mcVolatility === "high") return { feasibility: 61.2, spread: 55, label: "Stress" };
+    return { feasibility: 78.4, spread: 40, label: "Normal" };
+  }, [mcVolatility]);
+
+  const maxVol = Math.max(...data.map((d) => d.volume ?? 0), 1);
+
   return (
-    <div className="panel rounded-xl border border-[#2A2A3D] bg-[#0E0E16] flex flex-col overflow-hidden shadow-lg">
-      {/* ─── Top Control Bar: Visual Mode Tabs + Timeframe ───────────── */}
-      <div className="flex flex-wrap items-center justify-between px-3.5 py-2 border-b border-[#232336] bg-[#0A0A10] gap-2">
-        {/* Left: 5 Visual Canvas Switcher Tabs */}
-        <div className="flex items-center gap-1 bg-[#13131F] p-1 rounded-lg border border-[#232336] text-[11px] font-mono">
-          <button
-            onClick={() => handleModeChange("probability")}
-            className={`px-2.5 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 ${
-              visualMode === "probability"
-                ? "bg-violet-600 text-white shadow-[0_0_10px_rgba(124,58,237,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Probability Radar</span>
-          </button>
+    <div className="rounded-xl border border-[#1F1F2E] bg-[#0C0C14] flex flex-col overflow-hidden font-mono relative select-none">
+      {/* ─── Top Control Toolbar ──────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between px-3 py-1.5 border-b border-[#1A1A28] bg-[#09090F] gap-1.5">
+        {/* Left: Mode Tabs & Live Odds */}
+        <div className="flex items-center gap-0.5">
+          {MODE_TABS.map(({ mode, icon: Icon, label, activeClass }) => {
+            const isActive = visualMode === mode;
+            return (
+              <button
+                key={mode}
+                onClick={() => handleModeChange(mode)}
+                title={label}
+                className={`flex items-center gap-1 px-1.5 py-1 rounded-md transition-all text-[11px] font-bold ${
+                  isActive ? activeClass : "text-gray-500 hover:text-gray-300 hover:bg-[#161620]"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {isActive && <span>{label}</span>}
+              </button>
+            );
+          })}
 
-          <button
-            onClick={() => handleModeChange("montecarlo")}
-            className={`px-2.5 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 ${
-              visualMode === "montecarlo"
-                ? "bg-cyan-600 text-white shadow-[0_0_10px_rgba(6,182,212,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
-            <span>Monte Carlo Cone</span>
-          </button>
+          <div className="w-px h-4 bg-[#222234] mx-1.5" />
 
-          <button
-            onClick={() => handleModeChange("heatmap")}
-            className={`px-2.5 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 ${
-              visualMode === "heatmap"
-                ? "bg-amber-600 text-white shadow-[0_0_10px_rgba(245,158,11,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <Flame className="w-3.5 h-3.5 text-amber-300" />
-            <span>Heatmap</span>
-          </button>
-
-          <button
-            onClick={() => handleModeChange("depth")}
-            className={`px-2.5 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 ${
-              visualMode === "depth"
-                ? "bg-indigo-600 text-white shadow-[0_0_10px_rgba(99,102,241,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Order Depth</span>
-          </button>
-
-          <button
-            onClick={() => handleModeChange("timeline")}
-            className={`px-2.5 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 ${
-              visualMode === "timeline"
-                ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Timeline</span>
-          </button>
+          {/* Live Price Readout */}
+          <div className="flex items-baseline gap-1.5 text-xs">
+            <span className="text-white font-bold">{(last * 100).toFixed(1)}%</span>
+            <span className={`text-[10px] font-bold ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
+              {isUp ? "+" : ""}{change.toFixed(1)}%
+            </span>
+            {curveMode === "dual" && visualMode === "probability" && (
+              <span className="text-rose-400/70 text-[10px]">NO {(lastNo * 100).toFixed(0)}%</span>
+            )}
+          </div>
         </div>
 
-        {/* Right: Time Range Switcher */}
-        <div className="flex items-center gap-1 font-mono text-[10px]">
-          {(["15m", "1H", "4H", "1D"] as TimeRange[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => {
-                sound.playClick();
-                onTimeRangeChange(r);
-              }}
-              className={`px-2 py-1 rounded font-bold transition-all ${
-                timeRange === r
-                  ? "bg-violet-600/30 text-violet-300 border border-violet-500/50 shadow-sm"
-                  : "text-gray-500 hover:text-gray-300 hover:bg-[#1A1A28]"
-              }`}
-            >
-              {r}
-            </button>
-          ))}
+        {/* Right: Pro Zoom & Pan Controls + Toggles + Timeframe */}
+        <div className="flex items-center gap-1.5">
+          {/* Zoom Controls (with Drag/Pan indicator) */}
+          {visualMode === "probability" && (
+            <div className="flex items-center bg-[#111118] rounded-md border border-[#1F1F2E] text-[10px] p-0.5">
+              <button
+                onClick={handleZoomIn}
+                title="Zoom In (Ctrl + Scroll Up)"
+                className="p-1 text-gray-400 hover:text-white hover:bg-[#1E1E2E] rounded transition"
+              >
+                <ZoomIn className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleZoomOut}
+                title="Zoom Out (Ctrl + Scroll Down)"
+                className="p-1 text-gray-400 hover:text-white hover:bg-[#1E1E2E] rounded transition"
+              >
+                <ZoomOut className="w-3 h-3" />
+              </button>
+              {(zoomLevel > 1 || panOffset > 0) && (
+                <button
+                  onClick={handleResetZoom}
+                  title="Reset Zoom & Pan (1x)"
+                  className="px-1 py-0.5 text-[9px] font-bold text-violet-400 hover:bg-[#1E1E2E] rounded transition flex items-center gap-0.5"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  <span>{zoomLevel.toFixed(1)}x</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Dual / Candle switchers */}
+          {visualMode === "probability" && (
+            <div className="flex items-center bg-[#111118] rounded-md border border-[#1F1F2E] text-[10px]">
+              <button
+                onClick={() => { sound.playClick(); setCurveMode(curveMode === "dual" ? "yes-only" : "dual"); }}
+                title={curveMode === "dual" ? "YES Only" : "Dual YES/NO"}
+                className={`px-1.5 py-1 rounded-l-md transition ${
+                  curveMode === "dual" ? "text-emerald-400 bg-emerald-950/50" : "text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                <Split className="w-3 h-3" />
+              </button>
+              <div className="w-px h-3.5 bg-[#222234]" />
+              <button
+                onClick={() => { sound.playClick(); setRenderType(renderType === "area" ? "candles" : "area"); }}
+                title={renderType === "area" ? "Candles" : "Area"}
+                className={`px-1.5 py-1 rounded-r-md transition ${
+                  renderType === "candles" ? "text-amber-400 bg-amber-950/50" : "text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                <CandlestickChart className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {visualMode === "montecarlo" && (
+            <div className="flex items-center bg-[#111118] rounded-md border border-[#1F1F2E] text-[9px]">
+              {(["low", "normal", "high"] as VolatilityLevel[]).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => { sound.playClick(); setMcVolatility(v); }}
+                  className={`px-1.5 py-1 capitalize font-bold transition ${
+                    mcVolatility === v
+                      ? v === "high" ? "text-rose-400 bg-rose-950/50" : "text-cyan-400 bg-cyan-950/50"
+                      : "text-gray-500 hover:text-gray-300"
+                  } ${v === "low" ? "rounded-l-md" : v === "high" ? "rounded-r-md" : ""}`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="w-px h-4 bg-[#222234]" />
+
+          {/* Timeframe Buttons */}
+          <div className="flex items-center gap-px text-[10px]">
+            {(["15m", "1H", "4H", "1D"] as TimeRange[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => {
+                  sound.playClick();
+                  handleResetZoom();
+                  onTimeRangeChange(r);
+                }}
+                className={`px-1.5 py-0.5 rounded font-bold transition ${
+                  timeRange === r ? "text-violet-300 bg-violet-600/20" : "text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* ─── Visual Canvas Content by Mode ──────────────────────────── */}
-      <div className="p-3">
-        {visualMode === "probability" && (
-          <div className="space-y-2">
-            {/* Header info */}
-            <div className="flex items-center justify-between font-mono text-xs px-1">
-              <div className="flex items-center gap-2">
-                <span className="text-white font-bold text-base">{(last * 100).toFixed(1)}%</span>
-                <span className={`text-[11px] font-bold ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
-                  {isUp ? "▲ +" : "▼ "} {Math.abs(change).toFixed(2)}%
-                </span>
-                <span className="text-[10px] text-gray-500">({symbol} Implied Odds)</span>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                <span className="inline-flex items-center gap-1 text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  ⚡ Spike Marker Active
-                </span>
-              </div>
-            </div>
-
-            {/* Recharts Area */}
-            <div className="h-44 sm:h-52 w-full">
+      {/* ─── Chart Canvas with Drag & Pan Handlers ────────────────────── */}
+      <div
+        ref={chartWrapperRef}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        className={`px-2 pt-1 pb-0 relative ${
+          isDragging ? "cursor-grabbing" : zoomLevel > 1 ? "cursor-grab" : "cursor-crosshair"
+        }`}
+      >
+        {/* Mode 1A: Probability Area with Dual YES/NO */}
+        {visualMode === "probability" && renderType === "area" && (
+          <div>
+            <div className="h-48 sm:h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={data} margin={{ top: 6, right: 12, left: 0, bottom: 0 }} onClick={handleChartClick}>
                   <defs>
-                    <linearGradient id="cyberProbGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="#7C3AED" stopOpacity={0.0} />
+                    <linearGradient id="yesGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10B981" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#10B981" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="noGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.15} />
+                      <stop offset="100%" stopColor="#F43F5E" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
 
-                  <CartesianGrid stroke="#222234" strokeDasharray="3 3" vertical={false} />
+                  <CartesianGrid stroke="#1A1A28" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="time" tickFormatter={formatX} tick={{ fill: "#4B5563", fontSize: 9 }} axisLine={false} tickLine={false} interval={step - 1} />
+                  <YAxis domain={[0, 1]} tickFormatter={formatY} tick={{ fill: "#4B5563", fontSize: 9 }} axisLine={false} tickLine={false} width={32} orientation="right" />
 
-                  <XAxis
-                    dataKey="time"
-                    tickFormatter={formatX}
-                    tick={{ fill: "#6B7280", fontSize: 9, fontFamily: "JetBrains Mono" }}
-                    axisLine={false}
-                    tickLine={false}
-                    interval={step - 1}
+                  <Tooltip
+                    content={({ active, payload, label }: any) => {
+                      if (!active || !payload?.length || isDragging) return null;
+                      const pYes = payload[0]?.value as number;
+                      const vol = payload[0]?.payload?.volume;
+                      return (
+                        <div className="bg-[#0E0E16]/95 border border-[#2A2A3D] rounded-lg px-2.5 py-2 text-[11px] font-mono backdrop-blur-md shadow-lg min-w-[150px] pointer-events-auto">
+                          <div className="text-gray-500 text-[9px] mb-1 flex items-center justify-between">
+                            <span>{label} UTC</span>
+                            <span className="text-[8px] text-violet-400">Click to set</span>
+                          </div>
+                          <div className="flex justify-between text-emerald-400 font-bold">
+                            <span>YES</span><span>{(pYes * 100).toFixed(1)}%</span>
+                          </div>
+                          {curveMode === "dual" && (
+                            <div className="flex justify-between text-rose-400 font-bold">
+                              <span>NO</span><span>{((1 - pYes) * 100).toFixed(1)}%</span>
+                            </div>
+                          )}
+                          {vol && <div className="text-gray-500 text-[9px] mt-1 border-t border-[#1F1F2E] pt-1">{vol.toLocaleString()} tUSDC</div>}
+
+                          {/* Quick Tooltip Action Buttons */}
+                          <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-[#1F1F2E]">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                applyEntry(pYes);
+                              }}
+                              className="flex-1 py-0.5 bg-violet-600/80 hover:bg-violet-500 text-white rounded text-[9px] font-bold flex items-center justify-center gap-0.5 transition"
+                            >
+                              <Zap className="w-2.5 h-2.5" /> Entry
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                applyTP(pYes);
+                              }}
+                              className="flex-1 py-0.5 bg-emerald-600/80 hover:bg-emerald-500 text-white rounded text-[9px] font-bold flex items-center justify-center gap-0.5 transition"
+                            >
+                              <Target className="w-2.5 h-2.5" /> TP
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }}
                   />
-                  <YAxis
-                    domain={[yMin, yMax]}
-                    tickFormatter={formatY}
-                    tick={{ fill: "#6B7280", fontSize: 9, fontFamily: "JetBrains Mono" }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={34}
-                    orientation="right"
+
+                  {/* 50% Battleground Line */}
+                  <ReferenceLine
+                    y={0.5}
+                    stroke="#4B5563"
+                    strokeDasharray="2 4"
+                    strokeWidth={1}
+                    strokeOpacity={0.6}
+                    label={{ value: "50%", fill: "#6B7280", fontSize: 8, position: "insideTopRight" }}
                   />
 
-                  <Tooltip content={<CustomTooltip />} />
+                  {/* TP & Entry reference lines */}
+                  <ReferenceLine
+                    y={targetExitPrice}
+                    stroke="#10B981"
+                    strokeDasharray="6 3"
+                    strokeWidth={1.2}
+                    strokeOpacity={0.75}
+                    label={{ value: `TP ${Math.round(targetExitPrice * 100)}%`, fill: "#10B981", fontSize: 9, position: "right" }}
+                  />
+                  <ReferenceLine
+                    y={entryPrice}
+                    stroke="#A78BFA"
+                    strokeDasharray="4 4"
+                    strokeWidth={1.2}
+                    strokeOpacity={0.75}
+                    label={{ value: `Entry ${Math.round(entryPrice * 100)}%`, fill: "#A78BFA", fontSize: 9, position: "right" }}
+                  />
 
+                  {/* YES Curve */}
                   <Area
                     type="monotone"
                     dataKey="price"
-                    stroke="#A78BFA"
-                    strokeWidth={2}
-                    fill="url(#cyberProbGrad)"
-                    dot={false}
-                    activeDot={{ r: 5, fill: "#10B981", stroke: "#ffffff", strokeWidth: 2 }}
+                    name="YES"
+                    stroke="#10B981"
+                    strokeWidth={1.8}
+                    fill="url(#yesGrad)"
+                    dot={(props: any) => {
+                      const { cx, cy, payload, index } = props;
+                      const isLast = index === data.length - 1;
+
+                      if (payload?.isSpike) {
+                        return (
+                          <g key={`spike-${payload.time}`} className="cursor-pointer" onClick={() => handleInspectSpike(payload)}>
+                            <circle cx={cx} cy={cy} r={5} fill="#10B981" opacity={0.25} className="animate-ping" />
+                            <circle cx={cx} cy={cy} r={3.5} fill="#10B981" stroke="#fff" strokeWidth={1} />
+                            <text x={cx + 7} y={cy - 5} fill="#10B981" fontSize={8} fontFamily="JetBrains Mono" fontWeight="bold">⚡ Spike</text>
+                          </g>
+                        );
+                      }
+
+                      if (isLast && panOffset === 0) {
+                        return (
+                          <g key="live-pulse">
+                            <circle cx={cx} cy={cy} r={6} fill="#10B981" opacity={0.15} className="animate-ping" />
+                            <circle cx={cx} cy={cy} r={3} fill="#10B981" stroke="#10B981" strokeWidth={1.5} strokeOpacity={0.6} />
+                          </g>
+                        );
+                      }
+
+                      return null;
+                    }}
+                    activeDot={{ r: 4.5, fill: "#10B981", stroke: "#fff", strokeWidth: 1.5 }}
                   />
+
+                  {/* NO Curve */}
+                  {curveMode === "dual" && (
+                    <Area
+                      type="monotone"
+                      dataKey="priceNo"
+                      name="NO"
+                      stroke="#F43F5E"
+                      strokeWidth={1.2}
+                      strokeDasharray="3 3"
+                      fill="url(#noGrad)"
+                      dot={false}
+                      activeDot={{ r: 3.5, fill: "#F43F5E", stroke: "#fff", strokeWidth: 1 }}
+                    />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+
+            {/* Volume Bars */}
+            <div className="flex items-end gap-px h-5 px-1 -mt-0.5">
+              {data.map((d, i) => {
+                const h = ((d.volume ?? 0) / maxVol) * 100;
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-t-[1px]"
+                    style={{
+                      height: `${Math.max(8, h)}%`,
+                      background: (d.close ?? d.price) >= (d.open ?? d.price)
+                        ? "rgba(16,185,129,0.25)"
+                        : "rgba(244,63,94,0.2)",
+                    }}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Panning / Time Horizon Indicator */}
+            {(zoomLevel > 1 || panOffset > 0) && (
+              <div className="absolute top-2 left-3 bg-[#0E0E16]/90 border border-violet-500/40 rounded px-2 py-0.5 text-[9px] text-violet-300 font-mono flex items-center gap-1.5 shadow-sm">
+                <MoveHorizontal className="w-2.5 h-2.5 text-violet-400" />
+                <span>
+                  Window: {data[0]?.time} → {data[data.length - 1]?.time} ({zoomLevel.toFixed(1)}x)
+                </span>
+                {panOffset > 0 && <span className="text-amber-400">· Historical</span>}
+              </div>
+            )}
+
+            {/* Interaction Hint */}
+            {showHint && (
+              <div className="absolute bottom-8 right-3 text-[9px] text-gray-400 font-mono transition-opacity duration-1000 bg-[#0E0E16]/80 px-2 py-0.5 rounded border border-[#232336] flex items-center gap-1">
+                <Crosshair className="w-2.5 h-2.5 text-violet-400" />
+                <span>Ctrl + Scroll to Zoom · Drag chart to Pan · Click to set Entry/TP</span>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Mode 2: Monte Carlo 100-Path Trajectory Cone */}
-        {visualMode === "montecarlo" && (
-          <div className="space-y-2 font-mono text-xs">
-            <div className="flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-2">
-                <span className="text-cyan-300 font-bold flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  100-Path Monte Carlo Quant Simulation
-                </span>
-                <span className="text-[10px] text-gray-500">Geometric Brownian Motion</span>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-700/40">
-                Feasibility: 78.4%
-              </span>
-            </div>
-
-            {/* SVG Visual Monte Carlo Fan */}
-            <div className="h-44 sm:h-52 w-full bg-[#08080E] rounded-lg border border-[#1F1F2E] relative overflow-hidden flex items-center justify-center p-2">
+        {/* Mode 1B: Candlestick OHLC */}
+        {visualMode === "probability" && renderType === "candles" && (
+          <div>
+            <div className="h-48 sm:h-56 w-full bg-[#08080E] rounded-lg border border-[#161620] p-2 relative">
               <svg className="w-full h-full" viewBox="0 0 500 180" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="mcConeGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.1" />
-                    <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.45" />
-                  </linearGradient>
-                  <linearGradient id="mcBreakGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#F43F5E" stopOpacity="0.05" />
-                    <stop offset="100%" stopColor="#F43F5E" stopOpacity="0.25" />
-                  </linearGradient>
-                </defs>
-
-                {/* Shaded Upper Cone (95th percentile) */}
-                <path d="M 0 100 Q 250 80 500 20 L 500 100 L 0 100 Z" fill="url(#mcConeGrad)" />
-                {/* Shaded Lower Cone (Break zone) */}
-                <path d="M 0 100 Q 250 120 500 165 L 500 100 L 0 100 Z" fill="url(#mcBreakGrad)" />
-
-                {/* 15 Simulated Sample Trajectory Lines */}
-                {[
-                  "M 0 100 Q 150 90 500 25",
-                  "M 0 100 Q 200 85 500 35",
-                  "M 0 100 Q 220 70 500 45",
-                  "M 0 100 Q 180 95 500 55",
-                  "M 0 100 Q 240 90 500 68",
-                  "M 0 100 Q 250 105 500 82",
-                  "M 0 100 Q 200 110 500 95",
-                  "M 0 100 Q 300 115 500 112",
-                  "M 0 100 Q 180 130 500 138",
-                  "M 0 100 Q 260 140 500 158",
-                ].map((pathD, idx) => (
-                  <path
-                    key={idx}
-                    d={pathD}
-                    fill="none"
-                    stroke={idx < 6 ? "#22D3EE" : "#FB7185"}
-                    strokeWidth="1.2"
-                    strokeOpacity={0.45}
-                    strokeDasharray={idx % 2 === 0 ? "3 3" : undefined}
-                  />
+                {[36, 72, 108, 144].map((y) => (
+                  <line key={y} x1="0" y1={y} x2="500" y2={y} stroke="#141420" strokeDasharray="3 3" />
                 ))}
+                {/* 50% Battleground Line */}
+                <line x1="0" y1={90} x2="500" y2={90} stroke="#4B5563" strokeDasharray="2 4" strokeOpacity={0.5} />
+                <text x="480" y={87} fill="#6B7280" fontSize="7" textAnchor="end">50%</text>
 
-                {/* Median Target Line */}
-                <path d="M 0 100 Q 250 80 500 48" fill="none" stroke="#38BDF8" strokeWidth="2.5" />
-
-                {/* Strike Price Target Level */}
-                <line x1="0" y1="30" x2="500" y2="30" stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 4" />
-                {/* Thesis Invalidation Level */}
-                <line x1="0" y1="150" x2="500" y2="150" stroke="#F43F5E" strokeWidth="1.5" strokeDasharray="4 4" />
+                {data.map((d, i) => {
+                  const stepX = 500 / Math.max(1, data.length);
+                  const x = i * stepX + stepX * 0.15;
+                  const candleW = Math.max(3, stepX * 0.7);
+                  const openY = 180 - (d.open || d.price) * 170;
+                  const closeY = 180 - (d.close || d.price) * 170;
+                  const highY = 180 - (d.high || Math.max(d.open || d.price, d.close || d.price) + 0.01) * 170;
+                  const lowY = 180 - (d.low || Math.min(d.open || d.price, d.close || d.price) - 0.01) * 170;
+                  const up = (d.close || d.price) >= (d.open || d.price);
+                  const color = up ? "#10B981" : "#F43F5E";
+                  return (
+                    <g
+                      key={i}
+                      className="cursor-pointer hover:opacity-80"
+                      onClick={() => handleChartClick({ activePayload: [{ value: d.price, payload: d }] })}
+                    >
+                      <line x1={x + candleW / 2} y1={highY} x2={x + candleW / 2} y2={lowY} stroke={color} strokeWidth="1" />
+                      <rect x={x} y={Math.min(openY, closeY)} width={candleW} height={Math.max(2, Math.abs(closeY - openY))} fill={color} rx="0.5" />
+                    </g>
+                  );
+                })}
               </svg>
-
-              {/* Badges on Top of Simulation */}
-              <div className="absolute top-2 right-3 flex flex-col gap-1 text-[10px]">
-                <span className="bg-emerald-950/90 text-emerald-400 border border-emerald-500/50 px-2 py-0.5 rounded">
-                  Target Strike: $78,500 (+0.82%)
-                </span>
-                <span className="bg-rose-950/90 text-rose-300 border border-rose-500/50 px-2 py-0.5 rounded">
-                  Invalidation: &lt; $77,900
-                </span>
-              </div>
             </div>
+
+            {/* Volume bars for candle mode */}
+            <div className="flex items-end gap-px h-5 px-1 mt-1">
+              {data.map((d, i) => {
+                const h = ((d.volume ?? 0) / maxVol) * 100;
+                const up = (d.close ?? d.price) >= (d.open ?? d.price);
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-t-[1px]"
+                    style={{
+                      height: `${Math.max(8, h)}%`,
+                      background: up ? "rgba(16,185,129,0.25)" : "rgba(244,63,94,0.2)",
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Mode 2: Monte Carlo Cone */}
+        {visualMode === "montecarlo" && (
+          <div className="h-52 sm:h-60 w-full bg-[#08080E] rounded-lg border border-[#161620] relative overflow-hidden p-2">
+            <svg className="w-full h-full" viewBox="0 0 500 180" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="mcUp" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.35" />
+                </linearGradient>
+                <linearGradient id="mcDn" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#F43F5E" stopOpacity="0.04" />
+                  <stop offset="100%" stopColor="#F43F5E" stopOpacity="0.2" />
+                </linearGradient>
+              </defs>
+
+              <path d={`M 0 100 Q 250 ${90 - mcStats.spread / 2} 500 ${30 - mcStats.spread / 3} L 500 100 L 0 100 Z`} fill="url(#mcUp)" />
+              <path d={`M 0 100 Q 250 ${110 + mcStats.spread / 2} 500 ${150 + mcStats.spread / 3} L 500 100 L 0 100 Z`} fill="url(#mcDn)" />
+
+              {[
+                `M 0 100 Q 150 ${85 - mcStats.spread / 4} 500 ${25 - mcStats.spread / 4}`,
+                `M 0 100 Q 220 70 500 45`,
+                `M 0 100 Q 180 95 500 55`,
+                `M 0 100 Q 240 90 500 68`,
+                `M 0 100 Q 250 105 500 82`,
+                `M 0 100 Q 200 110 500 95`,
+                `M 0 100 Q 300 115 500 112`,
+                `M 0 100 Q 180 ${130 + mcStats.spread / 4} 500 ${138 + mcStats.spread / 4}`,
+              ].map((d, i) => (
+                <path key={i} d={d} fill="none" stroke={i < 4 ? "#22D3EE" : "#FB7185"} strokeWidth="1" strokeOpacity={0.35} strokeDasharray={i % 2 === 0 ? "3 3" : undefined} />
+              ))}
+
+              <path d="M 0 100 Q 250 80 500 48" fill="none" stroke="#38BDF8" strokeWidth="2" />
+              <line x1="0" y1="30" x2="500" y2="30" stroke="#10B981" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="0" y1="150" x2="500" y2="150" stroke="#F43F5E" strokeWidth="1" strokeDasharray="4 4" />
+            </svg>
+
+            <div className="absolute top-2 right-2 text-[9px] font-mono space-y-0.5">
+              <div className="text-emerald-400/80">Strike ↑</div>
+              <div className="text-cyan-300 font-bold">{mcStats.feasibility}% feasible</div>
+              <div className="text-rose-400/80">Break ↓</div>
+            </div>
+          </div>
+        )}
+
+        {/* Mode 3–5 */}
+        {visualMode === "heatmap" && <div className="h-56 overflow-y-auto"><Heatmap /></div>}
+        {visualMode === "depth" && <div className="h-56 overflow-y-auto"><DepthChart symbol={symbol} midPrice={last || 0.5} /></div>}
+        {visualMode === "timeline" && <div className="h-56 overflow-y-auto"><EventTimeline symbol={symbol} /></div>}
+
+        {/* ─── Interactive Quick Action Floating Popover (Entry / TP) ─── */}
+        {clickedAction && !isDragging && (
+          <div
+            className="absolute z-30 flex items-center gap-1.5 bg-[#12121E]/95 border border-violet-500/80 px-2 py-1.5 rounded-lg shadow-[0_0_20px_rgba(124,58,237,0.5)] backdrop-blur-xl animate-fadeIn"
+            style={{
+              top: `${Math.min(65, Math.max(10, clickedAction.yPercent))}%`,
+              left: `${Math.min(75, Math.max(10, clickedAction.xPercent))}%`,
+            }}
+          >
+            <span className="text-[10px] text-gray-200 font-bold whitespace-nowrap">
+              ${clickedAction.price.toFixed(2)} ({Math.round(clickedAction.price * 100)}%)
+            </span>
+
+            <button
+              onClick={() => applyEntry(clickedAction.price)}
+              className="px-2 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition shadow-sm"
+              title="Set as Entry Price"
+            >
+              <Zap className="w-3 h-3 text-amber-300" />
+              <span>Set Entry</span>
+            </button>
+
+            <button
+              onClick={() => applyTP(clickedAction.price)}
+              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition shadow-sm"
+              title="Set as Take-Profit"
+            >
+              <Target className="w-3 h-3 text-emerald-200" />
+              <span>Set TP</span>
+            </button>
+
+            <button
+              onClick={() => setClickedAction(null)}
+              className="p-1 text-gray-400 hover:text-white rounded"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
+        {/* ─── Spike HUD Popover ──────────────────────────────────────── */}
+        {selectedSpike && (
+          <div className="absolute top-10 right-3 w-72 bg-[#111118]/95 border border-[#2A2A3D] rounded-xl p-3 shadow-xl backdrop-blur-xl z-30 space-y-2 animate-fadeIn">
+            <div className="flex items-center justify-between pb-1.5 border-b border-[#1F1F2E]">
+              <span className="text-emerald-400 font-bold text-[11px] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {selectedSpike.time} UTC · {selectedSpike.magnitude}
+              </span>
+              <button onClick={() => setSelectedSpike(null)} className="text-gray-500 hover:text-white"><X className="w-3 h-3" /></button>
+            </div>
+
+            <p className="text-gray-300 text-[11px] font-sans leading-relaxed">{selectedSpike.summary}</p>
 
             <div className="flex items-center justify-between text-[10px] text-gray-500">
-              <span>Simulation: 100 paths with 1-second ticks</span>
-              <span className="text-cyan-300 font-bold">78% paths cross Strike before expiry</span>
+              <span>Velocity: <b className="text-emerald-400">{selectedSpike.velocity}</b></span>
             </div>
-          </div>
-        )}
 
-        {/* Mode 3: Liquidity Heatmap */}
-        {visualMode === "heatmap" && (
-          <div className="h-56 overflow-y-auto">
-            <Heatmap />
-          </div>
-        )}
-
-        {/* Mode 4: Orderbook Depth */}
-        {visualMode === "depth" && (
-          <div className="h-56 overflow-y-auto">
-            <DepthChart symbol={symbol} midPrice={last || 0.5} />
-          </div>
-        )}
-
-        {/* Mode 5: Event Timeline */}
-        {visualMode === "timeline" && (
-          <div className="h-56 overflow-y-auto">
-            <EventTimeline symbol={symbol} />
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => { sound.playClick(); sound.speakBriefing(`Spike on ${symbol}. ${selectedSpike.summary}`); }}
+                className="py-1.5 rounded bg-[#161620] hover:bg-[#1E1E2E] border border-[#2A2A3D] text-violet-300 font-bold text-[10px] flex items-center justify-center gap-1 transition"
+              >
+                <Volume2 className="w-3 h-3" /> Voice
+              </button>
+              <button
+                onClick={() => {
+                  applyEntry(selectedSpike.price);
+                  setSelectedSpike(null);
+                }}
+                className="py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center justify-center gap-1 transition"
+              >
+                <Zap className="w-3 h-3" /> Trade Spike
+              </button>
+            </div>
           </div>
         )}
       </div>
