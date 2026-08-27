@@ -17,42 +17,12 @@ interface ActivityTableProps {
   isClaiming?: boolean;
 }
 
-const DEFAULT_ACTIVITY: PositionRecord[] = [
-  {
-    id: "p1",
-    symbol: "BTC-0-26AUG26",
-    outcome: "YES",
-    amount: 25,
-    entryPrice: 0.62,
-    timestamp: Date.now() - 120000,
-    status: "OPEN",
-  },
-  {
-    id: "p2",
-    symbol: "ETH-0-26AUG26",
-    outcome: "NO",
-    amount: 10,
-    entryPrice: 0.38,
-    timestamp: Date.now() - 300000,
-    status: "SETTLED",
-  },
-  {
-    id: "p3",
-    symbol: "SOL-0-26AUG26",
-    outcome: "YES",
-    amount: 50,
-    entryPrice: 0.55,
-    timestamp: Date.now() - 720000,
-    status: "SETTLED",
-  },
-];
-
 export const ActivityTable: React.FC<ActivityTableProps> = ({
   positions = [],
   onClaim,
   isClaiming = false,
 }) => {
-  const list = positions.length > 0 ? positions : DEFAULT_ACTIVITY;
+  const list = positions;
 
   return (
     <div className="panel rounded-[4px] flex flex-col">
@@ -88,7 +58,12 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
 
       {/* Table Body */}
       <div className="flex-1 overflow-y-auto max-h-[220px]">
-        {list.slice(0, 8).map((pos) => {
+        {list.length === 0 ? (
+          <div className="p-6 text-center text-gray-500 text-xs font-mono">
+            No active on-chain positions recorded yet.
+          </div>
+        ) : (
+          list.slice(0, 8).map((pos) => {
           const d = new Date(pos.timestamp);
           const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(
             d.getMinutes()
@@ -125,7 +100,7 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
               </span>
             </div>
           );
-        })}
+        }))}
       </div>
     </div>
   );

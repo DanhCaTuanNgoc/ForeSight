@@ -25,33 +25,12 @@ interface ContextPanelProps {
   onSimulate: (params: { outcome: "YES" | "NO"; capital: number }) => void;
 }
 
-const DEFAULT_NEWS = [
-  {
-    title: "Bitcoin breaks consolidation band as volume spikes across top venues",
-    source: "CoinDesk",
-    time: "18m ago",
-    url: "https://www.coindesk.com",
-  },
-  {
-    title: "Somnia Shannon testnet records high TPS during high-frequency volatility test",
-    source: "Somnia Blog",
-    time: "42m ago",
-    url: "https://somnia.network",
-  },
-  {
-    title: "Macro interest rate expectations adjust ahead of upcoming central bank decisions",
-    source: "Bloomberg",
-    time: "1h ago",
-    url: "https://bloomberg.com",
-  },
-];
-
 export const ContextPanel: React.FC<ContextPanelProps> = ({
   symbol,
   debate,
   debateLoading = false,
   signals = [],
-  news = DEFAULT_NEWS,
+  news = [],
   onViewDebate,
   onSimulate,
 }) => {
@@ -215,7 +194,12 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
         </div>
 
         <div className="space-y-2">
-          {news.slice(0, 3).map((item, idx) => (
+          {news.length === 0 ? (
+            <div className="p-3 text-center text-gray-500 text-[10px] font-mono">
+              Ingesting live RSS crypto evidence citations...
+            </div>
+          ) : (
+            news.slice(0, 3).map((item, idx) => (
             <div
               key={idx}
               className="p-2 rounded-lg bg-[#12121E] border border-[#232336] space-y-1 hover:border-violet-500/50 transition group"
@@ -242,7 +226,7 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
                 </a>
               </div>
             </div>
-          ))}
+          )))}
         </div>
       </div>
     </aside>

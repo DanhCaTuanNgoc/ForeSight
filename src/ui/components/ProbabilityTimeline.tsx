@@ -59,7 +59,7 @@ export const ProbabilityTimeline: React.FC<ProbabilityTimelineProps> = ({
           }
         }
 
-        // Generate dynamic timeline simulation based on current price if empty
+        // Generate deterministic timeline simulation based on current price if empty
         const count = timeRange === "15m" ? 25 : timeRange === "1h" ? 40 : 60;
         const now = Date.now();
         const stepMs = (timeRange === "15m" ? 900_000 : timeRange === "1h" ? 3600_000 : 14400_000) / count;
@@ -67,14 +67,25 @@ export const ProbabilityTimeline: React.FC<ProbabilityTimelineProps> = ({
         let p = Math.max(0.2, Math.min(0.8, currentMidPrice || 0.5));
         const synthetic: TimelinePoint[] = [];
 
+        let seed = 0;
+        for (let c = 0; c < symbol.length; c++) {
+          seed = (seed << 5) - seed + symbol.charCodeAt(c);
+          seed |= 0;
+        }
+        seed += count;
+        const pseudoRandom = () => {
+          seed = (seed * 9301 + 49297) % 233280;
+          return seed / 233280;
+        };
+
         for (let i = count; i >= 0; i--) {
           const t = new Date(now - i * stepMs).toISOString();
-          const noise = (Math.random() - 0.49) * 0.04;
+          const noise = (pseudoRandom() - 0.49) * 0.04;
           p = Math.max(0.1, Math.min(0.9, p + noise));
 
           // Introduce a visible spike for demonstration
           const isSpikePoint = i === Math.floor(count * 0.4);
-          const spikeMag = isSpikePoint ? (Math.random() > 0.5 ? 0.18 : -0.15) : 0;
+          const spikeMag = isSpikePoint ? (pseudoRandom() > 0.5 ? 0.18 : -0.15) : 0;
           if (isSpikePoint) {
             p = Math.max(0.1, Math.min(0.9, p + spikeMag));
           }
@@ -255,9 +266,8 @@ export const ProbabilityTimeline: React.FC<ProbabilityTimelineProps> = ({
                       })
                     }
                   >
-                    {/* Glowing pulse */}
-                    <circle cx={pt.x} cy={pt.y} r="12" fill="#F97316" opacity="0.25" className="animate-ping" />
-                    <circle cx={pt.x} cy={pt.y} r="7" fill="#F97316" stroke="#FFFFFF" strokeWidth="2" />
+                    {/* Static Spike Marker */}
+                    <circle cx={pt.x} cy={pt.y} r="6" fill="#F97316" stroke="#FFFFFF" strokeWidth="2" />
                     <text
                       x={pt.x}
                       y={pt.y - 12}

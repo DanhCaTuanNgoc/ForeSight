@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface HeatmapCell {
+export interface HeatmapCell {
   category: string;
   label: string;
   intensity: number; // 0-100
@@ -11,18 +11,6 @@ interface HeatmapCell {
 interface HeatmapProps {
   cells?: HeatmapCell[];
 }
-
-// ─── Default mock data ────────────────────────────────────────────────────────
-const DEFAULT_CELLS: HeatmapCell[] = [
-  { category: 'CRYPTO',  label: 'BTC',   intensity: 88, change: -0.42 },
-  { category: 'CRYPTO',  label: 'ETH',   intensity: 74, change: -1.36 },
-  { category: 'CRYPTO',  label: 'SOL',   intensity: 52, change:  2.05 },
-  { category: 'CRYPTO',  label: 'SOMI',  intensity: 61, change:  2.05 },
-  { category: 'MACRO',   label: 'MACRO', intensity: 79, change: -0.10 },
-  { category: 'TECH',    label: 'TECH',  intensity: 43, change:  0.90 },
-  { category: 'SPORTS',  label: 'SPORT', intensity: 28, change:  0.00 },
-  { category: 'OTHER',   label: 'OTHER', intensity: 15, change: -0.25 },
-];
 
 // ─── Intensity color ──────────────────────────────────────────────────────────
 function intensityColor(intensity: number, change: number): string {
@@ -39,7 +27,45 @@ function intensityColor(intensity: number, change: number): string {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export const Heatmap: React.FC<HeatmapProps> = ({ cells = DEFAULT_CELLS }) => {
+export const Heatmap: React.FC<HeatmapProps> = ({ cells: propCells }) => {
+  const [apiCells, setApiCells] = useState<HeatmapCell[]>([]);
+
+  useEffect(() => {
+    if (propCells && propCells.length > 0) return;
+    let isMounted = true;
+    const fetchHeatmap = async () => {
+      try {
+        const res = await fetch("/api/tickers");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tickers && data.tickers.length > 0) {
+            const mapped: HeatmapCell[] = data.tickers.map((t: any) => ({
+              category: "SOMNIA CLOB",
+              label: t.rawSymbol || t.symbol.split("/")[0],
+              intensity: Math.min(98, Math.max(20, Math.round(t.probability || 50))),
+              change: t.change || 0,
+            }));
+            if (isMounted) setApiCells(mapped);
+          }
+        }
+      } catch {
+        // Ignore
+      }
+    };
+    fetchHeatmap();
+    const interval = setInterval(fetchHeatmap, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [propCells]);
+
+  const cells = propCells && propCells.length > 0 ? propCells : (apiCells.length > 0 ? apiCells : [
+    { category: 'CRYPTO', label: 'BTC', intensity: 62, change: 14.2 },
+    { category: 'CRYPTO', label: 'ETH', intensity: 45, change: -3.5 },
+    { category: 'CRYPTO', label: 'SOL', intensity: 54, change: 6.8 },
+    { category: 'CRYPTO', label: 'SOMI', intensity: 74, change: 4.15 },
+  ]);
   return (
     <div className="panel rounded-[4px]">
       {/* Header */}

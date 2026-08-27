@@ -100,6 +100,8 @@ function ForeSightTerminalApp() {
   const [prefillEntryPrice, setPrefillEntryPrice] = useState<number | undefined>(undefined);
   const [prefillTargetExit, setPrefillTargetExit] = useState<number | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [timelineData, setTimelineData] = useState<any[]>([]);
+  const [tickers, setTickers] = useState<any[]>([]);
 
   const wallet = useWallet();
 
@@ -150,7 +152,52 @@ function ForeSightTerminalApp() {
     if (!selectedMarket) setSelectedMarket(FALLBACK_MARKETS[0]);
   }, [selectedMarket]);
 
-  // 3. Fetch Positions
+  // 3. Fetch Tickers Tape
+  const fetchTickers = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tickers");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.tickers && data.tickers.length > 0) {
+          setTickers(data.tickers);
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  // 4. Fetch Timeline Data from API
+  const fetchTimelineData = useCallback(async (symbol: string, range: "15m" | "1H" | "4H" | "1D") => {
+    if (!symbol) return;
+    try {
+      const msMap = { "15m": 900_000, "1H": 3600_000, "4H": 14400_000, "1D": 86400_000 };
+      const from = new Date(Date.now() - msMap[range]).toISOString();
+      const res = await fetch(`/api/timeline/${encodeURIComponent(symbol)}?from=${from}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && json.data.length > 0) {
+          const formatted = json.data.map((d: any) => ({
+            time: new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            price: d.mid_price,
+            priceNo: Number((1 - d.mid_price).toFixed(4)),
+            open: d.mid_price,
+            high: d.best_ask || d.mid_price,
+            low: d.best_bid || d.mid_price,
+            close: d.mid_price,
+            volume: d.volume_24h || 12000,
+            isSpike: Boolean(d.is_spike),
+          }));
+          setTimelineData(formatted);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Timeline fetch error:", e);
+    }
+  }, []);
+
+  // 5. Fetch Positions
   const fetchPositions = useCallback(async () => {
     try {
       const url = wallet.address
@@ -167,10 +214,10 @@ function ForeSightTerminalApp() {
     }
   }, [wallet.address]);
 
-  // 4. Fetch News
+  // 6. Fetch News
   const fetchNews = useCallback(async () => {
     try {
-      const res = await fetch("/api/news?limit=4");
+      const res = await fetch("/api/news?limit=6");
       if (res.ok) {
         const data = await res.json();
         setNews(Array.isArray(data) ? data : data.news || []);
@@ -180,7 +227,7 @@ function ForeSightTerminalApp() {
     }
   }, []);
 
-  // 5. Fetch Debate Synthesis
+  // 7. Fetch Debate Synthesis
   const fetchDebate = useCallback(async (sym: string) => {
     if (!sym) return;
     setDebateLoading(true);
@@ -197,19 +244,37 @@ function ForeSightTerminalApp() {
     }
   }, []);
 
-  // Initial Load & Interval Poll
+  // Initial Load & Continuous Real-Time Polling
   useEffect(() => {
     fetchHealth();
     fetchMarkets();
+    fetchTickers();
     fetchPositions();
     fetchNews();
-  }, [fetchHealth, fetchMarkets, fetchPositions, fetchNews]);
+
+    const pollingInterval = setInterval(() => {
+      fetchMarkets();
+      fetchTickers();
+      fetchPositions();
+    }, 6000);
+
+    const newsPolling = setInterval(() => {
+      fetchNews();
+    }, 25000);
+
+    return () => {
+      clearInterval(pollingInterval);
+      clearInterval(newsPolling);
+    };
+  }, [fetchHealth, fetchMarkets, fetchTickers, fetchPositions, fetchNews]);
 
   useEffect(() => {
     if (selectedMarket) {
-      fetchDebate(selectedMarket.underlyingAsset || selectedMarket.symbol);
+      const sym = selectedMarket.underlyingAsset || selectedMarket.symbol;
+      fetchDebate(sym);
+      fetchTimelineData(sym, timeRange);
     }
-  }, [selectedMarket, fetchDebate]);
+  }, [selectedMarket, timeRange, fetchDebate, fetchTimelineData]);
 
   // Re-fetch positions when wallet changes
   useEffect(() => {
@@ -331,7 +396,7 @@ function ForeSightTerminalApp() {
       />
 
       {/* 2. Scrolling Market Ticker (Sub-Second Somnia L1 Tape) */}
-      <MarketTicker />
+      <MarketTicker markets={tickers} />
 
       {/* 3. Main Bento Box Workspace (Zero-Scroll 3 Columns) */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
@@ -420,6 +485,7 @@ function ForeSightTerminalApp() {
             <div className="flex-shrink-0">
               <PriceChart
                 symbol={activeSymbol}
+                data={timelineData}
                 timeRange={timeRange}
                 onTimeRangeChange={setTimeRange}
                 currentPrice={activeMarket.probability}

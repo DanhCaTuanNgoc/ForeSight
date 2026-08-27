@@ -23,6 +23,8 @@ import {
   Radio,
   BookOpen,
   Boxes,
+  Copy,
+  Check,
 } from "lucide-react";
 
 interface LandingPageProps {
@@ -164,6 +166,22 @@ const TECH_STACK_ROW_2 = [
   },
 ];
 
+const CODE_SNIPPET_TEXT = `import { SomniaMarkets } from "@somnia-chain/markets-sdk";
+
+// 1. Hydrate ForeSight with Somnia Shannon CLOB
+const exchange = new SomniaMarkets({
+  chainId: 50312,
+  venueId: "0x679795a0195a1b76cdebb7c51d74e0...",
+});
+
+// 2. Execute 1-Click Deterministic Scenario Order
+const order = await exchange.createOrder({
+  marketId: "BTC-0-26AUG26",
+  side: "BUY_YES",
+  price: 0.62,
+  amount: 80.64,
+});`;
+
 export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) => {
   // ─── 3D Mouse Parallax State ───────────────────────────────────────
   const heroRef = useRef<HTMLDivElement>(null);
@@ -183,6 +201,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
   const handleMouseLeave = useCallback(() => {
     setRotate({ x: 0, y: 0 });
+  }, []);
+
+  // ─── Code Snippet 3D Parallax State ────────────────────────────────
+  const codeSnippetRef = useRef<HTMLDivElement>(null);
+  const [codeRotate, setCodeRotate] = useState({ x: 0, y: 0 });
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
+
+  const handleCodeMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!codeSnippetRef.current) return;
+    const rect = codeSnippetRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    // Max tilt: 10 degrees on Y, -8 degrees on X
+    setCodeRotate({
+      x: -y * 10,
+      y: x * 12,
+    });
+  }, []);
+
+  const handleCodeMouseLeave = useCallback(() => {
+    setCodeRotate({ x: 0, y: 0 });
+  }, []);
+
+  const handleCopySnippet = useCallback(() => {
+    navigator.clipboard.writeText(CODE_SNIPPET_TEXT);
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 2000);
   }, []);
 
   // ─── Interactive Hero Sandbox State ────────────────────────────────
@@ -433,9 +478,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                       stroke="#A78BFA"
                       strokeWidth="3"
                     />
-                    {/* Spike Point Marker */}
-                    <circle cx="390" cy="28" r="6" fill="#10B981" className="animate-ping opacity-75" />
-                    <circle cx="390" cy="28" r="4.5" fill="#10B981" />
+                    {/* Static Spike Point Marker */}
+                    <circle cx="390" cy="28" r="4.5" fill="#10B981" stroke="#FFFFFF" strokeWidth="1.5" />
                   </svg>
 
                   {/* Spike Tooltip Badge */}
@@ -861,26 +905,67 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
             </div>
           </div>
 
-          <div className="lg:col-span-7 bg-[#09090F]/90 border border-[#1F1F2E] rounded-2xl p-4 font-mono text-[11px] text-gray-300 overflow-x-auto shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-md">
-            <div className="flex items-center justify-between text-gray-500 border-b border-[#1F1F2E] pb-2 mb-3">
-              <span>somnia-execution-snippet.ts</span>
-              <span className="text-violet-400">TypeScript</span>
+          <div
+            ref={codeSnippetRef}
+            onMouseMove={handleCodeMouseMove}
+            onMouseLeave={handleCodeMouseLeave}
+            className="lg:col-span-7 perspective-1000 select-none relative z-10"
+          >
+            <div
+              style={{
+                transform: `rotateX(${codeRotate.x}deg) rotateY(${codeRotate.y}deg)`,
+                transition: "transform 0.15s ease-out",
+              }}
+              className="border-beam-container cyber-card rounded-2xl border border-[#2A2A3D] bg-[#0E0E16]/95 p-5 font-mono text-[11px] text-gray-300 overflow-x-auto shadow-[0_0_40px_rgba(124,58,237,0.25)] backdrop-blur-2xl transform-3d text-left"
+            >
+              <div className="flex items-center justify-between text-gray-400 border-b border-[#232336] pb-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+                  <span className="ml-2 text-gray-200 font-semibold text-[11px]">
+                    somnia-execution-snippet.ts
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-violet-950/80 text-violet-300 border border-violet-500/50 font-bold shadow-[0_0_8px_rgba(124,58,237,0.3)]">
+                    TypeScript
+                  </span>
+                  <button
+                    onClick={handleCopySnippet}
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#161622] hover:bg-[#1F1F2F] text-gray-300 hover:text-white border border-[#2A2A3D] hover:border-violet-500/50 text-[10px] font-mono transition-all active:scale-95 cursor-pointer shadow-sm"
+                    title="Copy code"
+                  >
+                    {copiedSnippet ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-400" />
+                        <span className="text-emerald-400 font-bold">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-gray-400" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <pre className="leading-relaxed">
+                <span className="text-purple-400">import</span> {"{ SomniaMarkets }"} <span className="text-purple-400">from</span> <span className="text-emerald-400">"@somnia-chain/markets-sdk"</span>;{"\n\n"}
+                <span className="text-gray-500">// 1. Hydrate ForeSight with Somnia Shannon CLOB</span>{"\n"}
+                <span className="text-purple-400">const</span> exchange = <span className="text-purple-400">new</span> <span className="text-yellow-300">SomniaMarkets</span>({"{\n"}
+                {"  "}chainId: <span className="text-amber-400">50312</span>,{"\n"}
+                {"  "}venueId: <span className="text-emerald-400">"0x679795a0195a1b76cdebb7c51d74e0..."</span>,{"\n"}
+                {"}"});{"\n\n"}
+                <span className="text-gray-500">// 2. Execute 1-Click Deterministic Scenario Order</span>{"\n"}
+                <span className="text-purple-400">const</span> order = <span className="text-purple-400">await</span> exchange.<span className="text-blue-400">createOrder</span>({"{\n"}
+                {"  "}marketId: <span className="text-emerald-400">"BTC-0-26AUG26"</span>,{"\n"}
+                {"  "}side: <span className="text-emerald-400">"BUY_YES"</span>,{"\n"}
+                {"  "}price: <span className="text-amber-400">0.62</span>,{"\n"}
+                {"  "}amount: <span className="text-amber-400">80.64</span>,{"\n"}
+                {"}"});
+              </pre>
             </div>
-            <pre className="leading-relaxed">
-              <span className="text-purple-400">import</span> {"{ SomniaMarkets }"} <span className="text-purple-400">from</span> <span className="text-emerald-400">"@somnia-chain/markets-sdk"</span>;{"\n\n"}
-              <span className="text-gray-500">// 1. Hydrate ForeSight with Somnia Shannon CLOB</span>{"\n"}
-              <span className="text-purple-400">const</span> exchange = <span className="text-purple-400">new</span> <span className="text-yellow-300">SomniaMarkets</span>({"{\n"}
-              {"  "}chainId: <span className="text-amber-400">50312</span>,{"\n"}
-              {"  "}venueId: <span className="text-emerald-400">"0x679795a0195a1b76cdebb7c51d74e0..."</span>,{"\n"}
-              {"}"});{"\n\n"}
-              <span className="text-gray-500">// 2. Execute 1-Click Deterministic Scenario Order</span>{"\n"}
-              <span className="text-purple-400">const</span> order = <span className="text-purple-400">await</span> exchange.<span className="text-blue-400">createOrder</span>({"{\n"}
-              {"  "}marketId: <span className="text-emerald-400">"BTC-0-26AUG26"</span>,{"\n"}
-              {"  "}side: <span className="text-emerald-400">"BUY_YES"</span>,{"\n"}
-              {"  "}price: <span className="text-amber-400">0.62</span>,{"\n"}
-              {"  "}amount: <span className="text-amber-400">80.64</span>,{"\n"}
-              {"}"});
-            </pre>
           </div>
         </div>
       </section>

@@ -65,21 +65,34 @@ interface PriceChartProps {
   showToast?: (msg: string, type?: "success" | "error") => void;
 }
 
-function generateMockData(range: TimeRange, baseProbability: number): ChartDataPoint[] {
+function generateMockData(range: TimeRange, baseProbability: number, symbol: string = "BTC"): ChartDataPoint[] {
   const pointsMap: Record<TimeRange, number> = { "15m": 40, "1H": 75, "4H": 120, "1D": 60 };
   const points = pointsMap[range];
   let base = baseProbability / 100;
 
+  // Compute a deterministic seed from symbol and range
+  let seed = 0;
+  for (let c = 0; c < symbol.length; c++) {
+    seed = (seed << 5) - seed + symbol.charCodeAt(c);
+    seed |= 0;
+  }
+  seed += points + Math.round(baseProbability * 10);
+
+  const pseudoRandom = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+
   return Array.from({ length: points }, (_, i) => {
     const prev = base;
-    base += (Math.random() - 0.48) * 0.015;
+    base += (pseudoRandom() - 0.48) * 0.015;
     base = Math.max(0.05, Math.min(0.97, base));
     const h = Math.floor(i / 4);
     const m = (i % 4) * 15;
     const isSpike = i === Math.floor(points * 0.72);
 
-    const high = Math.min(0.98, Math.max(prev, base) + Math.random() * 0.015);
-    const low = Math.max(0.02, Math.min(prev, base) - Math.random() * 0.015);
+    const high = Math.min(0.98, Math.max(prev, base) + pseudoRandom() * 0.015);
+    const low = Math.max(0.02, Math.min(prev, base) - pseudoRandom() * 0.015);
 
     return {
       time: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
@@ -89,7 +102,7 @@ function generateMockData(range: TimeRange, baseProbability: number): ChartDataP
       high: parseFloat(high.toFixed(4)),
       low: parseFloat(low.toFixed(4)),
       close: parseFloat(base.toFixed(4)),
-      volume: Math.floor(Math.random() * 5000 + 500),
+      volume: Math.floor(pseudoRandom() * 5000 + 500),
       isSpike,
     };
   });
@@ -158,7 +171,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   };
 
   const rawData = useMemo(
-    () => (propData && propData.length > 0 ? propData : generateMockData(timeRange, currentPrice)),
+    () => (propData && propData.length > 0 ? propData : generateMockData(timeRange, currentPrice, symbol)),
     [propData, timeRange, currentPrice, symbol]
   );
 
@@ -578,8 +591,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                       if (payload?.isSpike) {
                         return (
                           <g key={`spike-${payload.time}`} className="cursor-pointer" onClick={() => handleInspectSpike(payload)}>
-                            <circle cx={cx} cy={cy} r={5} fill="#10B981" opacity={0.25} className="animate-ping" />
-                            <circle cx={cx} cy={cy} r={3.5} fill="#10B981" stroke="#fff" strokeWidth={1} />
+                            <circle cx={cx} cy={cy} r={4} fill="#10B981" stroke="#FFFFFF" strokeWidth={1.5} />
                             <text x={cx + 7} y={cy - 5} fill="#10B981" fontSize={8} fontFamily="JetBrains Mono" fontWeight="bold">⚡ Spike</text>
                           </g>
                         );
@@ -587,9 +599,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
                       if (isLast && panOffset === 0) {
                         return (
-                          <g key="live-pulse">
-                            <circle cx={cx} cy={cy} r={6} fill="#10B981" opacity={0.15} className="animate-ping" />
-                            <circle cx={cx} cy={cy} r={3} fill="#10B981" stroke="#10B981" strokeWidth={1.5} strokeOpacity={0.6} />
+                          <g key="live-dot">
+                            <circle cx={cx} cy={cy} r={3.5} fill="#10B981" stroke="#FFFFFF" strokeWidth={1} />
                           </g>
                         );
                       }

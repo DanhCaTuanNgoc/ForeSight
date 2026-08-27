@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Layers } from "lucide-react";
 
 interface DepthChartProps {
@@ -16,26 +16,71 @@ export const DepthChart: React.FC<DepthChartProps> = ({
   symbol = "BTC",
   midPrice = 0.612,
 }) => {
-  // Generate realistic orderbook depth levels
-  const bids: DepthLevel[] = React.useMemo(() => {
-    let currentTotal = 0;
-    return Array.from({ length: 6 }, (_, i) => {
-      const price = midPrice - (i + 1) * 0.015;
-      const size = Math.floor(800 + Math.sin(i * 1.5) * 400 + Math.random() * 200);
-      currentTotal += size;
-      return { price: Math.max(0.01, price), size, total: currentTotal };
-    });
-  }, [midPrice]);
+  const [bids, setBids] = useState<DepthLevel[]>([]);
+  const [asks, setAsks] = useState<DepthLevel[]>([]);
+  const [realMidPrice, setRealMidPrice] = useState<number>(midPrice);
 
-  const asks: DepthLevel[] = React.useMemo(() => {
-    let currentTotal = 0;
-    return Array.from({ length: 6 }, (_, i) => {
-      const price = midPrice + (i + 1) * 0.015;
-      const size = Math.floor(750 + Math.cos(i * 1.2) * 350 + Math.random() * 200);
-      currentTotal += size;
-      return { price: Math.min(0.99, price), size, total: currentTotal };
-    });
-  }, [midPrice]);
+  useEffect(() => {
+    let isMounted = true;
+    const fetchOrderbook = async () => {
+      try {
+        const res = await fetch(`/api/markets/${encodeURIComponent(symbol)}/orderbook`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.midPrice) setRealMidPrice(data.midPrice);
+
+          if (data.bids && data.bids.length > 0) {
+            let bidTotal = 0;
+            const parsedBids = data.bids.slice(0, 7).map((b: [number, number]) => {
+              const price = b[0];
+              const size = b[1] || Math.floor(price * 1000);
+              bidTotal += size;
+              return { price, size, total: bidTotal };
+            });
+            if (isMounted) setBids(parsedBids);
+          } else {
+            let currentTotal = 0;
+            const fallbackBids = Array.from({ length: 6 }, (_, i) => {
+              const price = realMidPrice - (i + 1) * 0.015;
+              const size = Math.floor(800 + ((i * 123) % 400));
+              currentTotal += size;
+              return { price: Math.max(0.01, price), size, total: currentTotal };
+            });
+            if (isMounted) setBids(fallbackBids);
+          }
+
+          if (data.asks && data.asks.length > 0) {
+            let askTotal = 0;
+            const parsedAsks = data.asks.slice(0, 7).map((a: [number, number]) => {
+              const price = a[0];
+              const size = a[1] || Math.floor(price * 1000);
+              askTotal += size;
+              return { price, size, total: askTotal };
+            });
+            if (isMounted) setAsks(parsedAsks);
+          } else {
+            let currentTotal = 0;
+            const fallbackAsks = Array.from({ length: 6 }, (_, i) => {
+              const price = realMidPrice + (i + 1) * 0.015;
+              const size = Math.floor(750 + ((i * 157) % 350));
+              currentTotal += size;
+              return { price: Math.min(0.99, price), size, total: currentTotal };
+            });
+            if (isMounted) setAsks(fallbackAsks);
+          }
+        }
+      } catch (err) {
+        console.warn("Depth fetch error:", err);
+      }
+    };
+
+    fetchOrderbook();
+    const interval = setInterval(fetchOrderbook, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [symbol, midPrice, realMidPrice]);
 
   const maxTotal = Math.max(
     bids[bids.length - 1]?.total || 1,

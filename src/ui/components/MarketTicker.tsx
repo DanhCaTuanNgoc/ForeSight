@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 export interface TickerItem {
   symbol: string;
@@ -10,20 +10,46 @@ interface MarketTickerProps {
   markets?: TickerItem[];
 }
 
-const DEFAULT_TICKERS: TickerItem[] = [
-  { symbol: "BTC/USD", price: 78624.7, change: -0.42 },
-  { symbol: "ETH/USD", price: 2450.1, change: -1.36 },
-  { symbol: "SOL/USD", price: 182.4, change: 2.05 },
-  { symbol: "SOMI/USD", price: 0.1095, change: 4.15 },
-  { symbol: "BNB/USD", price: 598.3, change: 0.78 },
-  { symbol: "AVAX/USD", price: 34.21, change: -0.91 },
-  { symbol: "MATIC/USD", price: 0.412, change: 1.44 },
-];
-
 export const MarketTicker: React.FC<MarketTickerProps> = ({
-  markets = DEFAULT_TICKERS,
+  markets: propMarkets,
 }) => {
-  const items = markets.length > 0 ? markets : DEFAULT_TICKERS;
+  const [apiTickers, setApiTickers] = useState<TickerItem[]>([]);
+
+  useEffect(() => {
+    if (propMarkets && propMarkets.length > 0) return;
+    let isMounted = true;
+    const fetchTickers = async () => {
+      try {
+        const res = await fetch("/api/tickers");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tickers && data.tickers.length > 0) {
+            const mapped: TickerItem[] = data.tickers.map((t: any) => ({
+              symbol: t.symbol,
+              price: t.price,
+              change: t.change,
+            }));
+            if (isMounted) setApiTickers(mapped);
+          }
+        }
+      } catch {
+        // Ignore
+      }
+    };
+    fetchTickers();
+    const interval = setInterval(fetchTickers, 6000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [propMarkets]);
+
+  const items = propMarkets && propMarkets.length > 0 ? propMarkets : (apiTickers.length > 0 ? apiTickers : [
+    { symbol: "BTC/tUSDC", price: 0.624, change: 14.2 },
+    { symbol: "ETH/tUSDC", price: 0.451, change: -3.5 },
+    { symbol: "SOL/tUSDC", price: 0.540, change: 6.8 },
+    { symbol: "SOMI/USDso", price: 0.738, change: 4.15 },
+  ]);
 
   return (
     <div className="h-9 border-b border-[#2A2A3D]/70 bg-[#0D0D14] overflow-hidden flex items-center select-none">
