@@ -1,5 +1,6 @@
 import React from "react";
 import { Award, CheckCircle2, Clock } from "lucide-react";
+import { CryptoIcon } from "./CryptoIcon.js";
 
 interface Position {
   id: string;
@@ -62,7 +63,10 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({ positions, onCla
 
                 return (
                   <tr key={p.id} className="hover:bg-[#131B2C]">
-                    <td className="py-3 px-3 text-white font-semibold">{p.symbol}</td>
+                    <td className="py-3 px-3 text-white font-semibold flex items-center gap-1.5">
+                      <CryptoIcon symbol={p.symbol} size={16} />
+                      <span>{p.symbol}</span>
+                    </td>
                     <td className="py-3 px-3">
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded ${

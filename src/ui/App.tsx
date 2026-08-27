@@ -9,7 +9,11 @@ import { ScenarioSimulator } from "./components/ScenarioSimulator.js";
 import { LandingPage } from "./components/LandingPage.js";
 import { WalletModal } from "./components/WalletModal.js";
 import { ThesisHealthMonitor, type PositionRecord } from "./components/ThesisHealthMonitor.js";
+import { AnalyticsView } from "./components/AnalyticsView.js";
+import { InsightsView } from "./components/InsightsView.js";
+import { ActivityView } from "./components/ActivityView.js";
 import { WalletProvider, useWallet } from "./context/WalletContext.js";
+import { CryptoIcon } from "./components/CryptoIcon.js";
 import { sound } from "./utils/sound-fx.js";
 import { Search } from "lucide-react";
 
@@ -398,145 +402,190 @@ function ForeSightTerminalApp() {
       {/* 2. Scrolling Market Ticker (Sub-Second Somnia L1 Tape) */}
       <MarketTicker markets={tickers} />
 
-      {/* 3. Main Bento Box Workspace (Zero-Scroll 3 Columns) */}
-      <div className="flex-1 flex min-h-0 overflow-hidden">
-        {/* ── LEFT COLUMN: Market Navigator & Live Radar ──────────────── */}
-        <aside className="w-56 xl:w-60 border-r border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
-          {/* Search Bar */}
-          <div className="p-2.5 border-b border-[#222234]">
-            <div className="flex items-center bg-[#13131F] border border-[#222234] rounded px-2 py-1 gap-1.5">
-              <Search className="w-3.5 h-3.5 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Search event..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent text-xs text-gray-200 placeholder-gray-600 outline-none w-full font-mono"
-              />
-            </div>
-          </div>
+      {/* 3. Dedicated Views or Main Bento Box Cockpit */}
+      {activeTab === "analytics" && (
+        <AnalyticsView
+          markets={markets}
+          onSelectMarket={(sym) => {
+            const found = markets.find(
+              (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
+            );
+            if (found) setSelectedMarket(found);
+            setActiveTab("markets");
+          }}
+        />
+      )}
 
-          <div className="px-3 py-1.5 border-b border-[#222234] flex items-center justify-between">
-            <span className="stat-label text-[10px]">MARKET RADAR</span>
-            <span className="text-[10px] font-mono text-violet-400">
-              {filteredMarkets.length} LIVE
-            </span>
-          </div>
+      {activeTab === "insights" && (
+        <InsightsView
+          markets={markets}
+          onTradeSignal={(sym, outcome, price) => {
+            const found = markets.find(
+              (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
+            );
+            if (found) setSelectedMarket(found);
+            setPrefillOutcome(outcome);
+            if (price) setPrefillEntryPrice(price);
+            setActiveTab("markets");
+            showToast(`Loaded ${sym} ${outcome} signal into Terminal!`, "success");
+          }}
+        />
+      )}
 
-          {/* Market List */}
-          <div className="flex-1 overflow-y-auto divide-y divide-[#1F1F2E] custom-scrollbar">
-            {filteredMarkets.map((m) => {
-              const isSelected = activeMarket.id === m.id;
-              const prob = m.probability ?? 50;
-              const isYes = prob >= 50;
+      {activeTab === "activity" && (
+        <ActivityView
+          positions={positions}
+          onClaimAll={handleClaimAll}
+          isClaiming={isClaiming}
+          onTradeNew={() => setActiveTab("markets")}
+          walletAddress={wallet.address || undefined}
+          walletBalance={wallet.balance || undefined}
+        />
+      )}
 
-              return (
-                <button
-                  key={m.id}
-                  onClick={() => {
-                    sound.playClick();
-                    setSelectedMarket(m);
-                  }}
-                  className={`w-full text-left p-2.5 transition-colors flex flex-col gap-0.5 ${
-                    isSelected
-                      ? "bg-violet-950/30 border-l-2 border-violet-500"
-                      : "hover:bg-[#151522]"
-                  }`}
-                >
-                  <div className="flex items-center justify-between font-mono">
-                    <span
-                      className={`text-xs font-bold ${
-                        isSelected ? "text-violet-300" : "text-gray-200"
+      {activeTab === "markets" && (
+        <>
+          <div className="flex-1 flex min-h-0 overflow-hidden">
+            {/* ── LEFT COLUMN: Market Navigator & Live Radar ──────────────── */}
+            <aside className="w-56 xl:w-60 border-r border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
+              {/* Search Bar */}
+              <div className="p-2.5 border-b border-[#222234]">
+                <div className="flex items-center bg-[#13131F] border border-[#222234] rounded px-2 py-1 gap-1.5">
+                  <Search className="w-3.5 h-3.5 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Search event..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent text-xs text-gray-200 placeholder-gray-600 outline-none w-full font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="px-3 py-1.5 border-b border-[#222234] flex items-center justify-between">
+                <span className="stat-label text-[10px]">MARKET RADAR</span>
+                <span className="text-[10px] font-mono text-violet-400">
+                  {filteredMarkets.length} LIVE
+                </span>
+              </div>
+
+              {/* Market List */}
+              <div className="flex-1 overflow-y-auto divide-y divide-[#1F1F2E] custom-scrollbar">
+                {filteredMarkets.map((m) => {
+                  const isSelected = activeMarket.id === m.id;
+                  const prob = m.probability ?? 50;
+                  const isYes = prob >= 50;
+
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        sound.playClick();
+                        setSelectedMarket(m);
+                      }}
+                      className={`w-full text-left p-2.5 transition-colors flex flex-col gap-0.5 ${
+                        isSelected
+                          ? "bg-violet-950/30 border-l-2 border-violet-500"
+                          : "hover:bg-[#151522]"
                       }`}
                     >
-                      {m.symbol}/tUSDC
-                    </span>
-                    <span
-                      className={`text-xs font-bold ${
-                        isYes ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {prob.toFixed(1)}%
-                    </span>
-                  </div>
+                      <div className="flex items-center justify-between font-mono">
+                        <span
+                          className={`text-xs font-bold flex items-center gap-1.5 ${
+                            isSelected ? "text-violet-300" : "text-gray-200"
+                          }`}
+                        >
+                          <CryptoIcon symbol={m.underlyingAsset || m.symbol} size={15} />
+                          <span>{m.symbol}/tUSDC</span>
+                        </span>
+                        <span
+                          className={`text-xs font-bold ${
+                            isYes ? "text-emerald-400" : "text-rose-400"
+                          }`}
+                        >
+                          {prob.toFixed(1)}%
+                        </span>
+                      </div>
 
-                  <p className="text-[10px] text-gray-400 line-clamp-1 leading-tight">
-                    {m.question}
-                  </p>
+                      <p className="text-[10px] text-gray-400 line-clamp-1 leading-tight">
+                        {m.question}
+                      </p>
 
-                  <div className="flex items-center justify-between text-[9px] text-gray-500 font-mono pt-0.5">
-                    <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</span>
-                    <span className="text-gray-600">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </aside>
+                      <div className="flex items-center justify-between text-[9px] text-gray-500 font-mono pt-0.5">
+                        <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</span>
+                        <span className="text-gray-600">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
 
-        {/* ── CENTER COLUMN: Visual Intelligence Canvas + Decision Stress Test ── */}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#0A0A0F] overflow-hidden">
-          {/* Header Stats Bar */}
-          <MarketStats market={activeMarket} serverMode={health?.mode} />
+            {/* ── CENTER COLUMN: Visual Intelligence Canvas + Decision Stress Test ── */}
+            <main className="flex-1 flex flex-col min-w-0 bg-[#0A0A0F] overflow-hidden">
+              {/* Header Stats Bar */}
+              <MarketStats market={activeMarket} serverMode={health?.mode} />
 
-          {/* Unified Visual Board (Scroll-Free Bento Split) */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
-            {/* Top Half: Multi-Mode Visual Intelligence Canvas */}
-            <div className="flex-shrink-0">
-              <PriceChart
+              {/* Unified Visual Board (Scroll-Free Bento Split) */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
+                {/* Top Half: Multi-Mode Visual Intelligence Canvas */}
+                <div className="flex-shrink-0">
+                  <PriceChart
+                    symbol={activeSymbol}
+                    data={timelineData}
+                    timeRange={timeRange}
+                    onTimeRangeChange={setTimeRange}
+                    currentPrice={activeMarket.probability}
+                    activeVisualMode={visualMode}
+                    onVisualModeChange={setVisualMode}
+                    entryPrice={prefillEntryPrice || 0.55}
+                    targetExitPrice={prefillTargetExit || 0.85}
+                    onSetEntryPrice={(p) => setPrefillEntryPrice(p)}
+                    onSetTargetExitPrice={(p) => setPrefillTargetExit(p)}
+                    showToast={showToast}
+                  />
+                </div>
+
+                {/* Bottom Half: Deterministic Decision Stress Test & 1-Click CLOB */}
+                <div className="flex-shrink-0">
+                  <ScenarioSimulator
+                    market={activeMarket}
+                    prefillOutcome={prefillOutcome}
+                    prefillEntryPrice={prefillEntryPrice}
+                    prefillTargetExit={prefillTargetExit}
+                    onTrade={handleExecuteTrade}
+                    isSubmitting={isSubmittingOrder}
+                    showToast={showToast}
+                  />
+                </div>
+              </div>
+            </main>
+
+            {/* ── RIGHT COLUMN: Dual AI Arena & Grounded RAG Evidence ──────── */}
+            <aside className="w-72 xl:w-80 border-l border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
+              <ContextPanel
                 symbol={activeSymbol}
-                data={timelineData}
-                timeRange={timeRange}
-                onTimeRangeChange={setTimeRange}
-                currentPrice={activeMarket.probability}
-                activeVisualMode={visualMode}
-                onVisualModeChange={setVisualMode}
-                entryPrice={prefillEntryPrice || 0.55}
-                targetExitPrice={prefillTargetExit || 0.85}
-                onSetEntryPrice={(p) => setPrefillEntryPrice(p)}
-                onSetTargetExitPrice={(p) => setPrefillTargetExit(p)}
-                showToast={showToast}
+                debate={debate}
+                debateLoading={debateLoading}
+                news={news}
+                onViewDebate={() => setIsDebateModalOpen(true)}
+                onSimulate={({ outcome }) => {
+                  setPrefillOutcome(outcome);
+                  showToast(`Synced ${outcome} strategy to decision simulator!`, "success");
+                }}
               />
-            </div>
-
-            {/* Bottom Half: Deterministic Decision Stress Test & 1-Click CLOB */}
-            <div className="flex-shrink-0">
-              <ScenarioSimulator
-                market={activeMarket}
-                prefillOutcome={prefillOutcome}
-                prefillEntryPrice={prefillEntryPrice}
-                prefillTargetExit={prefillTargetExit}
-                onTrade={handleExecuteTrade}
-                isSubmitting={isSubmittingOrder}
-                showToast={showToast}
-              />
-            </div>
+            </aside>
           </div>
-        </main>
 
-        {/* ── RIGHT COLUMN: Dual AI Arena & Grounded RAG Evidence ──────── */}
-        <aside className="w-72 xl:w-80 border-l border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
-          <ContextPanel
-            symbol={activeSymbol}
-            debate={debate}
-            debateLoading={debateLoading}
-            news={news}
-            onViewDebate={() => setIsDebateModalOpen(true)}
-            onSimulate={({ outcome }) => {
-              setPrefillOutcome(outcome);
-              showToast(`Synced ${outcome} strategy to decision simulator!`, "success");
-            }}
+          {/* 4. Bottom Dock: Live Thesis Health Monitor & 1-Click Auto Claim Sweeper */}
+          <ThesisHealthMonitor
+            positions={positions}
+            onClaimAll={handleClaimAll}
+            isClaiming={isClaiming}
+            activeSymbol={activeSymbol}
           />
-        </aside>
-      </div>
-
-      {/* 4. Bottom Dock: Live Thesis Health Monitor & 1-Click Auto Claim Sweeper */}
-      <ThesisHealthMonitor
-        positions={positions}
-        onClaimAll={handleClaimAll}
-        isClaiming={isClaiming}
-        activeSymbol={activeSymbol}
-      />
+        </>
+      )}
 
       {/* Dual AI Agent Arena Full Modal */}
       <DualDebateModal

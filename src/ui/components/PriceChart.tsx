@@ -20,10 +20,7 @@ import {
   Volume2,
   CandlestickChart,
   Split,
-  ZoomIn,
-  ZoomOut,
   RotateCcw,
-  Target,
   Crosshair,
   MoveHorizontal,
 } from "lucide-react";
@@ -149,13 +146,33 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
   const chartWrapperRef = useRef<HTMLDivElement>(null);
 
-  // ─── Interactive Click Quick-Action Popover ────────────────────────────────
-  const [clickedAction, setClickedAction] = useState<{
-    price: number;
-    time: string;
-    xPercent: number;
-    yPercent: number;
-  } | null>(null);
+  // ─── Native Wheel Listener (Ctrl + Wheel Zoom without Browser Page Zoom) ───
+  useEffect(() => {
+    const el = chartWrapperRef.current;
+    if (!el) return;
+
+    const onNativeWheel = (e: WheelEvent) => {
+      // Zoom with Ctrl / Meta + Wheel
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.deltaY < 0) {
+          // Zoom in
+          setZoomLevel((prev) => Math.min(5, Number((prev + 0.3).toFixed(2))));
+        } else if (e.deltaY > 0) {
+          // Zoom out
+          setZoomLevel((prev) => {
+            const next = Math.max(1, Number((prev - 0.3).toFixed(2)));
+            if (next === 1) setPanOffset(0);
+            return next;
+          });
+        }
+      }
+    };
+
+    el.addEventListener("wheel", onNativeWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onNativeWheel);
+  }, []);
 
   // Hint text fadeout
   const [showHint, setShowHint] = useState(true);
@@ -196,48 +213,18 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const step = Math.max(1, Math.ceil(data.length / 6));
   const formatX = (_: any, idx: number) => (idx % step === 0 ? data[idx]?.time ?? "" : "");
 
-  // ─── Zoom Handlers ─────────────────────────────────────────────────────────
-  const handleZoomIn = () => {
-    sound.playClick();
-    setZoomLevel((prev) => Math.min(5, Number((prev + 0.5).toFixed(1))));
-  };
-
-  const handleZoomOut = () => {
-    sound.playClick();
-    setZoomLevel((prev) => {
-      const next = Math.max(1, Number((prev - 0.5).toFixed(1)));
-      if (next === 1) setPanOffset(0);
-      return next;
-    });
-  };
-
   const handleResetZoom = () => {
     sound.playClick();
     setZoomLevel(1);
     setPanOffset(0);
   };
 
-  // ─── Wheel Handler: Ctrl+Wheel or Direct Wheel for Zooming ──────────────────
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (visualMode !== "probability") return;
-
-    if (e.deltaY < 0) {
-      // Zoom in (scroll up)
-      setZoomLevel((prev) => Math.min(5, Number((prev + 0.25).toFixed(2))));
-    } else if (e.deltaY > 0) {
-      // Zoom out (scroll down)
-      setZoomLevel((prev) => {
-        const next = Math.max(1, Number((prev - 0.25).toFixed(2)));
-        if (next === 1) setPanOffset(0);
-        return next;
-      });
-    }
-  }, [visualMode]);
-
-  // ─── Drag to Pan Handlers (TradingView / Binance style) ──────────────────────
+  // ─── Drag to Pan Handlers (ONLY active when Ctrl is pressed) ────────────────
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only drag on primary left click
     if (e.button !== 0 || visualMode !== "probability") return;
+    // Pan historical data ONLY when Ctrl / Cmd key is held!
+    if (!e.ctrlKey && !e.metaKey) return;
+
     setIsDragging(true);
     setDragStartX(e.clientX);
     setDragStartPan(panOffset);
@@ -250,12 +237,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
     if (Math.abs(deltaX) > 4) {
       setHasDragged(true);
-      // Determine points shifted per pixel
       const visibleCount = rawData.length / zoomLevel;
       const chartWidth = chartWrapperRef.current?.clientWidth || 500;
       const pointsPerPixel = visibleCount / chartWidth;
 
-      // Moving mouse right (deltaX > 0) shifts view to the LEFT (pan into past -> higher panOffset)
       const shiftPoints = Math.round(deltaX * pointsPerPixel * 1.5);
       const maxOffset = Math.max(0, rawData.length - Math.max(8, Math.floor(visibleCount)));
       const newPan = Math.max(0, Math.min(maxOffset, dragStartPan + shiftPoints));
@@ -267,7 +252,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     setIsDragging(false);
   };
 
-  // ─── Chart Click Handler (Only opens if not dragging) ──────────────────────
+  // ─── Chart Click Handler: Directly passes clicked price to Simulator ───────
   const handleChartClick = (e: any) => {
     if (hasDragged) {
       setHasDragged(false);
@@ -275,43 +260,19 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     }
 
     if (e && e.activePayload && e.activePayload[0]) {
-      const clickedPrice = Number(e.activePayload[0].value.toFixed(4));
-      const payloadTime = e.activePayload[0].payload?.time || "Selected Point";
+      const clickedPrice = Number(e.activePayload[0].value.toFixed(2));
       sound.playClick();
 
-      const activeIdx = e.activeTooltipIndex !== undefined ? e.activeTooltipIndex : Math.floor(data.length / 2);
-      const xPercent = Math.min(80, Math.max(15, (activeIdx / Math.max(1, data.length - 1)) * 100));
-      const yPercent = Math.min(70, Math.max(25, (1 - clickedPrice) * 100));
-
-      setClickedAction({
-        price: clickedPrice,
-        time: payloadTime,
-        xPercent,
-        yPercent,
-      });
-    }
-  };
-
-  const applyEntry = (p: number) => {
-    if (onSetEntryPrice) {
-      sound.playSuccessChime();
-      onSetEntryPrice(Number(p.toFixed(2)));
+      if (onSetEntryPrice) {
+        onSetEntryPrice(clickedPrice);
+      }
       if (showToast) {
-        showToast(`⚡ Entry Price set to $${p.toFixed(2)} (${Math.round(p * 100)}%)`, "success");
+        showToast(
+          `⚡ Synced Entry Price $${clickedPrice.toFixed(2)} (${Math.round(clickedPrice * 100)}%) to Decision Simulator!`,
+          "success"
+        );
       }
     }
-    setClickedAction(null);
-  };
-
-  const applyTP = (p: number) => {
-    if (onSetTargetExitPrice) {
-      sound.playSuccessChime();
-      onSetTargetExitPrice(Number(p.toFixed(2)));
-      if (showToast) {
-        showToast(`🎯 Take-Profit (TP) set to $${p.toFixed(2)} (${Math.round(p * 100)}%)`, "success");
-      }
-    }
-    setClickedAction(null);
   };
 
   const handleInspectSpike = (d: ChartDataPoint) => {
@@ -370,36 +331,18 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           </div>
         </div>
 
-        {/* Right: Pro Zoom & Pan Controls + Toggles + Timeframe */}
+        {/* Right: Pro Zoom & Pan Indicator + Toggles + Timeframe */}
         <div className="flex items-center gap-1.5">
-          {/* Zoom Controls (with Drag/Pan indicator) */}
-          {visualMode === "probability" && (
-            <div className="flex items-center bg-[#111118] rounded-md border border-[#1F1F2E] text-[10px] p-0.5">
-              <button
-                onClick={handleZoomIn}
-                title="Zoom In (Ctrl + Scroll Up)"
-                className="p-1 text-gray-400 hover:text-white hover:bg-[#1E1E2E] rounded transition"
-              >
-                <ZoomIn className="w-3 h-3" />
-              </button>
-              <button
-                onClick={handleZoomOut}
-                title="Zoom Out (Ctrl + Scroll Down)"
-                className="p-1 text-gray-400 hover:text-white hover:bg-[#1E1E2E] rounded transition"
-              >
-                <ZoomOut className="w-3 h-3" />
-              </button>
-              {(zoomLevel > 1 || panOffset > 0) && (
-                <button
-                  onClick={handleResetZoom}
-                  title="Reset Zoom & Pan (1x)"
-                  className="px-1 py-0.5 text-[9px] font-bold text-violet-400 hover:bg-[#1E1E2E] rounded transition flex items-center gap-0.5"
-                >
-                  <RotateCcw className="w-2.5 h-2.5" />
-                  <span>{zoomLevel.toFixed(1)}x</span>
-                </button>
-              )}
-            </div>
+          {/* Zoom Level Indicator & Reset */}
+          {visualMode === "probability" && (zoomLevel > 1 || panOffset > 0) && (
+            <button
+              onClick={handleResetZoom}
+              title="Reset Zoom & Pan (1x)"
+              className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#141420] text-violet-300 hover:text-white hover:bg-violet-600/30 border border-violet-500/40 rounded transition flex items-center gap-1"
+            >
+              <RotateCcw className="w-2.5 h-2.5" />
+              <span>{zoomLevel.toFixed(1)}x Reset</span>
+            </button>
           )}
 
           {/* Dual / Candle switchers */}
@@ -471,7 +414,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       {/* ─── Chart Canvas with Drag & Pan Handlers ────────────────────── */}
       <div
         ref={chartWrapperRef}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -507,10 +449,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                       const pYes = payload[0]?.value as number;
                       const vol = payload[0]?.payload?.volume;
                       return (
-                        <div className="bg-[#0E0E16]/95 border border-[#2A2A3D] rounded-lg px-2.5 py-2 text-[11px] font-mono backdrop-blur-md shadow-lg min-w-[150px] pointer-events-auto">
+                        <div className="bg-[#0E0E16]/95 border border-[#2A2A3D] rounded-lg px-2.5 py-2 text-[11px] font-mono backdrop-blur-md shadow-lg min-w-[140px] pointer-events-none">
                           <div className="text-gray-500 text-[9px] mb-1 flex items-center justify-between">
                             <span>{label} UTC</span>
-                            <span className="text-[8px] text-violet-400">Click to set</span>
+                            <span className="text-[8px] text-violet-400">Click to sync price</span>
                           </div>
                           <div className="flex justify-between text-emerald-400 font-bold">
                             <span>YES</span><span>{(pYes * 100).toFixed(1)}%</span>
@@ -521,28 +463,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                             </div>
                           )}
                           {vol && <div className="text-gray-500 text-[9px] mt-1 border-t border-[#1F1F2E] pt-1">{vol.toLocaleString()} tUSDC</div>}
-
-                          {/* Quick Tooltip Action Buttons */}
-                          <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-[#1F1F2E]">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                applyEntry(pYes);
-                              }}
-                              className="flex-1 py-0.5 bg-violet-600/80 hover:bg-violet-500 text-white rounded text-[9px] font-bold flex items-center justify-center gap-0.5 transition"
-                            >
-                              <Zap className="w-2.5 h-2.5" /> Entry
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                applyTP(pYes);
-                              }}
-                              className="flex-1 py-0.5 bg-emerald-600/80 hover:bg-emerald-500 text-white rounded text-[9px] font-bold flex items-center justify-center gap-0.5 transition"
-                            >
-                              <Target className="w-2.5 h-2.5" /> TP
-                            </button>
-                          </div>
                         </div>
                       );
                     }}
@@ -773,46 +693,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         {visualMode === "depth" && <div className="h-56 overflow-y-auto"><DepthChart symbol={symbol} midPrice={last || 0.5} /></div>}
         {visualMode === "timeline" && <div className="h-56 overflow-y-auto"><EventTimeline symbol={symbol} /></div>}
 
-        {/* ─── Interactive Quick Action Floating Popover (Entry / TP) ─── */}
-        {clickedAction && !isDragging && (
-          <div
-            className="absolute z-30 flex items-center gap-1.5 bg-[#12121E]/95 border border-violet-500/80 px-2 py-1.5 rounded-lg shadow-[0_0_20px_rgba(124,58,237,0.5)] backdrop-blur-xl animate-fadeIn"
-            style={{
-              top: `${Math.min(65, Math.max(10, clickedAction.yPercent))}%`,
-              left: `${Math.min(75, Math.max(10, clickedAction.xPercent))}%`,
-            }}
-          >
-            <span className="text-[10px] text-gray-200 font-bold whitespace-nowrap">
-              ${clickedAction.price.toFixed(2)} ({Math.round(clickedAction.price * 100)}%)
-            </span>
-
-            <button
-              onClick={() => applyEntry(clickedAction.price)}
-              className="px-2 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition shadow-sm"
-              title="Set as Entry Price"
-            >
-              <Zap className="w-3 h-3 text-amber-300" />
-              <span>Set Entry</span>
-            </button>
-
-            <button
-              onClick={() => applyTP(clickedAction.price)}
-              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition shadow-sm"
-              title="Set as Take-Profit"
-            >
-              <Target className="w-3 h-3 text-emerald-200" />
-              <span>Set TP</span>
-            </button>
-
-            <button
-              onClick={() => setClickedAction(null)}
-              className="p-1 text-gray-400 hover:text-white rounded"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        )}
-
         {/* ─── Spike HUD Popover ──────────────────────────────────────── */}
         {selectedSpike && (
           <div className="absolute top-10 right-3 w-72 bg-[#111118]/95 border border-[#2A2A3D] rounded-xl p-3 shadow-xl backdrop-blur-xl z-30 space-y-2 animate-fadeIn">
@@ -839,7 +719,9 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               </button>
               <button
                 onClick={() => {
-                  applyEntry(selectedSpike.price);
+                  sound.playClick();
+                  if (onSetEntryPrice) onSetEntryPrice(Number(selectedSpike.price.toFixed(2)));
+                  if (showToast) showToast(`⚡ Synced Spike Entry $${selectedSpike.price.toFixed(2)} to Simulator!`, "success");
                   setSelectedSpike(null);
                 }}
                 className="py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center justify-center gap-1 transition"

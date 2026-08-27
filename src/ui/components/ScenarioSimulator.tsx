@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
 import { useWallet, SOMNIA_SHANNON_CHAIN_ID } from "../context/WalletContext.js";
+import { CryptoIcon } from "./CryptoIcon.js";
 
 interface ScenarioSimulatorProps {
   market: any;
@@ -250,8 +251,9 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
         <div className="lg:col-span-5 bg-[#11111B] p-3 rounded-xl border border-[#232336] flex flex-col justify-between space-y-2.5">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-[10px] text-gray-400 border-b border-[#1F1F2E] pb-1.5">
-              <span className="text-gray-300 font-bold uppercase flex items-center gap-1">
-                <Gauge className="w-3 h-3 text-violet-400" /> Path to Settlement
+              <span className="text-gray-300 font-bold uppercase flex items-center gap-1.5">
+                <CryptoIcon symbol={assetName} size={14} />
+                <span>{assetName} Path to Settlement</span>
               </span>
               <span>
                 Spot: <b className="text-white">${trajectory.currentSpot.toLocaleString()}</b> → Strike: <b className="text-violet-300">${trajectory.strikePrice.toLocaleString()}</b>

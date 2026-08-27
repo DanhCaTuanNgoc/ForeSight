@@ -1,5 +1,6 @@
 import React from "react";
 import { Clock, TrendingUp, ShieldAlert, BarChart3 } from "lucide-react";
+import { CryptoIcon } from "./CryptoIcon.js";
 
 interface MarketStatsProps {
   market: any;
@@ -20,9 +21,7 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
     <div className="bg-[#111118] border-b border-[#2A2A3D] px-4 py-3 flex flex-wrap items-center justify-between gap-4">
       {/* Market Name & Question */}
       <div className="flex items-center gap-3 min-w-[280px]">
-        <div className="w-9 h-9 rounded bg-violet-950/40 border border-violet-700/40 flex items-center justify-center text-violet-400 font-mono font-bold text-sm">
-          {market.symbol?.slice(0, 3) || "EVT"}
-        </div>
+        <CryptoIcon symbol={market.underlyingAsset || market.symbol} size={36} />
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-white font-mono font-bold text-sm tracking-wide">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { CryptoIcon } from "./CryptoIcon.js";
 
 export interface TickerItem {
   symbol: string;
@@ -62,9 +63,10 @@ export const MarketTicker: React.FC<MarketTickerProps> = ({
               return (
                 <div
                   key={`${rep}-${idx}`}
-                  className="flex items-center gap-2.5 px-4 text-xs font-mono whitespace-nowrap border-r border-[#2A2A3D]/40"
+                  className="flex items-center gap-2 px-4 text-xs font-mono whitespace-nowrap border-r border-[#2A2A3D]/40"
                 >
-                  <span className="text-gray-400 font-semibold">{t.symbol}</span>
+                  <CryptoIcon symbol={t.symbol} size={15} />
+                  <span className="text-gray-300 font-semibold">{t.symbol}</span>
                   <span className="text-gray-100 font-medium">
                     ${t.price < 1 ? t.price.toFixed(4) : t.price.toLocaleString("en-US", { minimumFractionDigits: 1 })}
                   </span>

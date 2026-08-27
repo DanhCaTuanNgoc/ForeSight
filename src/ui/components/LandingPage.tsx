@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { CyberBackground } from "./CyberBackground.js";
 import { ForeSightLogo } from "./ForeSightLogo.js";
+import { CryptoIcon } from "./CryptoIcon.js";
 import {
   Zap,
   TrendingUp,
@@ -444,6 +445,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 font-mono">
+                      <CryptoIcon symbol="BTC" size={18} />
                       <span className="text-sm font-bold text-white">BTC-0-26AUG26 / tUSDC</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/50 font-bold shadow-[0_0_8px_rgba(16,185,129,0.3)]">
                         ACTIVE CLOB

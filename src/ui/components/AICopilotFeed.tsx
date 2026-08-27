@@ -1,5 +1,6 @@
 import React from "react";
 import { Bot, Sparkles, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
+import { CryptoIcon } from "./CryptoIcon.js";
 
 interface Signal {
   symbol: string;
@@ -52,6 +53,7 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
           signals.map((sig, idx) => {
             const isUp = sig.direction === "UP";
             const confPercent = Math.round(sig.confidence * 100);
+            const assetName = sig.asset || sig.symbol.split("/")[0].split("-")[0] || "BTC";
 
             return (
               <div
@@ -60,8 +62,9 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
                 className="p-3.5 rounded-xl bg-[#0E1422] border border-brand-border hover:border-orange-500/50 hover:bg-[#131B2E] transition cursor-pointer group"
               >
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-mono text-xs font-bold text-white group-hover:text-orange-400 transition">
-                    {sig.asset || "BTC"} • {sig.cadence || "15m"}
+                  <span className="font-mono text-xs font-bold text-white group-hover:text-orange-400 transition flex items-center gap-1.5">
+                    <CryptoIcon symbol={assetName} size={16} />
+                    <span>{assetName} • {sig.cadence || "15m"}</span>
                   </span>
                   <div className="flex items-center gap-1.5">
                     <span

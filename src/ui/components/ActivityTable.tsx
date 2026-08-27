@@ -1,5 +1,6 @@
 import React from "react";
 import { Coins, Activity } from "lucide-react";
+import { CryptoIcon } from "./CryptoIcon.js";
 
 export interface PositionRecord {
   id: string;
@@ -76,8 +77,9 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
               style={{ gridTemplateColumns: "70px 1fr 55px 70px 65px" }}
             >
               <span className="text-gray-500 text-[11px]">{timeStr}</span>
-              <span className="text-gray-300 font-medium truncate pr-2">
-                {pos.symbol}
+              <span className="text-gray-300 font-medium truncate pr-2 flex items-center gap-1.5">
+                <CryptoIcon symbol={pos.symbol} size={14} />
+                <span>{pos.symbol}</span>
               </span>
               <span
                 className={`text-[10px] font-bold px-1.5 py-0.2 rounded w-fit ${
