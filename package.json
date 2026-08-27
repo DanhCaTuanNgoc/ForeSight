@@ -18,7 +18,9 @@
     "agent:starter": "tsx src/agents/strategies/starter-bot.ts",
     "agent:maker": "tsx src/agents/strategies/market-maker.ts",
     "agent:oracle": "tsx src/agents/strategies/oracle-follower.ts",
-    "agent:copilot": "tsx src/agents/strategies/ai-copilot.ts"
+    "agent:copilot": "tsx src/agents/strategies/ai-copilot.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@somnia-chain/markets-sdk": "^0.28.1",
@@ -46,7 +48,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
-    "vite": "^6.1.0"
+    "vite": "^6.1.0",
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=20"
