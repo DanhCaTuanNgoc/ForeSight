@@ -15,6 +15,7 @@ import { ActivityView } from "./components/ActivityView.js";
 import { WalletProvider, useWallet } from "./context/WalletContext.js";
 import { CryptoIcon } from "./components/CryptoIcon.js";
 import { sound } from "./utils/sound-fx.js";
+import { apiUrl } from "./utils/api.js";
 import { Search } from "lucide-react";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
@@ -117,7 +118,7 @@ function ForeSightTerminalApp() {
   // 1. Fetch System Health
   const fetchHealth = useCallback(async () => {
     try {
-      const res = await fetch("/api/health");
+      const res = await fetch(apiUrl("/api/health"));
       if (res.ok) setHealth(await res.json());
     } catch {
       setHealth({ network: "Somnia Shannon", chainId: 50312, canTrade: false, mode: "simulation" });
@@ -127,7 +128,7 @@ function ForeSightTerminalApp() {
   // 2. Fetch Markets
   const fetchMarkets = useCallback(async () => {
     try {
-      const res = await fetch("/api/markets");
+      const res = await fetch(apiUrl("/api/markets"));
       if (res.ok) {
         const data = await res.json();
         const rawList = Array.isArray(data) ? data : data.markets || [];
@@ -159,7 +160,7 @@ function ForeSightTerminalApp() {
   // 3. Fetch Tickers Tape
   const fetchTickers = useCallback(async () => {
     try {
-      const res = await fetch("/api/tickers");
+      const res = await fetch(apiUrl("/api/tickers"));
       if (res.ok) {
         const data = await res.json();
         if (data.tickers && data.tickers.length > 0) {
@@ -177,7 +178,7 @@ function ForeSightTerminalApp() {
     try {
       const msMap = { "15m": 900_000, "1H": 3600_000, "4H": 14400_000, "1D": 86400_000 };
       const from = new Date(Date.now() - msMap[range]).toISOString();
-      const res = await fetch(`/api/timeline/${encodeURIComponent(symbol)}?from=${from}`);
+      const res = await fetch(apiUrl(`/api/timeline/${encodeURIComponent(symbol)}?from=${from}`));
       if (res.ok) {
         const json = await res.json();
         if (json.data && json.data.length > 0) {
@@ -207,7 +208,7 @@ function ForeSightTerminalApp() {
       const url = wallet.address
         ? `/api/positions?wallet=${encodeURIComponent(wallet.address)}`
         : "/api/positions";
-      const res = await fetch(url);
+      const res = await fetch(apiUrl(url));
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.positions || data.simulatedPositions || [];
@@ -221,7 +222,7 @@ function ForeSightTerminalApp() {
   // 6. Fetch News
   const fetchNews = useCallback(async () => {
     try {
-      const res = await fetch("/api/news?limit=6");
+      const res = await fetch(apiUrl("/api/news?limit=6"));
       if (res.ok) {
         const data = await res.json();
         setNews(Array.isArray(data) ? data : data.news || []);
@@ -236,7 +237,7 @@ function ForeSightTerminalApp() {
     if (!sym) return;
     setDebateLoading(true);
     try {
-      const res = await fetch(`/api/debate/${encodeURIComponent(sym)}`);
+      const res = await fetch(apiUrl(`/api/debate/${encodeURIComponent(sym)}`));
       if (res.ok) {
         const data = await res.json();
         setDebate(data.debate || data);
@@ -289,7 +290,7 @@ function ForeSightTerminalApp() {
   const handleClaimAll = async () => {
     setIsClaiming(true);
     try {
-      const res = await fetch("/api/claim", {
+      const res = await fetch(apiUrl("/api/claim"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -321,7 +322,7 @@ function ForeSightTerminalApp() {
   ) => {
     setIsSubmittingOrder(true);
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch(apiUrl("/api/orders"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

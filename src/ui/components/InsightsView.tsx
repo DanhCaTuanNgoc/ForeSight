@@ -3,6 +3,7 @@ import { Bot, Sparkles, Brain, Newspaper, Volume2, ShieldCheck, ArrowUpRight, Fl
 import { AICopilotFeed } from "./AICopilotFeed.js";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { sound } from "../utils/sound-fx.js";
+import { apiUrl } from "../utils/api.js";
 
 interface InsightsViewProps {
   markets: any[];
@@ -25,7 +26,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   // Fetch Signals from /api/signals
   const fetchSignals = useCallback(async () => {
     try {
-      const res = await fetch("/api/signals");
+      const res = await fetch(apiUrl("/api/signals"));
       if (res.ok) {
         const data = await res.json();
         if (data.signals && data.signals.length > 0) {
@@ -42,7 +43,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   const fetchDebate = useCallback(async (sym: string) => {
     setDebateLoading(true);
     try {
-      const res = await fetch(`/api/debate/${encodeURIComponent(sym)}`);
+      const res = await fetch(apiUrl(`/api/debate/${encodeURIComponent(sym)}`));
       if (res.ok) {
         const data = await res.json();
         setDebate(data.debate || data);
@@ -57,7 +58,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   // Fetch News for Grounded RAG
   const fetchNews = useCallback(async () => {
     try {
-      const res = await fetch("/api/news?limit=6");
+      const res = await fetch(apiUrl("/api/news?limit=6"));
       if (res.ok) {
         const data = await res.json();
         setNews(Array.isArray(data) ? data : data.news || []);

@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsc",
+    "build": "tsc && vite build",
+    "build:server": "tsc",
     "build:ui": "vite build",
     "server": "tsx src/server/index.ts",
     "ui": "vite",
@@ -34,6 +35,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^3.10.1",
+    "tsx": "^4.19.3",
     "viem": "^2.23.0",
     "ws": "^8.18.0",
     "zod": "^3.24.2"
@@ -46,7 +48,6 @@
     "@types/react-dom": "^19.0.3",
     "@types/ws": "^8.5.14",
     "@vitejs/plugin-react": "^4.3.4",
-    "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "vite": "^6.1.0",
     "vitest": "^4.1.11"

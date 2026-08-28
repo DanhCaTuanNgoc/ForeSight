@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { apiUrl } from '../utils/api.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface TimelineEvent {
@@ -45,8 +46,8 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
     const fetchEvents = async () => {
       try {
         const [spikeRes, newsRes] = await Promise.all([
-          fetch(`/api/spikes?symbol=${encodeURIComponent(symbol)}&limit=4`),
-          fetch(`/api/news?limit=4`),
+          fetch(apiUrl(`/api/spikes?symbol=${encodeURIComponent(symbol)}&limit=4`)),
+          fetch(apiUrl(`/api/news?limit=4`)),
         ]);
 
         const combined: TimelineEvent[] = [];

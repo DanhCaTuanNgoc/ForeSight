@@ -17,6 +17,8 @@ import {
   saveStrategy,
   getStrategiesByWallet,
 } from "../db/repository.js";
+import path from "path";
+import fs from "fs";
 import { generateDualDebate, calculateScenario } from "../agents/strategies/dual-debate-engine.js";
 
 const app = express();
@@ -24,6 +26,24 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 
 app.use(cors());
 app.use(express.json());
+
+const UI_DIST_PATH = path.join(process.cwd(), "dist-ui");
+if (fs.existsSync(UI_DIST_PATH)) {
+  app.use(express.static(UI_DIST_PATH));
+}
+
+app.get("/api", (req, res) => {
+  res.json({
+    status: "ok",
+    service: "ForeSight AI Intelligence API Server",
+    version: "0.1.0",
+    endpoints: {
+      health: "/api/health",
+      markets: "/api/markets",
+      tickers: "/api/tickers",
+    },
+  });
+});
 
 let ctx: ExchangeContext;
 let watcher: MarketWatcher;
@@ -300,34 +320,86 @@ app.post("/api/claim", async (req, res) => {
 // NEW PHASE 1 ENDPOINTS — Database-backed Intelligence Data
 // ═══════════════════════════════════════════════════════════════
 
+// Cache for live spot prices
+let cachedSpotTickers: any[] = [];
+let lastSpotFetch = 0;
+
+async function getLiveSpotTickers(): Promise<any[]> {
+  const now = Date.now();
+  if (cachedSpotTickers.length > 0 && now - lastSpotFetch < 10000) {
+    return cachedSpotTickers;
+  }
+  try {
+    const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "AVAXUSDT", "SUIUSDT", "DOGEUSDT"];
+    const url = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data: any = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        cachedSpotTickers = data.map((t: any) => {
+          const base = t.symbol.replace("USDT", "");
+          return {
+            symbol: `${base}/USDT`,
+            rawSymbol: base,
+            price: parseFloat(t.lastPrice),
+            probability: (parseFloat(t.lastPrice) % 100),
+            change: parseFloat(t.priceChangePercent),
+            volume: parseFloat(t.quoteVolume),
+            status: "TRADING",
+          };
+        });
+        // Add Somnia token
+        cachedSpotTickers.push({
+          symbol: "SOMI/USDso",
+          rawSymbol: "SOMI",
+          price: 0.742,
+          probability: 74.2,
+          change: 3.85,
+          volume: 185200,
+          status: "TRADING",
+        });
+        lastSpotFetch = now;
+        return cachedSpotTickers;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to fetch live Binance spot prices:", e);
+  }
+  return cachedSpotTickers.length > 0 ? cachedSpotTickers : [
+    { symbol: "BTC/USDT", rawSymbol: "BTC", price: 80120.5, probability: 62.4, change: 1.42, volume: 142900000, status: "TRADING" },
+    { symbol: "ETH/USDT", rawSymbol: "ETH", price: 2514.8, probability: 45.1, change: -0.35, volume: 89400000, status: "TRADING" },
+    { symbol: "SOL/USDT", rawSymbol: "SOL", price: 178.4, probability: 54.0, change: 4.8, volume: 48150000, status: "TRADING" },
+    { symbol: "BNB/USDT", rawSymbol: "BNB", price: 624.1, probability: 51.0, change: 0.95, volume: 21240000, status: "TRADING" },
+    { symbol: "SOMI/USDso", rawSymbol: "SOMI", price: 0.742, probability: 74.2, change: 3.85, volume: 185200, status: "TRADING" },
+  ];
+}
+
 /**
  * GET /api/tickers
- * Fetch live market ticker tape data computed from Somnia CLOB markets
+ * Fetch live market ticker tape data computed from Somnia CLOB markets or live spot prices
  */
 app.get("/api/tickers", async (req, res) => {
   try {
     const markets = await watcher.getActiveEventContracts();
     const tickers = markets.map((m) => {
-      const prob = m.impliedUpProbability ?? (m.midPrice ?? 0.5);
-      const probPct = prob * 100;
+      let prob = m.impliedUpProbability ?? (m.midPrice ?? 0.5);
+      if (prob > 1000) prob = prob / 1_000_000;
+      else if (prob > 1) prob = prob / 100;
+      prob = Math.max(0.01, Math.min(0.99, prob));
+      const probPct = Number((prob * 100).toFixed(1));
       const change = Number(((prob - 0.5) * 10).toFixed(2));
       return {
         symbol: `${m.underlyingAsset || m.symbol}/tUSDC`,
         rawSymbol: m.symbol,
         price: Number(prob.toFixed(3)),
-        probability: Number(probPct.toFixed(1)),
+        probability: probPct,
         change,
         volume: m.minOrderSize ? m.minOrderSize * 1000 : 125000,
         status: m.status,
       };
     });
 
-    const finalTickers = tickers.length > 0 ? tickers : [
-      { symbol: "BTC/tUSDC", rawSymbol: "BTC", price: 0.624, probability: 62.4, change: 14.2, volume: 342900, status: "TRADING" },
-      { symbol: "ETH/tUSDC", rawSymbol: "ETH", price: 0.451, probability: 45.1, change: -3.5, volume: 189400, status: "TRADING" },
-      { symbol: "SOL/tUSDC", rawSymbol: "SOL", price: 0.540, probability: 54.0, change: 6.8, volume: 98150, status: "TRADING" },
-      { symbol: "SOMI/USDso", rawSymbol: "SOMI", price: 0.738, probability: 73.8, change: 4.15, volume: 51240, status: "TRADING" },
-    ];
+    const finalTickers = tickers.length > 0 ? tickers : await getLiveSpotTickers();
 
     res.json({
       count: finalTickers.length,
@@ -588,6 +660,25 @@ app.post("/api/simulate", async (req, res) => {
   }
 });
 
+// Fallback for UI SPA or Root API info
+app.get("*", (req, res) => {
+  const indexHtmlPath = path.join(UI_DIST_PATH, "index.html");
+  if (fs.existsSync(indexHtmlPath)) {
+    res.sendFile(indexHtmlPath);
+  } else {
+    res.json({
+      status: "ok",
+      service: "ForeSight AI Intelligence API Server",
+      version: "0.1.0",
+      endpoints: {
+        health: "/api/health",
+        markets: "/api/markets",
+        tickers: "/api/tickers",
+      },
+    });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════════
 // SERVER STARTUP
 // ═══════════════════════════════════════════════════════════════
@@ -622,8 +713,8 @@ async function startServer() {
     }
 
     // ── 3. Start HTTP listener ────────────────────────────────
-    app.listen(PORT, () => {
-      console.log(chalk.bold.green(`\n✔ Server listening on http://localhost:${PORT}`));
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(chalk.bold.green(`\n✔ Server listening on http://0.0.0.0:${PORT}`));
       console.log(chalk.white(`✔ Connected to ${ctx.config.networkName} (Chain ID: ${ctx.config.chainId})`));
       console.log(chalk.white(`✔ Indexer: ${ctx.config.indexerUrl}`));
       console.log(chalk.white(`✔ Venue: ${ctx.config.venueId}`));

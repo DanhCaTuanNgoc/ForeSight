@@ -16,6 +16,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
+import { apiUrl } from "../utils/api.js";
 import { useWallet, SOMNIA_SHANNON_CHAIN_ID } from "../context/WalletContext.js";
 import { CryptoIcon } from "./CryptoIcon.js";
 
@@ -150,7 +151,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     sound.playClick();
     setIsDeployingBot(true);
     try {
-      const res = await fetch("/api/strategies", {
+      const res = await fetch(apiUrl("/api/strategies"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

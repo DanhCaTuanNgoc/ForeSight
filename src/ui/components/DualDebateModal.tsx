@@ -9,6 +9,7 @@ import {
   Zap,
   ArrowRight,
 } from "lucide-react";
+import { apiUrl } from "../utils/api.js";
 
 interface DualDebateModalProps {
   isOpen: boolean;
@@ -37,7 +38,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
     const fetchDebate = async () => {
       try {
         const query = spike?.id ? `?spikeId=${encodeURIComponent(spike.id)}` : "";
-        const res = await fetch(`/api/debate/${encodeURIComponent(symbol)}${query}`);
+        const res = await fetch(apiUrl(`/api/debate/${encodeURIComponent(symbol)}${query}`));
         if (res.ok) {
           const data = await res.json();
           if (isMounted && data.debate) {

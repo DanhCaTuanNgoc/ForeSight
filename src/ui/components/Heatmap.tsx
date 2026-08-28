@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiUrl } from '../utils/api.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface HeatmapCell {
@@ -35,7 +36,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ cells: propCells }) => {
     let isMounted = true;
     const fetchHeatmap = async () => {
       try {
-        const res = await fetch("/api/tickers");
+        const res = await fetch(apiUrl("/api/tickers"));
         if (res.ok) {
           const data = await res.json();
           if (data.tickers && data.tickers.length > 0) {

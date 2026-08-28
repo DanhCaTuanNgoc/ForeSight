@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Layers } from "lucide-react";
+import { apiUrl } from "../utils/api.js";
 
 interface DepthChartProps {
   symbol?: string;
@@ -24,7 +25,7 @@ export const DepthChart: React.FC<DepthChartProps> = ({
     let isMounted = true;
     const fetchOrderbook = async () => {
       try {
-        const res = await fetch(`/api/markets/${encodeURIComponent(symbol)}/orderbook`);
+        const res = await fetch(apiUrl(`/api/markets/${encodeURIComponent(symbol)}/orderbook`));
         if (res.ok) {
           const data = await res.json();
           if (data.midPrice) setRealMidPrice(data.midPrice);

@@ -110,10 +110,17 @@ export class MarketWatcher {
       };
 
       // Best bid / ask if present
-      if (m.info?.lastPrice) {
-        contract.midPrice = Number(m.info.lastPrice);
+      if (m.info?.lastPrice !== undefined && m.info?.lastPrice !== null) {
+        let p = Number(m.info.lastPrice);
+        if (p > 1000) {
+          p = p / 1_000_000;
+        } else if (p > 1) {
+          p = p / 100;
+        }
+        p = Math.max(0.01, Math.min(0.99, p));
+        contract.midPrice = Number(p.toFixed(4));
         contract.impliedUpProbability = contract.midPrice;
-        contract.impliedDownProbability = 1 - contract.midPrice;
+        contract.impliedDownProbability = Number((1 - contract.midPrice).toFixed(4));
       }
 
       eventContracts.push(contract);

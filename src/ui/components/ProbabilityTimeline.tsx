@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Zap, TrendingUp, TrendingDown, Clock, Activity, ExternalLink, Sparkles } from "lucide-react";
+import { apiUrl } from "../utils/api.js";
 
 interface TimelinePoint {
   id?: string;
@@ -38,8 +39,8 @@ export const ProbabilityTimeline: React.FC<ProbabilityTimelineProps> = ({
     const fetchTimeline = async () => {
       try {
         const from = new Date(Date.now() - (timeRange === "15m" ? 900_000 : timeRange === "1h" ? 3600_000 : 14400_000)).toISOString();
-        const res = await fetch(`/api/timeline/${encodeURIComponent(symbol)}?from=${from}`);
-        const spikeRes = await fetch(`/api/spikes?symbol=${encodeURIComponent(symbol)}&limit=10`);
+        const res = await fetch(apiUrl(`/api/timeline/${encodeURIComponent(symbol)}?from=${from}`));
+        const spikeRes = await fetch(apiUrl(`/api/spikes?symbol=${encodeURIComponent(symbol)}&limit=10`));
 
         let fetchedSpikes: any[] = [];
         if (spikeRes.ok) {
