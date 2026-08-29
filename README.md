@@ -223,20 +223,6 @@ Open **`http://localhost:3000`** to access the live ForeSight terminal.
 
 ---
 
-## 📊 8. Hackathon Landscape & Competitive Differentiation
-
-| Feature / Dimension | 🧠 **ForeSight** | 🪞 **rampart** | ⚡ **DreamPulse** | 🗡️ **Market Dungeon** |
-| :--- | :---: | :---: | :---: | :---: |
-| **Product Category** | **Decision Terminal** | Protocol Mechanism | Quant Auto-Swarm | Roguelite Game |
-| **Target User** | **Retail & DeFi Traders** | Market Makers | Automated Traders | Web3 Gamers |
-| **Cognitive Framework** | **4-Step Explainable Loop** | Bytecode Verification | Black-box Bot | Gamified Settlement |
-| **RAG News Citations** | **Yes (Dual Bull vs Bear)** | No | No | No |
-| **Deterministic Math** | **$VC$ Velocity Coverage** | Opcode Disassembler | $\Phi(z)$ Black-Scholes | Game Combat Math |
-| **Auto-Claim Sweeper** | **Integrated 1-Click** | Manual Sweep | Auto-Compounder | Read-Only |
-| **On-Chain Execution** | **Live CLOB + Simulation** | Revert Proof Only | Live CLOB Swarm | Read-Only |
-
----
-
 ## 📄 License
 
 MIT License. Built with ❤️ for the **Somnia × DreamDEX Event Contracts Hackathon** on DoraHacks.
