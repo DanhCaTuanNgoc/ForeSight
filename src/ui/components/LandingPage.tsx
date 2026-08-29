@@ -1,7 +1,8 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { CyberBackground } from "./CyberBackground.js";
 import { ForeSightLogo } from "./ForeSightLogo.js";
 import { CryptoIcon } from "./CryptoIcon.js";
+import { apiUrl } from "../utils/api.js";
 import {
   Zap,
   TrendingUp,
@@ -236,6 +237,57 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
   const [simEntryPrice, setSimEntryPrice] = useState<number>(0.62);
   const [simExitPrice, setSimExitPrice] = useState<number>(0.88);
   const [activeDebateTab, setActiveDebateTab] = useState<"bull" | "bear">("bull");
+  const [liveTickers, setLiveTickers] = useState<any[]>([]);
+  const [heroMarket, setHeroMarket] = useState<any>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveLandingData = async () => {
+      try {
+        const [tickerRes, marketRes] = await Promise.all([
+          fetch(apiUrl("/api/tickers")),
+          fetch(apiUrl("/api/markets?limit=10")),
+        ]);
+
+        if (tickerRes.ok) {
+          const tData = await tickerRes.json();
+          if (tData.tickers && tData.tickers.length > 0 && isMounted) {
+            setLiveTickers(
+              tData.tickers.map((t: any) => ({
+                pair: t.symbol,
+                prob: `${(t.probability ?? 50).toFixed(1)}%`,
+                change: `${t.change >= 0 ? "+" : ""}${(t.change ?? 0).toFixed(1)}%`,
+                isUp: (t.change ?? 0) >= 0,
+                spike: Math.abs(t.change ?? 0) >= 8,
+              }))
+            );
+          }
+        }
+
+        if (marketRes.ok) {
+          const mData = await marketRes.json();
+          const list = mData.markets || [];
+          if (list.length > 0 && isMounted) {
+            const btc = list.find((m: any) => m.underlyingAsset === "BTC") || list[0];
+            setHeroMarket(btc);
+            if (btc.midPrice) {
+              setSimEntryPrice(Number(btc.midPrice.toFixed(2)));
+              setSimExitPrice(Number(Math.min(0.95, btc.midPrice + 0.25).toFixed(2)));
+            }
+          }
+        }
+      } catch {
+        // Fallback gracefully
+      }
+    };
+
+    fetchLiveLandingData();
+    const interval = setInterval(fetchLiveLandingData, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Deterministic math
   const shares = simCapital / simEntryPrice;
@@ -307,7 +359,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
       <div className="w-full bg-[#0D0D14]/90 backdrop-blur-md border-b border-[#1F1F2E] overflow-hidden py-1.5 z-40 text-[11px] font-mono select-none mt-16">
         <div className="relative flex items-center">
           <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
-            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
+            {[
+              ...(liveTickers.length > 0 ? liveTickers : TICKER_ITEMS),
+              ...(liveTickers.length > 0 ? liveTickers : TICKER_ITEMS),
+            ].map((item, idx) => (
               <div
                 key={idx}
                 className="inline-flex items-center gap-2 px-3 py-0.5 rounded-md bg-[#13131D]/90 border border-[#232336] hover:border-violet-400 cursor-pointer transition-all hover:shadow-[0_0_12px_rgba(124,58,237,0.3)]"
@@ -445,19 +500,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 font-mono">
-                      <CryptoIcon symbol="BTC" size={18} />
-                      <span className="text-sm font-bold text-white">BTC-0-26AUG26 / tUSDC</span>
+                      <CryptoIcon symbol={heroMarket?.underlyingAsset || "BTC"} size={18} />
+                      <span className="text-sm font-bold text-white">
+                        {heroMarket?.symbol || "BTC-0-29AUG26-0700/tUSDC"}
+                      </span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/50 font-bold shadow-[0_0_8px_rgba(16,185,129,0.3)]">
                         ACTIVE CLOB
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      Will BTC close above $78,500 at 16:00 UTC?
+                      {heroMarket?.question || "Will BTC close at or above its opening price?"}
                     </p>
                   </div>
                   <div className="text-right font-mono">
-                    <div className="text-2xl font-black text-emerald-400 neon-glow-emerald">62.4%</div>
-                    <div className="text-[10px] text-emerald-400 font-bold">▲ +14.2% Spike Detected</div>
+                    <div className="text-2xl font-black text-emerald-400 neon-glow-emerald">
+                      {heroMarket?.midPrice ? `${(heroMarket.midPrice * 100).toFixed(1)}%` : "62.4%"}
+                    </div>
+                    <div className="text-[10px] text-emerald-400 font-bold">▲ +12.8% Spike Detected</div>
                   </div>
                 </div>
 
@@ -487,17 +546,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   {/* Spike Tooltip Badge */}
                   <div className="absolute top-2 right-12 bg-violet-950/95 border border-violet-400 rounded-md px-2.5 py-1 text-[10px] font-mono text-violet-200 shadow-[0_0_16px_rgba(124,58,237,0.6)] flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span className="font-bold">⚡ 14:32 UTC SPIKE (+14.2%)</span>
+                    <span className="font-bold">
+                      ⚡ {new Date(Date.now() - 18 * 60_000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} SPIKE (+12.8%)
+                    </span>
                   </div>
                 </div>
 
                 {/* Timestamps */}
                 <div className="flex items-center justify-between text-[10px] font-mono text-gray-500 border-t border-[#1F1F2E] pt-2">
-                  <span>12:00 UTC</span>
-                  <span>13:00 UTC</span>
-                  <span>14:00 UTC</span>
-                  <span>15:00 UTC</span>
-                  <span className="text-violet-400 font-bold">16:00 (EXPIRY)</span>
+                  <span>{new Date(Date.now() - 3 * 3600_000).getUTCHours().toString().padStart(2, '0')}:00 UTC</span>
+                  <span>{new Date(Date.now() - 2 * 3600_000).getUTCHours().toString().padStart(2, '0')}:00 UTC</span>
+                  <span>{new Date(Date.now() - 1 * 3600_000).getUTCHours().toString().padStart(2, '0')}:00 UTC</span>
+                  <span>{new Date(Date.now()).getUTCHours().toString().padStart(2, '0')}:00 UTC</span>
+                  <span className="text-violet-400 font-bold">
+                    {new Date(Date.now() + 1 * 3600_000).getUTCHours().toString().padStart(2, '0')}:00 (EXPIRY)
+                  </span>
                 </div>
               </div>
 

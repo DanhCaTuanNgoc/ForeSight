@@ -101,31 +101,37 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
     };
   }, [propEvents, symbol]);
 
+  const formatHhMm = (ms: number) => {
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
+  const now = Date.now();
   const events = propEvents && propEvents.length > 0 ? propEvents : (apiEvents.length > 0 ? apiEvents : [
     {
       id: 'e1',
-      time: '12:00',
-      timestamp: Date.now() - 4 * 3600_000,
-      title: `${symbol} Shannon CLOB Trading Window Open`,
-      description: 'Active binary event contract orderbook initialized on Somnia L1.',
+      time: formatHhMm(now - 120 * 60_000),
+      timestamp: now - 120 * 60_000,
+      title: `${symbol} Shannon CLOB Trading Window Active`,
+      description: 'Active binary event contract orderbook initialized on Somnia L1 testnet.',
       category: 'spike' as const,
     },
     {
       id: 'e2',
-      time: '14:32',
-      timestamp: Date.now() - 2 * 3600_000,
-      title: 'Somnia Probability Spike Detected (+14.2%)',
+      time: formatHhMm(now - 45 * 60_000),
+      timestamp: now - 45 * 60_000,
+      title: `${symbol} Probability Spike Shift Detected (+12.4%)`,
       description: 'Dual AI Debate consensus synthesized: Alpha Bull 68% vs Macro Bear 32%.',
       priceBefore: 0.48,
-      priceAfter: 0.62,
+      priceAfter: 0.60,
       category: 'spike' as const,
     },
     {
       id: 'e3',
-      time: '15:45',
-      timestamp: Date.now() - 30 * 60_000,
+      time: formatHhMm(now - 15 * 60_000),
+      timestamp: now - 15 * 60_000,
       title: 'Grounded Macro Ingestion Sync',
-      description: 'Live news RSS stream synced to Somnia Shannon indexer with verified citations.',
+      description: 'Live news RSS stream synced to Somnia indexer with verified citations.',
       category: 'news' as const,
     },
   ]);

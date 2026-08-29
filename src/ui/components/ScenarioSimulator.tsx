@@ -53,6 +53,36 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const [targetExitPrice, setTargetExitPrice] = useState<number>(defaultTarget);
 
   const [isDeployingBot, setIsDeployingBot] = useState<boolean>(false);
+  const [liveSpotMap, setLiveSpotMap] = useState<Record<string, number>>({});
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchSpot = async () => {
+      try {
+        const res = await fetch(apiUrl("/api/spot"));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tickers && isMounted) {
+            const map: Record<string, number> = {};
+            data.tickers.forEach((t: any) => {
+              if (t.rawSymbol && t.price) {
+                map[t.rawSymbol.toUpperCase()] = t.price;
+              }
+            });
+            setLiveSpotMap(map);
+          }
+        }
+      } catch {
+        // Ignore
+      }
+    };
+    fetchSpot();
+    const interval = setInterval(fetchSpot, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (prefillOutcome) setOutcome(prefillOutcome);
@@ -63,13 +93,15 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   // ─── Layer 1 & 2: Path to Settlement & Decision Stress Test Math ──────
   const assetName = market?.underlyingAsset || (market?.symbol?.includes("BTC") ? "BTC" : market?.symbol?.includes("ETH") ? "ETH" : "SOMI");
   
-  // Base spot price benchmark
+  // Real-time spot price benchmark from oracle
   const currentSpot = useMemo(() => {
-    if (assetName === "BTC") return 109240;
-    if (assetName === "ETH") return 3415;
-    if (assetName === "SOL") return 188.5;
-    return 1.45;
-  }, [assetName]);
+    const sym = assetName.toUpperCase();
+    if (liveSpotMap[sym]) return liveSpotMap[sym];
+    if (sym === "BTC") return 80120;
+    if (sym === "ETH") return 2514;
+    if (sym === "SOL") return 178;
+    return 0.742;
+  }, [assetName, liveSpotMap]);
 
   // Derive strike price from market or question
   const strikePrice = useMemo(() => {

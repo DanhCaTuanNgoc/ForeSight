@@ -80,19 +80,24 @@ function generateMockData(range: TimeRange, baseProbability: number, symbol: str
     return seed / 233280;
   };
 
+  const now = Date.now();
+  const msMap: Record<TimeRange, number> = { "15m": 900_000, "1H": 3600_000, "4H": 14400_000, "1D": 86400_000 };
+  const spanMs = msMap[range];
+  const stepMs = spanMs / points;
+
   return Array.from({ length: points }, (_, i) => {
     const prev = base;
     base += (pseudoRandom() - 0.48) * 0.015;
     base = Math.max(0.05, Math.min(0.97, base));
-    const h = Math.floor(i / 4);
-    const m = (i % 4) * 15;
+    const ptTime = new Date(now - (points - 1 - i) * stepMs);
+    const timeStr = ptTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const isSpike = i === Math.floor(points * 0.72);
 
     const high = Math.min(0.98, Math.max(prev, base) + pseudoRandom() * 0.015);
     const low = Math.max(0.02, Math.min(prev, base) - pseudoRandom() * 0.015);
 
     return {
-      time: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
+      time: timeStr,
       price: parseFloat(base.toFixed(4)),
       priceNo: parseFloat((1 - base).toFixed(4)),
       open: parseFloat(prev.toFixed(4)),
