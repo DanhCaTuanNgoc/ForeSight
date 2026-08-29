@@ -289,12 +289,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
     };
   }, []);
 
-  // Deterministic math
   const shares = simCapital / simEntryPrice;
   const exitValue = shares * simExitPrice;
   const pnl = exitValue - simCapital;
   const roiNum = (pnl / simCapital) * 100;
   const roi = roiNum.toFixed(1);
+
+  // Marquee ticker speed calculation matching Terminal tape velocity (~25px/sec)
+  const tickerData = liveTickers.length > 0 ? liveTickers : TICKER_ITEMS;
+  const repeatMultiplier = Math.max(1, Math.ceil(12 / (tickerData.length || 1)));
+  const repeatedTickerList = Array(repeatMultiplier).fill(tickerData).flat();
+  const totalStripWidthPx = repeatedTickerList.length * 200;
+  const tickerDurationSec = Math.max(65, Math.round(totalStripWidthPx / 25));
 
   return (
     <div className="min-h-screen bg-[#07070A] text-[#E2E8F0] font-sans selection:bg-violet-600 selection:text-white relative overflow-hidden flex flex-col">
@@ -356,32 +362,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
       </header>
 
       {/* ─── Top Marquee Ticker Tape (Positioned Below Fixed Header) ────── */}
-      <div className="w-full bg-[#0D0D14]/90 backdrop-blur-md border-b border-[#1F1F2E] overflow-hidden py-1.5 z-40 text-[11px] font-mono select-none mt-16">
+      <div className="w-full bg-[#0D0D14]/90 backdrop-blur-md border-b border-[#1F1F2E] overflow-hidden py-1.5 z-40 text-[11px] font-mono select-none mt-16 relative">
         <div className="relative flex items-center">
-          <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
-            {[
-              ...(liveTickers.length > 0 ? liveTickers : TICKER_ITEMS),
-              ...(liveTickers.length > 0 ? liveTickers : TICKER_ITEMS),
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="inline-flex items-center gap-2 px-3 py-0.5 rounded-md bg-[#13131D]/90 border border-[#232336] hover:border-violet-400 cursor-pointer transition-all hover:shadow-[0_0_12px_rgba(124,58,237,0.3)]"
-                onClick={onLaunchTerminal}
-              >
-                <span className="text-gray-400 font-medium">{item.pair}</span>
-                <span className="text-white font-bold">{item.prob}</span>
-                <span
-                  className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${
-                    item.isUp ? "text-emerald-400 neon-glow-emerald" : "text-rose-400"
-                  }`}
-                >
-                  {item.isUp ? "▲" : "▼"} {item.change}
-                </span>
-                {item.spike && (
-                  <span className="ml-1 text-[9px] px-1.5 py-0.2 rounded bg-violet-950/80 text-violet-300 border border-violet-500 animate-pulse shadow-[0_0_8px_rgba(167,139,250,0.6)]">
-                    ⚡ SPIKE
-                  </span>
-                )}
+          <div
+            className="ticker-track flex items-center gap-0"
+            style={{
+              animation: `ticker ${tickerDurationSec}s linear infinite`,
+              willChange: "transform",
+            }}
+          >
+            {[0, 1].map((stripIdx) => (
+              <div key={stripIdx} className="flex items-center gap-6 pr-6 whitespace-nowrap flex-shrink-0">
+                {repeatedTickerList.map((item, idx) => (
+                  <div
+                    key={`${stripIdx}-${idx}`}
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#13131D]/90 border border-[#232336] hover:border-violet-400 cursor-pointer transition-all hover:shadow-[0_0_12px_rgba(124,58,237,0.3)]"
+                    onClick={onLaunchTerminal}
+                  >
+                    <span className="text-gray-400 font-medium">{item.pair}</span>
+                    <span className="text-white font-bold">{item.prob}</span>
+                    <span
+                      className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${
+                        item.isUp ? "text-emerald-400 neon-glow-emerald" : "text-rose-400"
+                      }`}
+                    >
+                      {item.isUp ? "▲" : "▼"} {item.change}
+                    </span>
+                    {item.spike && (
+                      <span className="ml-1 text-[9px] px-1.5 py-0.2 rounded bg-violet-950/80 text-violet-300 border border-violet-500 animate-pulse shadow-[0_0_8px_rgba(167,139,250,0.6)]">
+                        ⚡ SPIKE
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
