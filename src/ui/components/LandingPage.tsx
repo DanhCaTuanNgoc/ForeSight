@@ -430,9 +430,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
         {/* Status Pill */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#12121C]/90 backdrop-blur-md border border-violet-500/50 text-violet-300 text-xs font-mono mb-6 shadow-[0_0_20px_rgba(124,58,237,0.3)]">
           <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-spin" style={{ animationDuration: "6s" }} />
-          <span>Institutional Intelligence Layer for DreamDEX & Somnia</span>
+          <span>The Cognitive Trading Terminal for DreamDEX</span>
           <span className="text-gray-600">•</span>
-          <span className="text-emerald-400 font-bold">100K TPS Ready</span>
+          <span className="text-emerald-400 font-bold">Somnia L1</span>
         </div>
 
         {/* Title */}
@@ -445,8 +445,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
         {/* Subtitle */}
         <p className="mt-5 text-base sm:text-lg text-gray-300 max-w-2xl font-light leading-relaxed">
-          ForeSight transforms opaque prediction-market orderbooks into an interactive 30-second loop:
-          detect probability spikes, synthesize verified dual AI debates, and simulate deterministic PnL.
+          Detect the move. Challenge the thesis. Model the trajectory. Execute with confidence on DreamDEX Event Contracts.
         </p>
 
         {/* CTA Buttons */}
@@ -700,8 +699,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
               <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
               Math Latency
             </span>
-            <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-violet-300 neon-glow-violet">0 ms</div>
-            <p className="mt-1 text-[11px] text-gray-400 font-light">Deterministic scenario calculations</p>
+            <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-violet-300 neon-glow-violet">&lt;1 ms</div>
+            <p className="mt-1 text-[11px] text-gray-400 font-light">Zero network latency client simulation</p>
           </div>
 
           <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(245,158,11,0.2)]">
@@ -737,7 +736,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 01
               </div>
               <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider block">
-                What Happened?
+                DETECT • What Happened?
               </span>
               <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
                 Probability Timeline & Spike Radar
@@ -758,7 +757,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 02
               </div>
               <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider block">
-                What Changed?
+                DEBATE • What Changed?
               </span>
               <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
                 Dual AI Arena + RAG Verification
@@ -768,7 +767,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
               </p>
             </div>
             <div className="text-[10px] font-mono text-gray-500 pt-2 border-t border-[#1F1F2E]">
-              Module 2 • RAG Intelligence
+              Module 2 • Evidence-Grounded AI
             </div>
           </div>
 
@@ -779,17 +778,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 03
               </div>
               <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider block">
-                What If?
+                SIMULATE • What If?
               </span>
               <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
-                Decision Stress Test & Trajectory
+                Trajectory Feasibility & Stress Test
               </h3>
               <p className="text-xs text-gray-400 leading-relaxed font-light">
-                Stress-test event trajectory feasibility (1.28× velocity coverage), pre-trade Thesis Break conditions, and 0ms deterministic PnL money math.
+                Stress-test event trajectory feasibility with Velocity Coverage ($VC$), pre-trade Thesis Break conditions, and zero-lag PnL math.
               </p>
             </div>
             <div className="text-[10px] font-mono text-gray-500 pt-2 border-t border-[#1F1F2E]">
-              Module 3 • Event Contract Reasoning
+              Module 3 • Deterministic Modeling
             </div>
           </div>
 
@@ -800,7 +799,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 04
               </div>
               <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider block">
-                What Do I Do?
+                EXECUTE • What Do I Do?
               </span>
               <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
                 1-Click Execution & Auto Sweeper
