@@ -94,7 +94,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
               Wallet Balance
             </span>
             <span className="text-base font-bold font-mono text-amber-300">
-              {walletBalance || "10,000.00"} STT
+              {walletAddress ? (walletBalance ? `${walletBalance} STT` : "0.0000 STT") : "Not Connected"}
             </span>
           </div>
           <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400">
@@ -164,6 +164,9 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
             entryPrice: p.entryPrice,
             timestamp: p.timestamp || Date.now(),
             status: p.status,
+            orderId: p.orderId,
+            txHash: p.txHash,
+            isLiveOnChain: p.isLiveOnChain,
           }))}
           onClaim={onClaimAll}
           isClaiming={isClaiming}

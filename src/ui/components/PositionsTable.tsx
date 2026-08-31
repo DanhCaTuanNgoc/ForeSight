@@ -10,6 +10,9 @@ interface Position {
   entryPrice: number;
   timestamp: number;
   status: "OPEN" | "SETTLED";
+  orderId?: string;
+  txHash?: string;
+  isLiveOnChain?: boolean;
 }
 
 interface PositionsTableProps {
@@ -83,11 +86,11 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({ positions, onCla
                     <td className="py-3 px-3 text-right">
                       {p.status === "OPEN" ? (
                         <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                          <Clock className="w-3 h-3 animate-spin" /> In-Flight
+                          <Clock className="w-3 h-3 animate-spin" /> {p.isLiveOnChain ? "Live On-Chain" : "Open Position"}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3" /> Settled / Claimed
+                          <CheckCircle2 className="w-3 h-3" /> Settled
                         </span>
                       )}
                     </td>

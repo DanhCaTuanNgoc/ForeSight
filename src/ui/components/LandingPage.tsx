@@ -27,7 +27,12 @@ import {
   Boxes,
   Copy,
   Check,
+  Wallet,
+  Gauge,
+  Compass,
+  Share2,
 } from "lucide-react";
+import { RevealOnScroll } from "./RevealOnScroll.js";
 
 interface LandingPageProps {
   onLaunchTerminal: () => void;
@@ -165,6 +170,87 @@ const TECH_STACK_ROW_2 = [
     iconBg: "bg-teal-950/80 border-teal-500/50 shadow-[0_0_12px_rgba(20,184,166,0.35)]",
     badgeBg: "bg-teal-950/90 text-teal-300 border-teal-500/50",
     hoverBorder: "hover:border-teal-500/60 hover:shadow-[0_0_25px_rgba(20,184,166,0.25)]",
+  },
+];
+
+const USER_WORKFLOW_PHASES = [
+  {
+    step: "01",
+    phase: "WALLET ONBOARDING",
+    userAction: "Connect & Fund",
+    title: "Connect Wallet & Access Testnet Faucet",
+    badge: "Chain ID 50312",
+    badgeColor: "text-purple-300 bg-purple-950/80 border-purple-500/40",
+    icon: Wallet,
+    iconColor: "text-purple-400",
+    iconBg: "bg-purple-950/80 border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.35)]",
+    desc: "Connect MetaMask to Somnia Shannon L1. The terminal verifies your network configuration (Chain 50312), tracks your live STT balance, and links directly to the official testnet faucet.",
+    interactionPills: ["1-Click MetaMask Connect", "Auto-Switch to Chain 50312", "Live Balance & Faucet Link"],
+  },
+  {
+    step: "02",
+    phase: "MARKET DISCOVERY",
+    userAction: "Detect Volatility",
+    title: "Spot Live Anomaly Spikes on the Timeline",
+    badge: "500+ Markets",
+    badgeColor: "text-cyan-300 bg-cyan-950/80 border-cyan-500/40",
+    icon: Activity,
+    iconColor: "text-cyan-400",
+    iconBg: "bg-cyan-950/80 border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.35)]",
+    desc: "Browse 500+ active event contracts. Whenever implied probability jumps by ≥10%, the 10-second indexer highlights interactive pulsing Spike Markers on the probability chart.",
+    interactionPills: ["Browse Active Markets", "10s Automated Scanning", "Click Pulsing Spike Markers"],
+  },
+  {
+    step: "03",
+    phase: "EVIDENCE ANALYSIS",
+    userAction: "Challenge Thesis",
+    title: "Debate with Dual AI & Inspect News Sources",
+    badge: "Zero Hallucination",
+    badgeColor: "text-fuchsia-300 bg-fuchsia-950/80 border-fuchsia-500/40",
+    icon: Bot,
+    iconColor: "text-fuchsia-400",
+    iconBg: "bg-fuchsia-950/80 border-fuchsia-500/50 shadow-[0_0_12px_rgba(217,70,239,0.35)]",
+    desc: "Clicking a spike summons the Dual AI Arena. Alpha Bull AI and Macro Bear AI debate market moves, while transparent [View Sources] links provide verifiable news citations.",
+    interactionPills: ["Adversarial Bull/Bear Debate", "Transparent Source Links", "Grounded Consensus Delta"],
+  },
+  {
+    step: "04",
+    phase: "RISK SIMULATION",
+    userAction: "Stress-Test Trajectory",
+    title: "Simulate Trajectory Feasibility & Quant Edge",
+    badge: "Deterministic Math",
+    badgeColor: "text-rose-300 bg-rose-950/80 border-rose-500/40",
+    icon: Gauge,
+    iconColor: "text-rose-400",
+    iconBg: "bg-rose-950/80 border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.35)]",
+    desc: "Adjust the interactive scenario sliders to stress-test your thesis. Verify Velocity Coverage (VC) to check physical momentum, and compare market odds to Black-Scholes Φ(d₂).",
+    interactionPills: ["Interactive Scenario Sliders", "Velocity Coverage (VC) Physics", "Black-Scholes Edge (bps)"],
+  },
+  {
+    step: "05",
+    phase: "ORDER EXECUTION",
+    userAction: "Dispatch & Sweep",
+    title: "Execute CLOB Orders & Auto-Claim Winnings",
+    badge: "MultiCall Settlement",
+    badgeColor: "text-emerald-300 bg-emerald-950/80 border-emerald-500/40",
+    icon: ShieldCheck,
+    iconColor: "text-emerald-400",
+    iconBg: "bg-emerald-950/80 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.35)]",
+    desc: "Submit limit orders directly to DreamDEX CLOB or practice in Simulation Mode. When rounds resolve, the Settlement Sweeper auto-claims all payouts in a single batch transaction.",
+    interactionPills: ["1-Click DreamDEX CLOB Orders", "Simulation Mode Sandbox", "Batch Auto-Claim Sweeper"],
+  },
+  {
+    step: "06",
+    phase: "COMMUNITY PROOF",
+    userAction: "Share Alpha",
+    title: "Export & Share Verified Alpha Cards",
+    badge: "1200×675 HD Canvas",
+    badgeColor: "text-amber-300 bg-amber-950/80 border-amber-500/40",
+    icon: Share2,
+    iconColor: "text-amber-400",
+    iconBg: "bg-amber-950/80 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.35)]",
+    desc: "Generate 1200×675 HD trading cards stamped with Somnia Shannon verification seals. Copy directly to clipboard or share to Twitter (X) with 1 click to showcase your predictions.",
+    interactionPills: ["1200×675 16:9 Canvas", "Somnia L1 Certified Watermark", "1-Click Share on X & Telegram"],
   },
 ];
 
@@ -675,144 +761,143 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
       {/* ─── Proof Metrics Bar (DreamDEX Style) ───────────────────────── */}
       <section id="stats" className="py-12 px-6 lg:px-12 max-w-6xl mx-auto w-full relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(16,185,129,0.2)]">
-            <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              Event Volume
-            </span>
-            <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-white">$45.2M+</div>
-            <p className="mt-1 text-[11px] text-gray-400 font-light">Trailing 30D tracked onchain</p>
-          </div>
+        <RevealOnScroll direction="up" delayMs={60}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(16,185,129,0.2)]">
+              <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                Event Volume
+              </span>
+              <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-white">$45.2M+</div>
+              <p className="mt-1 text-[11px] text-gray-400 font-light">Trailing 30D tracked onchain</p>
+            </div>
 
-          <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(6,182,212,0.2)]">
-            <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-              Somnia Throughput
-            </span>
-            <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-cyan-400 neon-glow-cyan">100K+ TPS</div>
-            <p className="mt-1 text-[11px] text-gray-400 font-light">Sub-second CLOB execution</p>
-          </div>
+            <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(6,182,212,0.2)]">
+              <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                Somnia Throughput
+              </span>
+              <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-cyan-400 neon-glow-cyan">100K+ TPS</div>
+              <p className="mt-1 text-[11px] text-gray-400 font-light">Sub-second CLOB execution</p>
+            </div>
 
-          <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(167,139,250,0.2)]">
-            <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
-              Math Latency
-            </span>
-            <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-violet-300 neon-glow-violet">&lt;1 ms</div>
-            <p className="mt-1 text-[11px] text-gray-400 font-light">Zero network latency client simulation</p>
-          </div>
+            <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(167,139,250,0.2)]">
+              <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
+                Math Latency
+              </span>
+              <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-violet-300 neon-glow-violet">&lt;1 ms</div>
+              <p className="mt-1 text-[11px] text-gray-400 font-light">Zero network latency client simulation</p>
+            </div>
 
-          <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(245,158,11,0.2)]">
-            <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-              RAG Evidence
-            </span>
-            <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-amber-300">100%</div>
-            <p className="mt-1 text-[11px] text-gray-400 font-light">Verified citations & no black-boxes</p>
+            <div className="cyber-card p-5 rounded-2xl bg-[#0E0E16]/90 backdrop-blur-md border border-[#1F1F2E] flex flex-col justify-between hover:shadow-[0_0_24px_rgba(245,158,11,0.2)]">
+              <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                RAG Evidence
+              </span>
+              <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-amber-300">100%</div>
+              <p className="mt-1 text-[11px] text-gray-400 font-light">Verified citations & no black-boxes</p>
+            </div>
           </div>
-        </div>
+        </RevealOnScroll>
       </section>
 
-      {/* ─── The 4-Step ForeSight Experience ───────────────────────────── */}
-      <section id="loop" className="py-16 px-6 lg:px-12 max-w-7xl mx-auto border-t border-[#1F1F2E] w-full relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
-            THE 30-SECOND WORKFLOW
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">
-            The 4-Step ForeSight Decision Loop
-          </h2>
-          <p className="text-sm text-gray-400 mt-3 font-light">
-            Designed to bridge the gap between complex blockchain prediction markets and instant, confident trading decisions.
-          </p>
+      {/* ─── How It Works: The User Interaction Journey ───────────────── */}
+      <section id="workflow" className="py-20 px-6 lg:px-12 max-w-5xl mx-auto border-t border-[#1F1F2E] w-full relative z-10">
+        <RevealOnScroll direction="up" delayMs={50}>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
+              HOW IT WORKS
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+              The ForeSight Trading Workflow
+            </h2>
+            <p className="text-sm text-gray-400 mt-3 font-light leading-relaxed max-w-2xl mx-auto">
+              A transparent 6-phase journey detailing exactly how you interact with the terminal — from wallet connection to AI verification, risk simulation, and automated payout recovery.
+            </p>
+          </div>
+        </RevealOnScroll>
+
+        {/* Process Timeline with Dashed Spine Line */}
+        <div className="relative pl-6 sm:pl-10 ml-2 sm:ml-6 border-l-2 border-dashed border-violet-500/30 space-y-6">
+          {USER_WORKFLOW_PHASES.map((item, idx) => {
+            const IconComp = item.icon;
+            return (
+              <RevealOnScroll key={item.step} direction="up" delayMs={idx * 60}>
+                <div className="relative group">
+                  {/* Glowing Node on the Dashed Spine */}
+                  <div className="absolute -left-[37px] sm:-left-[53px] top-4 w-7 sm:w-9 h-7 sm:h-9 rounded-xl bg-[#090912] border-2 border-violet-500/70 group-hover:border-violet-400 group-hover:shadow-[0_0_15px_rgba(167,139,250,0.5)] flex items-center justify-center font-mono font-bold text-[11px] sm:text-xs text-violet-300 transition-all z-10">
+                    {item.step}
+                  </div>
+
+                  {/* Dashed Horizontal Connector */}
+                  <div className="hidden sm:block absolute -left-[14px] top-8 w-6 border-t-2 border-dashed border-violet-500/40" />
+
+                  {/* Step Card Container */}
+                  <div className="p-4 sm:p-5 rounded-2xl border border-[#1F1F2E] bg-[#0E0E18]/90 backdrop-blur-md hover:border-violet-500/50 transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(124,58,237,0.12)] space-y-3">
+                    {/* Top Header: Phase label + User Action Pill */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#1A1A2A] pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono text-gray-400 uppercase tracking-widest font-semibold">
+                          PHASE {item.step} // {item.phase}
+                        </span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-950/70 border border-violet-700/40 text-[10px] font-mono text-violet-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                        <span className="text-gray-400">User Action:</span>
+                        <span className="font-bold text-violet-200">{item.userAction}</span>
+                      </div>
+                    </div>
+
+                    {/* Step Title with Icon */}
+                    <div className="flex items-center gap-3 pt-0.5">
+                      <div className={`p-2 rounded-xl ${item.iconBg} border flex items-center justify-center flex-shrink-0`}>
+                        <IconComp className={`w-4 h-4 ${item.iconColor}`} />
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-violet-200 transition-colors">
+                        {item.title}
+                      </h3>
+                    </div>
+
+                    {/* Description of User Interaction */}
+                    <p className="text-xs sm:text-sm text-gray-300 font-light leading-relaxed pl-0 sm:pl-11">
+                      {item.desc}
+                    </p>
+
+                    {/* Interaction Checkpoints / Feature Pills */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1 pl-0 sm:pl-11 text-[10px] font-mono">
+                      {item.interactionPills.map((pill, pIdx) => (
+                        <span
+                          key={pIdx}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#141424] border border-[#25253A] text-gray-300 hover:border-violet-500/40 transition-colors"
+                        >
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                          <span>{pill}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </RevealOnScroll>
+            );
+          })}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {/* Step 1 */}
-          <div className="cyber-card p-6 rounded-2xl border border-[#1F1F2E] bg-[#0E0E16]/90 backdrop-blur-md hover:border-violet-500/60 transition-all flex flex-col justify-between space-y-4 group hover:shadow-[0_0_25px_rgba(124,58,237,0.25)]">
-            <div className="space-y-3">
-              <div className="w-8 h-8 rounded-lg bg-violet-950/80 border border-violet-500/50 flex items-center justify-center text-violet-300 font-mono font-bold text-xs shadow-[0_0_10px_rgba(124,58,237,0.4)]">
-                01
-              </div>
-              <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider block">
-                DETECT • What Happened?
-              </span>
-              <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
-                Probability Timeline & Spike Radar
-              </h3>
-              <p className="text-xs text-gray-400 leading-relaxed font-light">
-                Continuous scanning for probability spikes $\ge 10\%$ across Somnia event contracts with glowing visual markers.
-              </p>
-            </div>
-            <div className="text-[10px] font-mono text-gray-500 pt-2 border-t border-[#1F1F2E]">
-              Module 1 • Real-Time Indexing
-            </div>
+        {/* Action Button at bottom of roadmap */}
+        {/* <RevealOnScroll direction="up" delayMs={120}>
+          <div className="mt-12 text-center flex flex-col items-center justify-center">
+            <button
+              onClick={onLaunchTerminal}
+              className="border-beam-container bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-mono font-bold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-[0_0_30px_rgba(124,58,237,0.4)] flex items-center gap-2.5"
+            >
+              <span>Launch Terminal & Start Trading</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <p className="text-[11px] font-mono text-gray-500 mt-2">
+              Somnia Shannon Testnet • Chain ID: 50312 • Non-Custodial & Open Source
+            </p>
           </div>
-
-          {/* Step 2 */}
-          <div className="cyber-card p-6 rounded-2xl border border-[#1F1F2E] bg-[#0E0E16]/90 backdrop-blur-md hover:border-violet-500/60 transition-all flex flex-col justify-between space-y-4 group hover:shadow-[0_0_25px_rgba(124,58,237,0.25)]">
-            <div className="space-y-3">
-              <div className="w-8 h-8 rounded-lg bg-violet-950/80 border border-violet-500/50 flex items-center justify-center text-violet-300 font-mono font-bold text-xs shadow-[0_0_10px_rgba(124,58,237,0.4)]">
-                02
-              </div>
-              <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider block">
-                DEBATE • What Changed?
-              </span>
-              <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
-                Dual AI Arena + RAG Verification
-              </h3>
-              <p className="text-xs text-gray-400 leading-relaxed font-light">
-                Alpha Bull vs Macro Bear synthesize live crypto news and macro events. No black boxes — every thesis links to verified sources.
-              </p>
-            </div>
-            <div className="text-[10px] font-mono text-gray-500 pt-2 border-t border-[#1F1F2E]">
-              Module 2 • Evidence-Grounded AI
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div className="cyber-card p-6 rounded-2xl border border-[#1F1F2E] bg-[#0E0E16]/90 backdrop-blur-md hover:border-violet-500/60 transition-all flex flex-col justify-between space-y-4 group hover:shadow-[0_0_25px_rgba(124,58,237,0.25)]">
-            <div className="space-y-3">
-              <div className="w-8 h-8 rounded-lg bg-violet-950/80 border border-violet-500/50 flex items-center justify-center text-violet-300 font-mono font-bold text-xs shadow-[0_0_10px_rgba(124,58,237,0.4)]">
-                03
-              </div>
-              <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider block">
-                SIMULATE • What If?
-              </span>
-              <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
-                Trajectory Feasibility & Stress Test
-              </h3>
-              <p className="text-xs text-gray-400 leading-relaxed font-light">
-                Stress-test event trajectory feasibility with Velocity Coverage ($VC$), pre-trade Thesis Break conditions, and zero-lag PnL math.
-              </p>
-            </div>
-            <div className="text-[10px] font-mono text-gray-500 pt-2 border-t border-[#1F1F2E]">
-              Module 3 • Deterministic Modeling
-            </div>
-          </div>
-
-          {/* Step 4 */}
-          <div className="cyber-card p-6 rounded-2xl border border-[#1F1F2E] bg-[#0E0E16]/90 backdrop-blur-md hover:border-violet-500/60 transition-all flex flex-col justify-between space-y-4 group hover:shadow-[0_0_25px_rgba(124,58,237,0.25)]">
-            <div className="space-y-3">
-              <div className="w-8 h-8 rounded-lg bg-violet-950/80 border border-violet-500/50 flex items-center justify-center text-violet-300 font-mono font-bold text-xs shadow-[0_0_10px_rgba(124,58,237,0.4)]">
-                04
-              </div>
-              <span className="text-xs font-mono font-bold text-violet-400 uppercase tracking-wider block">
-                EXECUTE • What Do I Do?
-              </span>
-              <h3 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">
-                1-Click Execution & Auto Sweeper
-              </h3>
-              <p className="text-xs text-gray-400 leading-relaxed font-light">
-                Execute directly to Somnia CLOB, deploy strategies as automated background bots, and auto-sweep all settled winnings.
-              </p>
-            </div>
-            <div className="text-[10px] font-mono text-gray-500 pt-2 border-t border-[#1F1F2E]">
-              Module 4 • On-Chain Execution
-            </div>
-          </div>
-        </div>
+        </RevealOnScroll> */}
       </section>
 
       {/* ─── Tech Stack Infinite Running Carousel ─────────────────────── */}
@@ -820,17 +905,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
         id="tech-stack"
         className="py-16 border-t border-[#1F1F2E] w-full relative z-10 overflow-hidden"
       >
-        <div className="text-center max-w-3xl mx-auto mb-12 px-6">
-          <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
-            POWERED BY HYBRID INFRASTRUCTURE
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">
-            The ForeSight Technology Stack
-          </h2>
-          <p className="text-sm text-gray-400 mt-3 font-light max-w-2xl mx-auto">
-            Combining Somnia L1 sub-second finality, DreamDEX decentralized CLOB, and multi-agent RAG intelligence into a unified cognitive terminal.
-          </p>
-        </div>
+        <RevealOnScroll direction="up" delayMs={50}>
+          <div className="text-center max-w-3xl mx-auto mb-12 px-6">
+            <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
+              POWERED BY HYBRID INFRASTRUCTURE
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">
+              The ForeSight Technology Stack
+            </h2>
+            <p className="text-sm text-gray-400 mt-3 font-light max-w-2xl mx-auto">
+              Combining Somnia L1 sub-second finality, DreamDEX decentralized CLOB, and multi-agent RAG intelligence into a unified cognitive terminal.
+            </p>
+          </div>
+        </RevealOnScroll>
 
         {/* Marquee Row 1 (Left Scrolling) */}
         <div className="w-full overflow-hidden marquee-mask py-1.5">
@@ -901,150 +988,154 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
       {/* ─── Benchmarks & Architecture Comparison ──────────────────────── */}
       <section id="benchmarks" className="py-16 px-6 lg:px-12 max-w-6xl mx-auto border-t border-[#1F1F2E] w-full relative z-10">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
-            WHY FORESIGHT
-          </span>
-          <h2 className="text-3xl font-bold text-white mt-2">
-            ForeSight vs Traditional Trading Bots
-          </h2>
-        </div>
+        <RevealOnScroll direction="up" delayMs={60}>
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
+              WHY FORESIGHT
+            </span>
+            <h2 className="text-3xl font-bold text-white mt-2">
+              ForeSight vs Traditional Trading Bots
+            </h2>
+          </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-[#1F1F2E] bg-[#0E0E16]/90 backdrop-blur-md shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-          <table className="w-full text-left text-xs font-mono divide-y divide-[#1F1F2E]">
-            <thead className="bg-[#0A0A0F]/90 text-gray-400 uppercase">
-              <tr>
-                <th className="p-4">Feature</th>
-                <th className="p-4 text-violet-400 font-bold">ForeSight Terminal</th>
-                <th className="p-4 text-gray-500">Generic Black-Box Bots</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#1F1F2E]/60">
-              <tr className="hover:bg-[#13131D] transition">
-                <td className="p-4 font-semibold text-gray-200">AI Decision Transparency</td>
-                <td className="p-4 text-emerald-400 flex items-center gap-1.5 font-bold neon-glow-emerald">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  Dual Bull/Bear Debates + Direct RAG Citations
-                </td>
-                <td className="p-4 text-gray-500">Opaque single-number signals</td>
-              </tr>
-              <tr className="hover:bg-[#13131D] transition">
-                <td className="p-4 font-semibold text-gray-200">Risk & Scenario Modeling</td>
-                <td className="p-4 text-emerald-400 flex items-center gap-1.5 font-bold neon-glow-emerald">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  Deterministic Math Sliders (0ms Latency)
-                </td>
-                <td className="p-4 text-gray-500">Manual calculation spreadsheets</td>
-              </tr>
-              <tr className="hover:bg-[#13131D] transition">
-                <td className="p-4 font-semibold text-gray-200">Execution Speed</td>
-                <td className="p-4 text-emerald-400 flex items-center gap-1.5 font-bold neon-glow-emerald">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  Sub-second finality on Somnia Shannon CLOB
-                </td>
-                <td className="p-4 text-gray-500">Slow gas-constrained EVM blocks</td>
-              </tr>
-              <tr className="hover:bg-[#13131D] transition">
-                <td className="p-4 font-semibold text-gray-200">Settlement Workflow</td>
-                <td className="p-4 text-emerald-400 flex items-center gap-1.5 font-bold neon-glow-emerald">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  1-Click Auto Sweeper & Bot Deployment
-                </td>
-                <td className="p-4 text-gray-500">Manual per-contract claiming</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <div className="overflow-x-auto rounded-2xl border border-[#1F1F2E] bg-[#0E0E16]/90 backdrop-blur-md shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+            <table className="w-full text-left text-xs font-mono divide-y divide-[#1F1F2E]">
+              <thead className="bg-[#0A0A0F]/90 text-gray-400 uppercase">
+                <tr>
+                  <th className="p-4">Feature</th>
+                  <th className="p-4 text-violet-400 font-bold">ForeSight Terminal</th>
+                  <th className="p-4 text-gray-500">Generic Black-Box Bots</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1F1F2E]/60">
+                <tr className="hover:bg-[#13131D] transition">
+                  <td className="p-4 font-semibold text-gray-200">AI Decision Transparency</td>
+                  <td className="p-4 text-emerald-400 flex items-center gap-1.5 font-bold neon-glow-emerald">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    Dual Bull/Bear Debates + Direct RAG Citations
+                  </td>
+                  <td className="p-4 text-gray-500">Opaque single-number signals</td>
+                </tr>
+                <tr className="hover:bg-[#13131D] transition">
+                  <td className="p-4 font-semibold text-gray-200">Risk & Scenario Modeling</td>
+                  <td className="p-4 text-emerald-400 flex items-center gap-1.5 font-bold neon-glow-emerald">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    Deterministic Math Sliders (0ms Latency)
+                  </td>
+                  <td className="p-4 text-gray-500">Manual calculation spreadsheets</td>
+                </tr>
+                <tr className="hover:bg-[#13131D] transition">
+                  <td className="p-4 font-semibold text-gray-200">Execution Speed</td>
+                  <td className="p-4 text-emerald-400 flex items-center gap-1.5 font-bold neon-glow-emerald">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    Sub-second finality on Somnia Shannon CLOB
+                  </td>
+                  <td className="p-4 text-gray-500">Slow gas-constrained EVM blocks</td>
+                </tr>
+                <tr className="hover:bg-[#13131D] transition">
+                  <td className="p-4 font-semibold text-gray-200">Settlement Workflow</td>
+                  <td className="p-4 text-emerald-400 flex items-center gap-1.5 font-bold neon-glow-emerald">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    1-Click Auto Sweeper & Bot Deployment
+                  </td>
+                  <td className="p-4 text-gray-500">Manual per-contract claiming</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </RevealOnScroll>
       </section>
 
       {/* ─── SDK / Developer Snippet Section ───────────────────────────── */}
       <section id="sdk" className="py-16 px-6 lg:px-12 max-w-5xl mx-auto border-t border-[#1F1F2E] w-full relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-5 space-y-4 text-left">
-            <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
-              DEVELOPER NATIVE
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">
-              Built on Somnia & DreamDEX SDK
-            </h2>
-            <p className="text-xs text-gray-400 font-light leading-relaxed">
-              ForeSight natively integrates with <code className="text-violet-300 font-mono">@somnia-chain/markets-sdk</code>,
-              supporting indexer hydration, CLOB limit orders, and automated multi-agent bot loops.
-            </p>
-            <div className="flex items-center gap-3 pt-2 font-mono text-xs">
-              <button
-                onClick={onLaunchTerminal}
-                className="px-4 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-bold transition flex items-center gap-1.5 shadow-[0_0_16px_rgba(124,58,237,0.4)]"
-              >
-                <span>Test on Shannon</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          <div
-            ref={codeSnippetRef}
-            onMouseMove={handleCodeMouseMove}
-            onMouseLeave={handleCodeMouseLeave}
-            className="lg:col-span-7 perspective-1000 select-none relative z-10"
-          >
-            <div
-              style={{
-                transform: `rotateX(${codeRotate.x}deg) rotateY(${codeRotate.y}deg)`,
-                transition: "transform 0.15s ease-out",
-              }}
-              className="border-beam-container cyber-card rounded-2xl border border-[#2A2A3D] bg-[#0E0E16]/95 p-5 font-mono text-[11px] text-gray-300 overflow-x-auto shadow-[0_0_40px_rgba(124,58,237,0.25)] backdrop-blur-2xl transform-3d text-left"
-            >
-              <div className="flex items-center justify-between text-gray-400 border-b border-[#232336] pb-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
-                  <span className="ml-2 text-gray-200 font-semibold text-[11px]">
-                    somnia-execution-snippet.ts
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-violet-950/80 text-violet-300 border border-violet-500/50 font-bold shadow-[0_0_8px_rgba(124,58,237,0.3)]">
-                    TypeScript
-                  </span>
-                  <button
-                    onClick={handleCopySnippet}
-                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#161622] hover:bg-[#1F1F2F] text-gray-300 hover:text-white border border-[#2A2A3D] hover:border-violet-500/50 text-[10px] font-mono transition-all active:scale-95 cursor-pointer shadow-sm"
-                    title="Copy code"
-                  >
-                    {copiedSnippet ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span className="text-emerald-400 font-bold">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3 text-gray-400" />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+        <RevealOnScroll direction="up" delayMs={70}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-5 space-y-4 text-left">
+              <span className="text-xs font-mono text-violet-400 uppercase tracking-widest font-semibold">
+                DEVELOPER NATIVE
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                Built on Somnia & DreamDEX SDK
+              </h2>
+              <p className="text-xs text-gray-400 font-light leading-relaxed">
+                ForeSight natively integrates with <code className="text-violet-300 font-mono">@somnia-chain/markets-sdk</code>,
+                supporting indexer hydration, CLOB limit orders, and automated multi-agent bot loops.
+              </p>
+              <div className="flex items-center gap-3 pt-2 font-mono text-xs">
+                <button
+                  onClick={onLaunchTerminal}
+                  className="px-4 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-bold transition flex items-center gap-1.5 shadow-[0_0_16px_rgba(124,58,237,0.4)]"
+                >
+                  <span>Test on Shannon</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <pre className="leading-relaxed">
-                <span className="text-purple-400">import</span> {"{ SomniaMarkets }"} <span className="text-purple-400">from</span> <span className="text-emerald-400">"@somnia-chain/markets-sdk"</span>;{"\n\n"}
-                <span className="text-gray-500">// 1. Hydrate ForeSight with Somnia Shannon CLOB</span>{"\n"}
-                <span className="text-purple-400">const</span> exchange = <span className="text-purple-400">new</span> <span className="text-yellow-300">SomniaMarkets</span>({"{\n"}
-                {"  "}chainId: <span className="text-amber-400">50312</span>,{"\n"}
-                {"  "}venueId: <span className="text-emerald-400">"0x679795a0195a1b76cdebb7c51d74e0..."</span>,{"\n"}
-                {"}"});{"\n\n"}
-                <span className="text-gray-500">// 2. Execute 1-Click Deterministic Scenario Order</span>{"\n"}
-                <span className="text-purple-400">const</span> order = <span className="text-purple-400">await</span> exchange.<span className="text-blue-400">createOrder</span>({"{\n"}
-                {"  "}marketId: <span className="text-emerald-400">"BTC-0-26AUG26"</span>,{"\n"}
-                {"  "}side: <span className="text-emerald-400">"BUY_YES"</span>,{"\n"}
-                {"  "}price: <span className="text-amber-400">0.62</span>,{"\n"}
-                {"  "}amount: <span className="text-amber-400">80.64</span>,{"\n"}
-                {"}"});
-              </pre>
+            </div>
+
+            <div
+              ref={codeSnippetRef}
+              onMouseMove={handleCodeMouseMove}
+              onMouseLeave={handleCodeMouseLeave}
+              className="lg:col-span-7 perspective-1000 select-none relative z-10"
+            >
+              <div
+                style={{
+                  transform: `rotateX(${codeRotate.x}deg) rotateY(${codeRotate.y}deg)`,
+                  transition: "transform 0.15s ease-out",
+                }}
+                className="border-beam-container cyber-card rounded-2xl border border-[#2A2A3D] bg-[#0E0E16]/95 p-5 font-mono text-[11px] text-gray-300 overflow-x-auto shadow-[0_0_40px_rgba(124,58,237,0.25)] backdrop-blur-2xl transform-3d text-left"
+              >
+                <div className="flex items-center justify-between text-gray-400 border-b border-[#232336] pb-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+                    <span className="ml-2 text-gray-200 font-semibold text-[11px]">
+                      somnia-execution-snippet.ts
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-violet-950/80 text-violet-300 border border-violet-500/50 font-bold shadow-[0_0_8px_rgba(124,58,237,0.3)]">
+                      TypeScript
+                    </span>
+                    <button
+                      onClick={handleCopySnippet}
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#161622] hover:bg-[#1F1F2F] text-gray-300 hover:text-white border border-[#2A2A3D] hover:border-violet-500/50 text-[10px] font-mono transition-all active:scale-95 cursor-pointer shadow-sm"
+                      title="Copy code"
+                    >
+                      {copiedSnippet ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          <span className="text-emerald-400 font-bold">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 text-gray-400" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <pre className="leading-relaxed">
+                  <span className="text-purple-400">import</span> {"{ SomniaMarkets }"} <span className="text-purple-400">from</span> <span className="text-emerald-400">"@somnia-chain/markets-sdk"</span>;{"\n\n"}
+                  <span className="text-gray-500">// 1. Hydrate ForeSight with Somnia Shannon CLOB</span>{"\n"}
+                  <span className="text-purple-400">const</span> exchange = <span className="text-purple-400">new</span> <span className="text-yellow-300">SomniaMarkets</span>({"{\n"}
+                  {"  "}chainId: <span className="text-amber-400">50312</span>,{"\n"}
+                  {"  "}venueId: <span className="text-emerald-400">"0x679795a0195a1b76cdebb7c51d74e0..."</span>,{"\n"}
+                  {"}"});{"\n\n"}
+                  <span className="text-gray-500">// 2. Execute 1-Click Deterministic Scenario Order</span>{"\n"}
+                  <span className="text-purple-400">const</span> order = <span className="text-purple-400">await</span> exchange.<span className="text-blue-400">createOrder</span>({"{\n"}
+                  {"  "}marketId: <span className="text-emerald-400">"BTC-0-26AUG26"</span>,{"\n"}
+                  {"  "}side: <span className="text-emerald-400">"BUY_YES"</span>,{"\n"}
+                  {"  "}price: <span className="text-amber-400">0.62</span>,{"\n"}
+                  {"  "}amount: <span className="text-amber-400">80.64</span>,{"\n"}
+                  {"}"});
+                </pre>
+              </div>
             </div>
           </div>
-        </div>
+        </RevealOnScroll>
       </section>
 
       {/* ─── Footer ────────────────────────────────────────────────────── */}

@@ -10,6 +10,9 @@ export interface PositionRecord {
   entryPrice: number;
   timestamp: number;
   status: "OPEN" | "SETTLED";
+  orderId?: string;
+  txHash?: string;
+  isLiveOnChain?: boolean;
 }
 
 interface ActivityTableProps {
@@ -95,10 +98,11 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
               </span>
               <span
                 className={`text-right text-[10px] font-semibold ${
-                  pos.status === "OPEN" ? "text-violet-400" : "text-gray-500"
+                  pos.status === "OPEN" ? (pos.isLiveOnChain ? "text-emerald-400" : "text-violet-400") : "text-gray-500"
                 }`}
+                title={pos.orderId ? `Order: ${pos.orderId}` : undefined}
               >
-                {pos.status}
+                {pos.status === "OPEN" ? (pos.isLiveOnChain ? "LIVE" : "OPEN") : pos.status}
               </span>
             </div>
           );

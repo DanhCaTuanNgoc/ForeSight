@@ -3,8 +3,14 @@
  * Reads SUPABASE_URL and SUPABASE_ANON_KEY from environment.
  */
 
+import WebSocket from "ws";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types.js";
+
+// Polyfill WebSocket for Node.js < 22
+if (typeof globalThis.WebSocket === "undefined") {
+  (globalThis as any).WebSocket = WebSocket;
+}
 
 let _client: SupabaseClient<Database> | null = null;
 
@@ -29,16 +35,15 @@ export function getSupabase(): SupabaseClient<Database> {
     auth: { persistSession: false },
     db: { schema: "public" },
     realtime: {
-      // Disable realtime — we don't need WebSocket subscriptions
-      // This avoids the Node.js 20 WebSocket compatibility issue
+      transport: WebSocket as any,
       params: { eventsPerSecond: 0 },
     },
     global: {
       headers: { "x-connection-source": "dreamdex-copilot" },
     },
-  });
+  }) as any;
 
-  return _client;
+  return _client!;
 }
 
 /**

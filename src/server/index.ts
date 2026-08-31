@@ -53,8 +53,8 @@ let snapshotWorker: MarketSnapshotWorker;
 let newsWorker: NewsIngestionWorker;
 const copilotStrategy = new AICopilotStrategy();
 
-// In-memory simulated positions and recent trade logs for demo / testing
-const simulatedPositions: Array<{
+// In-memory trade positions ledger (records real on-chain orders or paper trading orders)
+const recordedPositions: Array<{
   id: string;
   symbol: string;
   outcome: "YES" | "NO";
@@ -63,10 +63,13 @@ const simulatedPositions: Array<{
   timestamp: number;
   status: "OPEN" | "SETTLED";
   walletAddress?: string;
+  orderId?: string;
+  txHash?: string;
+  isLiveOnChain?: boolean;
 }> = [];
 
 // ═══════════════════════════════════════════════════════════════
-// LIVE MARKET RESOLVER & IN-MEMORY SEED
+// LIVE MARKET RESOLVER
 // ═══════════════════════════════════════════════════════════════
 
 export function findMarket(markets: any[], query: string): any {
@@ -94,33 +97,9 @@ export function findMarket(markets: any[], query: string): any {
   return m || markets[0];
 }
 
-function initSimulatedPositions(markets: any[]) {
-  if (simulatedPositions.length > 0 || !markets || markets.length === 0) return;
-  const btcMarket = findMarket(markets, "BTC") || markets[0];
-  const ethMarket = findMarket(markets, "ETH") || markets[1] || markets[0];
-  const now = Date.now();
-
-  simulatedPositions.push({
-    id: `pos-${now - 300_000}-live1`,
-    symbol: btcMarket?.symbol || "BTC/tUSDC",
-    outcome: "YES",
-    amount: 10,
-    entryPrice: Number((btcMarket?.midPrice || 0.62).toFixed(2)),
-    timestamp: now - 300_000,
-    status: "OPEN",
-  });
-
-  if (ethMarket && ethMarket.symbol !== btcMarket?.symbol) {
-    simulatedPositions.push({
-      id: `pos-${now - 900_000}-live2`,
-      symbol: ethMarket.symbol,
-      outcome: "NO",
-      amount: 15,
-      entryPrice: Number((1 - (ethMarket.midPrice || 0.45)).toFixed(2)),
-      timestamp: now - 900_000,
-      status: "OPEN",
-    });
-  }
+function initSimulatedPositions(_markets: any[]) {
+  // Pure real-time execution: No artificial or hardcoded positions seeded.
+  // The ledger reflects only authentic orders submitted by the user/agents.
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -266,9 +245,9 @@ app.post("/api/orders", async (req, res) => {
     const orderPrice = price || (outcome === "YES" ? 0.55 : 0.45);
 
     if (simulate || !ctx.canTrade) {
-      // Create simulated position tagged with wallet address
+      // Create position record tagged with wallet address (Simulation / Paper Trading)
       const newPos = {
-        id: `pos-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        id: `sim-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         symbol,
         outcome: outcome.toUpperCase() as "YES" | "NO",
         amount: Number(amount),
@@ -276,18 +255,20 @@ app.post("/api/orders", async (req, res) => {
         timestamp: Date.now(),
         status: "OPEN" as const,
         walletAddress: walletAddress?.toLowerCase() || ctx.walletAddress?.toLowerCase() || undefined,
+        isLiveOnChain: false,
       };
-      simulatedPositions.unshift(newPos);
+      recordedPositions.unshift(newPos);
 
       return res.json({
         success: true,
         simulated: true,
+        isLiveOnChain: false,
         position: newPos,
-        message: `Order entered (${signerType || "Simulated"}) for ${amount} contracts @ ${orderPrice} USDC`,
+        message: `Paper order executed (${signerType || "Simulated"}) for ${amount} contracts @ ${orderPrice} USDC`,
       });
     }
 
-    // Execute on live Somnia testnet
+    // Execute live on-chain transaction on Somnia testnet via DreamDEX CLOB
     const result = await orderEngine.placeLimitOrder({
       symbol: targetOutcomeSymbol,
       side: "buy",
@@ -295,12 +276,38 @@ app.post("/api/orders", async (req, res) => {
       amount: Number(amount),
     });
 
-    res.json({
-      success: result.success,
-      orderId: result.orderId,
-      error: result.error,
-      filledAmount: result.filledAmount,
-    });
+    if (result.success) {
+      const livePos = {
+        id: result.orderId || `order-${Date.now()}`,
+        symbol,
+        outcome: outcome.toUpperCase() as "YES" | "NO",
+        amount: Number(amount),
+        entryPrice: orderPrice,
+        timestamp: Date.now(),
+        status: "OPEN" as const,
+        walletAddress: walletAddress?.toLowerCase() || ctx.walletAddress?.toLowerCase() || undefined,
+        orderId: result.orderId,
+        txHash: result.txHash,
+        isLiveOnChain: true,
+      };
+      recordedPositions.unshift(livePos);
+
+      return res.json({
+        success: true,
+        simulated: false,
+        isLiveOnChain: true,
+        orderId: result.orderId,
+        txHash: result.txHash,
+        position: livePos,
+        filledAmount: result.filledAmount,
+        message: `On-chain limit order placed on Somnia DreamDEX CLOB (ID: ${result.orderId})`,
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: result.error || "Order execution failed on Somnia CLOB",
+      });
+    }
   } catch (err: any) {
     res.status(500).json({ error: err?.message || String(err) });
   }
@@ -313,7 +320,7 @@ app.get("/api/positions", async (req, res) => {
   try {
     const filterWallet = (req.query.wallet as string)?.toLowerCase();
     let balances: any = {};
-    if (ctx.canTrade) {
+    if (ctx?.canTrade) {
       try {
         balances = await ctx.exchange.fetchBalance();
       } catch {
@@ -321,15 +328,17 @@ app.get("/api/positions", async (req, res) => {
       }
     }
 
-    let returnedPositions = simulatedPositions;
+    let returnedPositions = recordedPositions;
     if (filterWallet) {
-      returnedPositions = simulatedPositions.filter(
+      returnedPositions = recordedPositions.filter(
         (p) => !p.walletAddress || p.walletAddress === filterWallet
       );
     }
 
     res.json({
       walletAddress: filterWallet || ctx.walletAddress || null,
+      canTrade: ctx?.canTrade || false,
+      tradingMode: ctx?.canTrade ? "LIVE_ONCHAIN" : "SIMULATION",
       balances,
       positions: returnedPositions,
       simulatedPositions: returnedPositions,
@@ -350,7 +359,7 @@ app.post("/api/claim", async (req, res) => {
     if (!ctx.canTrade) {
       // Simulate claiming positions
       let claimedCount = 0;
-      for (const pos of simulatedPositions) {
+      for (const pos of recordedPositions) {
         const matchesWallet = !targetWallet || !pos.walletAddress || pos.walletAddress === targetWallet;
         if (pos.status === "OPEN" && matchesWallet) {
           pos.status = "SETTLED";
@@ -366,10 +375,25 @@ app.post("/api/claim", async (req, res) => {
     }
 
     const results = await sweeper.sweepSettledMarkets();
+    let claimedCount = results.filter((r) => r.claimed).length;
+
+    // Update matching recorded positions to SETTLED
+    for (const r of results) {
+      if (r.claimed) {
+        for (const pos of recordedPositions) {
+          if (pos.symbol === r.symbol && pos.status === "OPEN") {
+            pos.status = "SETTLED";
+          }
+        }
+      }
+    }
+
     res.json({
       success: true,
+      simulated: false,
       results,
-      claimedCount: results.filter((r) => r.claimed).length,
+      claimedCount,
+      message: `On-chain settlement sweep completed on Somnia Testnet: ${claimedCount} positions redeemed.`,
     });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || String(err) });
@@ -391,8 +415,16 @@ async function getLiveSpotTickers(): Promise<any[]> {
   }
   try {
     const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "AVAXUSDT", "SUIUSDT", "DOGEUSDT"];
-    const url = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`;
-    const res = await fetch(url);
+    // Prefer data-api.binance.vision (dedicated public market data cluster, bypasses ISP DPI blocks)
+    const primaryUrl = `https://data-api.binance.vision/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`;
+    let res: Response;
+    try {
+      res = await fetch(primaryUrl, { signal: AbortSignal.timeout(6000) });
+    } catch {
+      const backupUrl = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`;
+      res = await fetch(backupUrl, { signal: AbortSignal.timeout(6000) });
+    }
+
     if (res.ok) {
       const data: any = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -422,8 +454,9 @@ async function getLiveSpotTickers(): Promise<any[]> {
         return cachedSpotTickers;
       }
     }
-  } catch (e) {
-    console.warn("Failed to fetch live Binance spot prices:", e);
+  } catch (e: any) {
+    // Graceful fallback to cached tickers without spamming stack trace
+    console.warn(`[SpotOracle] Live spot price fetch notice (${e?.code || e?.message || "network blip"}) — using cached/resilient tickers.`);
   }
   return cachedSpotTickers.length > 0 ? cachedSpotTickers : [
     { symbol: "BTC/USDT", rawSymbol: "BTC", price: 80120.5, probability: 62.4, change: 1.42, volume: 142900000, status: "TRADING" },
@@ -561,29 +594,32 @@ async function getNewsData(limit: number = 20): Promise<any[]> {
     return inMemoryLiveNews.slice(0, limit);
   }
 
-  // 1. Fetch live from CryptoPanic public aggregator
-  try {
-    const cpRes = await fetch("https://cryptopanic.com/api/free/v1/posts/?currencies=BTC,ETH&kind=news&public=true", {
-      signal: AbortSignal.timeout(5000),
-    });
-    if (cpRes.ok) {
-      const json = (await cpRes.json()) as any;
-      if (json?.results && json.results.length > 0) {
-        inMemoryLiveNews = json.results.map((p: any) => ({
-          id: String(p.id),
-          title: p.title,
-          summary: p.metadata?.description || `Live intelligence feed covering ${p.currencies?.map((c: any) => c.code).join(", ") || "crypto market movement"}.`,
-          url: p.url || `https://cryptopanic.com/news/${p.id}`,
-          source: p.source?.title || "CryptoPanic",
-          asset_tags: (p.currencies || []).map((c: any) => c.code),
-          published_at: p.published_at || new Date().toISOString(),
-        }));
-        lastLiveNewsFetch = now;
-        return inMemoryLiveNews.slice(0, limit);
+  // 1. Fetch live from CryptoPanic public aggregator (if token provided)
+  const cpToken = process.env.CRYPTOPANIC_TOKEN;
+  if (cpToken) {
+    try {
+      const cpRes = await fetch(`https://cryptopanic.com/api/v1/posts/?auth_token=${cpToken}&currencies=BTC,ETH&kind=news&public=true`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (cpRes.ok) {
+        const json = (await cpRes.json()) as any;
+        if (json?.results && json.results.length > 0) {
+          inMemoryLiveNews = json.results.map((p: any) => ({
+            id: String(p.id),
+            title: p.title,
+            summary: p.metadata?.description || `Live intelligence feed covering ${p.currencies?.map((c: any) => c.code).join(", ") || "crypto market movement"}.`,
+            url: p.url || `https://cryptopanic.com/news/${p.id}`,
+            source: p.source?.title || "CryptoPanic",
+            asset_tags: (p.currencies || []).map((c: any) => c.code),
+            published_at: p.published_at || new Date().toISOString(),
+          }));
+          lastLiveNewsFetch = now;
+          return inMemoryLiveNews.slice(0, limit);
+        }
       }
+    } catch {
+      // Ignore and proceed to fallback
     }
-  } catch {
-    // Ignore and proceed to fallback
   }
 
   // 2. High-precision dynamic news feed with real-time timestamps

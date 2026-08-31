@@ -10,6 +10,7 @@
 
 import { getNewsByTimeWindow, getLatestNews } from "../../db/repository.js";
 import type { EventContractMarket } from "../../core/market-watcher.js";
+import { calculateBlackScholesBinaryFairValue } from "../../core/quantitative-pricing.js";
 
 export interface DebateSource {
   id: string | number;
@@ -86,6 +87,14 @@ export interface ScenarioResult {
   observedVelocity?: number; // % per minute
   velocityCoverage?: number; // VC ratio (v_obs / v_req)
 
+  // Quantitative Valuation & Edge Metrics (Black-Scholes Binary)
+  modelFairProbability?: number; // e.g. 0.684
+  modelFairProbabilityPercent?: number; // e.g. 68.4%
+  modelEdgeBps?: number; // basis points edge vs entryPrice
+  modelEdgePercent?: number; // percentage edge
+  isFavorableEdge?: boolean;
+  halfKellyFraction?: number;
+
   riskRewardRatio: number;
   summaryText: string;
 }
@@ -146,6 +155,17 @@ export function calculateScenario(input: ScenarioInput): ScenarioResult {
     ? `Entering ${outcome} @ $${safeEntry.toFixed(2)} with $${investmentUsdc} yields +$${earlyExitPnlUsdc} (+${earlyExitRoiPercent}%) if price reaches $${safeExit.toFixed(2)}. Trajectory VC: ${velocityCoverage}x.`
     : `Entering ${outcome} @ $${safeEntry.toFixed(2)} with $${investmentUsdc} would result in -$${Math.abs(earlyExitPnlUsdc)} (${earlyExitRoiPercent}%) at target $${safeExit.toFixed(2)}.`;
 
+  // Quantitative Black-Scholes Model Fair Value & Edge
+  const assetGuess = symbol.includes("BTC") ? "BTC" : symbol.includes("ETH") ? "ETH" : symbol.includes("SOL") ? "SOL" : "SOMI";
+  const quantResult = calculateBlackScholesBinaryFairValue({
+    currentSpot,
+    strikePrice,
+    timeRemainingSeconds: Math.max(45, timeRemainingMin * 60),
+    asset: assetGuess,
+    isCall: outcome === "YES",
+    marketPrice: safeEntry,
+  });
+
   return {
     symbol,
     outcome,
@@ -164,6 +184,12 @@ export function calculateScenario(input: ScenarioInput): ScenarioResult {
     requiredVelocity,
     observedVelocity,
     velocityCoverage,
+    modelFairProbability: quantResult.fairProbability,
+    modelFairProbabilityPercent: quantResult.fairProbabilityPercent,
+    modelEdgeBps: quantResult.edgeBps,
+    modelEdgePercent: quantResult.edgePercent,
+    isFavorableEdge: quantResult.isFavorable,
+    halfKellyFraction: quantResult.halfKellyFraction,
     riskRewardRatio,
     summaryText,
   };

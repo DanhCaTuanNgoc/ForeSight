@@ -5,7 +5,7 @@
 
 [![Somnia Network](https://img.shields.io/badge/Somnia-Shannon_Testnet_(50312)-7C3AED?style=for-the-badge&logo=blockchain)](https://somnia.network)
 [![DreamDEX CLOB](https://img.shields.io/badge/Protocol-DreamDEX_Event_Contracts-06B6D4?style=for-the-badge)](https://dev.smk.somnia.host)
-[![Tests Passing](https://img.shields.io/badge/Tests-25%2F25%20Passed%20(100%25)-00e676?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
+[![Tests Passing](https://img.shields.io/badge/Tests-64%2F64%20Passed%20(100%25)-00e676?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
 [![Evidence-Grounded AI](https://img.shields.io/badge/Adversarial_AI-Gemini_+_Groq_+_RAG-f55036?style=for-the-badge&logo=google&logoColor=white)](src/agents/strategies/dual-debate-engine.ts)
 [![React 19](https://img.shields.io/badge/Frontend-React_19_+_Vite_6-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript_5.7-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -157,7 +157,16 @@ To answer: *"Does the underlying asset have sufficient momentum to cross the str
   $$VC = \frac{v_{\text{obs}}}{v_{\text{req}}}$$
   *(Note: $VC$ is a momentum feasibility metric, not an unconditional guarantee. It informs whether the required path is physically plausible given current volatility).*
 
-### 2. Discrete Binary Payoff & Early-Exit Formulation
+### 2. Closed-Form Black-Scholes Binary Option Pricing & Basis Point Edge
+To compute theoretical fair value independent of orderbook imbalances, ForeSight implements high-precision standard normal cumulative distribution $\Phi(z)$ via **Abramowitz & Stegun rational Chebyshev approximation** (Formula 7.1.26, $|\epsilon| < 1.5 \times 10^{-7}$):
+$$d_2 = \frac{\ln(S / K) + \left(r - \frac{1}{2}\sigma^2\right)\tau}{\sigma \sqrt{\tau}}$$
+$$\text{Fair Probability} = \Phi(d_2)$$
+* **Anti-Pin-Risk Diffusion Floor:** For short horizons ($1\text{m}, 5\text{m}$), enforces $\tau_{\text{floor}} = 45\text{s}$ to prevent step-function probability cliff collapses as $\tau \to 0$.
+* **Theoretical Edge in Basis Points ($bps$):**
+  $$\text{Edge}_{bps} = (\text{Fair Probability} - P_{\text{market}}) \times 10{,}000 \quad (bps)$$
+* **Half-Kelly Capital Allocation:** Recommends optimal bankroll fraction $f^* = \frac{1}{2} \left[ \frac{\text{Fair} - P_{\text{market}}}{1 - P_{\text{market}}} \right]$, capped at $25\%$ to protect against drawdown.
+
+### 3. Discrete Binary Payoff & Early-Exit Formulation
 Given user allocation $C$ (Collateral) and entry odds $P_{\text{entry}} \in [0.01, 0.99]$:
 * **Contracts Minted:** $N = \frac{C}{P_{\text{entry}}}$
 * **Early-Exit PnL (at target odds $P_{\text{target}}$):**
@@ -168,7 +177,17 @@ Given user allocation $C$ (Collateral) and entry odds $P_{\text{entry}} \in [0.0
 
 ---
 
-## 🤖 5. Automated Strategy Bot Suite
+## 📸 5. Proof-of-Thesis Alpha Card Studio & Viral Social Sharing
+
+To accelerate viral ecosystem adoption and social prediction sharing on Somnia, ForeSight includes an in-terminal **Proof-of-Thesis Alpha Card Studio**:
+* **1200×675 HD Canvas Export:** Renders cybernetic, high-resolution trading cards formatted perfectly for Twitter (16:9) and Telegram.
+* **Dual Evidence Stamps:** Displays both quantitative metrics ($VC$ momentum ratio, Model Edge in bps) and qualitative Dual AI consensus snippets.
+* **Network Verification Seal:** Certified watermark referencing Somnia Shannon Testnet (`Chain ID: 50312`) and DreamDEX CLOB.
+* **1-Click Social Intent:** Single click to copy raw image to clipboard, download high-DPI PNG, or launch a pre-populated tweet on X.
+
+---
+
+## 🤖 6. Automated Strategy Bot Suite
 
 For programmatic traders, ForeSight provides modular strategy runners built on top of `@somnia-chain/markets-sdk`:
 
@@ -181,7 +200,7 @@ For programmatic traders, ForeSight provides modular strategy runners built on t
 
 ---
 
-## 💻 6. Developer Diagnostics & Test Coverage
+## 💻 7. Developer Diagnostics & Test Coverage
 
 ForeSight emphasizes protocol reliability and developer tooling:
 
@@ -195,7 +214,7 @@ npm run markets
 # 3. Scan finalized markets and execute automated batch settlement sweep
 npm run claim
 
-# 4. Run automated test suite (25/25 unit & integration tests passing)
+# 4. Run automated test suite (64/64 unit & integration tests passing)
 npm test
 
 # 5. Compile backend TypeScript engine
@@ -207,7 +226,7 @@ npm run build:ui
 
 ---
 
-## ⚡ 7. Quickstart Guide (Local Setup in 3 Minutes)
+## ⚡ 8. Quickstart Guide (Local Setup in 3 Minutes)
 
 ### Prerequisites
 * Node.js $\ge 20.0.0$

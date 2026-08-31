@@ -127,17 +127,19 @@ export class NewsIngestionWorker {
   // Data Sources
   // ────────────────────────────────────────────────────────────
 
-  /** CryptoPanic: free public crypto news aggregator. */
+  /** CryptoPanic: crypto news aggregator (requires free auth token). */
   private async fetchCryptoPanic(): Promise<NewsEventInsert[]> {
-    const baseUrl = "https://cryptopanic.com/api/free/v1/posts/";
+    if (!this.authToken) {
+      return []; // Silently skip if no API token configured
+    }
+
+    const baseUrl = "https://cryptopanic.com/api/v1/posts/";
     const params = new URLSearchParams({
+      auth_token: this.authToken,
       currencies: "BTC,ETH",
       kind: "news",
       public: "true",
     });
-    if (this.authToken) {
-      params.set("auth_token", this.authToken);
-    }
 
     const res = await fetch(`${baseUrl}?${params}`, {
       signal: AbortSignal.timeout(10_000),
@@ -164,30 +166,47 @@ export class NewsIngestionWorker {
     });
   }
 
-  /** CoinGecko: free status updates endpoint. */
+  /** CoinTelegraph RSS: free real-time public crypto news feed (no auth required). */
   private async fetchCoinGeckoStatus(): Promise<NewsEventInsert[]> {
-    const url = "https://api.coingecko.com/api/v3/status_updates?per_page=20";
+    const url = "https://cointelegraph.com/rss";
     const res = await fetch(url, {
       signal: AbortSignal.timeout(10_000),
-      headers: { Accept: "application/json" },
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
     });
 
     if (!res.ok) {
-      throw new Error(`CoinGecko API returned ${res.status}`);
+      throw new Error(`CoinTelegraph RSS returned ${res.status}`);
     }
 
-    const json = (await res.json()) as any;
-    const updates: any[] = json?.status_updates || [];
+    const xml = await res.text();
+    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+    const results: NewsEventInsert[] = [];
 
-    return updates.map((u) => ({
-      title: u.project?.name ? `${u.project.name}: ${(u.description || "").slice(0, 120)}` : (u.description || "").slice(0, 120),
-      summary: u.description || null,
-      url: u.project?.links?.homepage?.[0] || null,
-      source: "coingecko",
-      asset_tags: this.extractAssetTags(u.description || ""),
-      sentiment: "neutral" as const,
-      published_at: u.created_at || new Date().toISOString(),
-    }));
+    for (const item of items.slice(0, 15)) {
+      const content = item[1];
+      const titleMatch = content.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || content.match(/<title>(.*?)<\/title>/);
+      const linkMatch = content.match(/<link>(.*?)<\/link>/);
+      const descMatch = content.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || content.match(/<description>(.*?)<\/description>/);
+      const pubDateMatch = content.match(/<pubDate>(.*?)<\/pubDate>/);
+
+      const title = titleMatch ? titleMatch[1].trim() : "";
+      if (!title) continue;
+
+      const cleanDesc = descMatch ? descMatch[1].replace(/<[^>]+>/g, "").trim() : "";
+      const dateStr = pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString();
+
+      results.push({
+        title,
+        summary: cleanDesc.slice(0, 200) || null,
+        url: linkMatch ? linkMatch[1].trim() : null,
+        source: "cointelegraph",
+        asset_tags: this.extractAssetTags(title + " " + cleanDesc),
+        sentiment: "neutral" as const,
+        published_at: dateStr,
+      });
+    }
+
+    return results;
   }
 
   // ────────────────────────────────────────────────────────────

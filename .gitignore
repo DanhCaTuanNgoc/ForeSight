@@ -32,14 +32,14 @@ Thumbs.db
 *.swo
 
 # Internal Project Details, Planning & Strategy Docs
-Project-Details*.md
+
 Plan-Tracking*.md
 UI-*.md
 Improve-Suggestion*.md
 Demo-Video-Script*.md
 DreamDEX-SDK-Feedback*.md
 Somnia-Tech-Evaluation*.md
-*-Details.md
+
 *-Tracking.md
 *-Feedback.md
 *-Evaluation.md

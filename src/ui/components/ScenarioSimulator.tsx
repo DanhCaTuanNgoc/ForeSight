@@ -14,11 +14,14 @@ import {
   Compass,
   Gauge,
   Wallet,
+  Share2,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
 import { apiUrl } from "../utils/api.js";
 import { useWallet, SOMNIA_SHANNON_CHAIN_ID } from "../context/WalletContext.js";
 import { CryptoIcon } from "./CryptoIcon.js";
+import { calculateBlackScholesBinaryFairValue } from "../../core/quantitative-pricing.js";
+import { AlphaCardModal } from "./AlphaCardModal.js";
 
 interface ScenarioSimulatorProps {
   market: any;
@@ -53,6 +56,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const [targetExitPrice, setTargetExitPrice] = useState<number>(defaultTarget);
 
   const [isDeployingBot, setIsDeployingBot] = useState<boolean>(false);
+  const [showAlphaCard, setShowAlphaCard] = useState<boolean>(false);
   const [liveSpotMap, setLiveSpotMap] = useState<Record<string, number>>({});
 
   React.useEffect(() => {
@@ -150,6 +154,18 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     };
   }, [currentSpot, strikePrice, timeRemainingMin, outcome]);
 
+  // ─── Layer 2.5: Quantitative Black-Scholes Model Fair Value & Edge ───
+  const quantModel = useMemo(() => {
+    return calculateBlackScholesBinaryFairValue({
+      currentSpot,
+      strikePrice,
+      timeRemainingSeconds: Math.max(45, (timeRemainingMin || 15) * 60),
+      asset: assetName,
+      isCall: outcome === "YES",
+      marketPrice: entryPrice,
+    });
+  }, [currentSpot, strikePrice, timeRemainingMin, assetName, outcome, entryPrice]);
+
   // ─── Layer 3: Deterministic Financial Simulator Math ────────────────
   const calculation = useMemo(() => {
     const safeEntry = Math.max(0.01, Math.min(0.99, entryPrice));
@@ -245,36 +261,51 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
           </div>
         </div>
 
-        {/* Outcome Selector */}
-        <div className="flex items-center gap-1 bg-[#141420] p-0.5 rounded-lg border border-[#2A2A3D]">
+        <div className="flex items-center gap-2">
+          {/* Export Alpha Card Button */}
           <button
             onClick={() => {
               sound.playClick();
-              setOutcome("YES");
+              setShowAlphaCard(true);
             }}
-            className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
-              outcome === "YES"
-                ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
+            className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-[#171728] hover:bg-violet-950/80 text-violet-300 border border-violet-700/50 flex items-center gap-1.5 transition-all shadow-sm"
+            title="Export High-Resolution Proof-of-Thesis Alpha Card"
           >
-            <TrendingUp className="w-3 h-3" />
-            <span>YES</span>
+            <Share2 className="w-3 h-3 text-violet-400" />
+            <span className="hidden sm:inline">Alpha Card</span>
           </button>
-          <button
-            onClick={() => {
-              sound.playClick();
-              setOutcome("NO");
-            }}
-            className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
-              outcome === "NO"
-                ? "bg-rose-600 text-white shadow-[0_0_10px_rgba(244,63,94,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <TrendingDown className="w-3 h-3" />
-            <span>NO</span>
-          </button>
+
+          {/* Outcome Selector */}
+          <div className="flex items-center gap-1 bg-[#141420] p-0.5 rounded-lg border border-[#2A2A3D]">
+            <button
+              onClick={() => {
+                sound.playClick();
+                setOutcome("YES");
+              }}
+              className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                outcome === "YES"
+                  ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <TrendingUp className="w-3 h-3" />
+              <span>YES</span>
+            </button>
+            <button
+              onClick={() => {
+                sound.playClick();
+                setOutcome("NO");
+              }}
+              className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                outcome === "NO"
+                  ? "bg-rose-600 text-white shadow-[0_0_10px_rgba(244,63,94,0.4)]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <TrendingDown className="w-3 h-3" />
+              <span>NO</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -322,6 +353,29 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
               <p className="text-gray-300">
                 Spot {outcome === "YES" ? "<" : ">"} <b className="text-rose-300">${trajectory.breakPrice.toLocaleString()}</b> or momentum slows with &lt;10m remaining.
               </p>
+            </div>
+
+            {/* Quantitative Black-Scholes Model Fair Value & Edge */}
+            <div className="p-2 rounded-lg bg-[#0E1322] border border-cyan-800/40 text-[10px] space-y-1">
+              <div className="flex items-center justify-between font-mono">
+                <span className="text-cyan-300 font-bold flex items-center gap-1">
+                  <Gauge className="w-3 h-3 text-cyan-400" />
+                  Model Fair Value Φ(d₂):
+                </span>
+                <span className="text-white font-bold">{quantModel.fairProbabilityPercent}%</span>
+              </div>
+              <div className="flex items-center justify-between text-gray-400 text-[9px]">
+                <span>vs Implied Book: {(entryPrice * 100).toFixed(0)}%</span>
+                <span className={`font-bold ${quantModel.isFavorable ? "text-emerald-400" : "text-amber-400"}`}>
+                  {quantModel.edgeBps !== undefined ? `${quantModel.edgeBps > 0 ? "+" : ""}${quantModel.edgeBps} bps Edge` : ""}
+                </span>
+              </div>
+              {quantModel.halfKellyFraction && quantModel.halfKellyFraction > 0 ? (
+                <div className="text-[9px] text-gray-400 border-t border-cyan-900/30 pt-0.5 flex justify-between">
+                  <span>Half-Kelly Sizing:</span>
+                  <span className="text-cyan-300 font-bold">{(quantModel.halfKellyFraction * 100).toFixed(1)}% bankroll</span>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -439,6 +493,24 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Proof-of-Thesis Alpha Card Modal */}
+      <AlphaCardModal
+        isOpen={showAlphaCard}
+        onClose={() => setShowAlphaCard(false)}
+        market={market}
+        outcome={outcome}
+        entryPrice={entryPrice}
+        targetExitPrice={targetExitPrice}
+        projectedPnl={calculation.earlyExitPnl}
+        projectedRoi={calculation.earlyExitRoi}
+        velocityCoverage={trajectory.velocityCoverage}
+        modelFairValuePercent={quantModel.fairProbabilityPercent}
+        edgeBps={quantModel.edgeBps}
+        currentSpot={currentSpot}
+        strikePrice={strikePrice}
+        assetName={assetName}
+      />
     </div>
   );
 };
