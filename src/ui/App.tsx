@@ -102,8 +102,8 @@ function ForeSightTerminalApp() {
   // Modals & Interactive simulation state
   const [isDebateModalOpen, setIsDebateModalOpen] = useState<boolean>(false);
   const [prefillOutcome, setPrefillOutcome] = useState<"YES" | "NO">("YES");
-  const [prefillEntryPrice, setPrefillEntryPrice] = useState<number | undefined>(undefined);
-  const [prefillTargetExit, setPrefillTargetExit] = useState<number | undefined>(undefined);
+  const [prefillEntryPrice, setPrefillEntryPrice] = useState<number>(0.55);
+  const [prefillTargetExit, setPrefillTargetExit] = useState<number>(0.85);
   const [toastMessage, setToastMessage] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [timelineData, setTimelineData] = useState<any[]>([]);
   const [tickers, setTickers] = useState<any[]>([]);
@@ -406,9 +406,10 @@ function ForeSightTerminalApp() {
       {/* 3. Dedicated Views or Main Bento Box Cockpit */}
       {activeTab === "analytics" && (
         <AnalyticsView
-          markets={markets}
+          markets={markets.length > 0 ? markets : FALLBACK_MARKETS}
           onSelectMarket={(sym) => {
-            const found = markets.find(
+            const list = markets.length > 0 ? markets : FALLBACK_MARKETS;
+            const found = list.find(
               (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
             );
             if (found) setSelectedMarket(found);
@@ -539,8 +540,8 @@ function ForeSightTerminalApp() {
                     currentPrice={activeMarket.probability}
                     activeVisualMode={visualMode}
                     onVisualModeChange={setVisualMode}
-                    entryPrice={prefillEntryPrice || 0.55}
-                    targetExitPrice={prefillTargetExit || 0.85}
+                    entryPrice={prefillEntryPrice}
+                    targetExitPrice={prefillTargetExit}
                     onSetEntryPrice={(p) => setPrefillEntryPrice(p)}
                     onSetTargetExitPrice={(p) => setPrefillTargetExit(p)}
                     showToast={showToast}
@@ -554,6 +555,8 @@ function ForeSightTerminalApp() {
                     prefillOutcome={prefillOutcome}
                     prefillEntryPrice={prefillEntryPrice}
                     prefillTargetExit={prefillTargetExit}
+                    onEntryPriceChange={(p) => setPrefillEntryPrice(p)}
+                    onTargetExitPriceChange={(p) => setPrefillTargetExit(p)}
                     onTrade={handleExecuteTrade}
                     isSubmitting={isSubmittingOrder}
                     showToast={showToast}

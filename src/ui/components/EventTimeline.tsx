@@ -1,5 +1,18 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { apiUrl } from '../utils/api.js';
+import {
+  Zap,
+  Newspaper,
+  BarChart2,
+  CheckCircle2,
+  ArrowRight,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Clock,
+} from 'lucide-react';
+import { sound } from '../utils/sound-fx.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface TimelineEvent {
@@ -18,22 +31,76 @@ interface EventTimelineProps {
   symbol?: string;
 }
 
-// ─── Category styles ──────────────────────────────────────────────────────────
-const CATEGORY_COLOR: Record<string, string> = {
-  spike:  'border-violet-500 bg-violet-500',
-  news:   'border-blue-500 bg-blue-500',
-  volume: 'border-yellow-500 bg-yellow-500',
-  settle: 'border-gray-500 bg-gray-500',
+// ─── Vivid Category Themes (Always Colorful, not just when clicked) ───────────
+interface CategoryTheme {
+  label: string;
+  icon: React.ElementType;
+  dotBg: string;
+  dotBorder: string;
+  glow: string;
+  badgeBg: string;
+  badgeText: string;
+  badgeBorder: string;
+  cardBorder: string;
+  cardBg: string;
+  textColor: string;
+}
+
+const CATEGORY_THEMES: Record<string, CategoryTheme> = {
+  spike: {
+    label: 'PRICE SPIKE',
+    icon: Zap,
+    dotBg: 'bg-violet-500',
+    dotBorder: 'border-violet-400',
+    glow: 'shadow-[0_0_12px_rgba(168,85,247,0.8)]',
+    badgeBg: 'bg-violet-950/90',
+    badgeText: 'text-violet-300',
+    badgeBorder: 'border-violet-500/60',
+    cardBorder: 'border-violet-500/60',
+    cardBg: 'bg-gradient-to-b from-[#171126] to-[#0E0E18]',
+    textColor: 'text-violet-400',
+  },
+  news: {
+    label: 'GROUNDED NEWS (RAG)',
+    icon: Newspaper,
+    dotBg: 'bg-cyan-500',
+    dotBorder: 'border-cyan-400',
+    glow: 'shadow-[0_0_12px_rgba(6,182,212,0.8)]',
+    badgeBg: 'bg-cyan-950/90',
+    badgeText: 'text-cyan-300',
+    badgeBorder: 'border-cyan-500/60',
+    cardBorder: 'border-cyan-500/60',
+    cardBg: 'bg-gradient-to-b from-[#0E1B28] to-[#0A101A]',
+    textColor: 'text-cyan-400',
+  },
+  volume: {
+    label: 'VOLUME SURGE',
+    icon: BarChart2,
+    dotBg: 'bg-amber-500',
+    dotBorder: 'border-amber-400',
+    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.8)]',
+    badgeBg: 'bg-amber-950/90',
+    badgeText: 'text-amber-300',
+    badgeBorder: 'border-amber-500/60',
+    cardBorder: 'border-amber-500/60',
+    cardBg: 'bg-gradient-to-b from-[#1F190E] to-[#120F08]',
+    textColor: 'text-amber-400',
+  },
+  settle: {
+    label: 'SETTLEMENT',
+    icon: CheckCircle2,
+    dotBg: 'bg-emerald-500',
+    dotBorder: 'border-emerald-400',
+    glow: 'shadow-[0_0_12px_rgba(16,185,129,0.8)]',
+    badgeBg: 'bg-emerald-950/90',
+    badgeText: 'text-emerald-300',
+    badgeBorder: 'border-emerald-500/60',
+    cardBorder: 'border-emerald-500/60',
+    cardBg: 'bg-gradient-to-b from-[#0E201B] to-[#081410]',
+    textColor: 'text-emerald-400',
+  },
 };
 
-const CATEGORY_LABEL: Record<string, string> = {
-  spike:  'PRICE SPIKE',
-  news:   'NEWS',
-  volume: 'VOLUME',
-  settle: 'SETTLEMENT',
-};
-
-// ─── Component ────────────────────────────────────────────────────────────────
 export const EventTimeline: React.FC<EventTimelineProps> = ({
   events: propEvents,
   symbol = 'BTC',
@@ -121,7 +188,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
       time: formatHhMm(now - 45 * 60_000),
       timestamp: now - 45 * 60_000,
       title: `${symbol} Probability Spike Shift Detected (+12.4%)`,
-      description: 'Dual AI Debate consensus synthesized: Alpha Bull 68% vs Macro Bear 32%.',
+      description: 'Dual AI Debate consensus synthesized: Alpha Bull 68% vs Macro Bear 32%. Unusual institutional bid support observed.',
       priceBefore: 0.48,
       priceAfter: 0.60,
       category: 'spike' as const,
@@ -131,52 +198,112 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
       time: formatHhMm(now - 15 * 60_000),
       timestamp: now - 15 * 60_000,
       title: 'Grounded Macro Ingestion Sync',
-      description: 'Live news RSS stream synced to Somnia indexer with verified citations.',
+      description: 'Live news RSS stream synced to Somnia indexer with verified citations from major crypto news outlets.',
       category: 'news' as const,
     },
   ]);
+
+  // Selected event state: Defaults to the latest event
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const activeEvent = events.find(e => e.id === activeId) ?? null;
+  // Active event object
+  const activeEvent = events.find(e => e.id === activeId) || events[events.length - 1] || events[0];
+  const activeIndex = events.findIndex(e => e.id === activeEvent?.id);
+  const activeTheme = activeEvent ? (CATEGORY_THEMES[activeEvent.category] || CATEGORY_THEMES.spike) : CATEGORY_THEMES.spike;
+  const ActiveIcon = activeTheme.icon;
 
-  const handleDotClick = useCallback((id: string) => {
-    setActiveId(prev => (prev === id ? null : id));
+  const handleSelectEvent = useCallback((id: string) => {
+    sound.playClick();
+    setActiveId(id);
   }, []);
 
+  const handlePrev = () => {
+    if (activeIndex > 0) {
+      sound.playClick();
+      setActiveId(events[activeIndex - 1].id);
+    }
+  };
+
+  const handleNext = () => {
+    if (activeIndex < events.length - 1) {
+      sound.playClick();
+      setActiveId(events[activeIndex + 1].id);
+    }
+  };
+
   return (
-    <div className="panel rounded-[4px]">
+    <div className="panel rounded-xl border border-[#222234] bg-[#0E0E16] overflow-hidden flex flex-col font-mono shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2A2A3D]">
-        <span className="stat-label">EVENT TIMELINE</span>
-        <span className="text-[10px] text-gray-600 mono">{symbol}</span>
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1F1F2E] bg-[#0A0A10]">
+        <div className="flex items-center gap-2">
+          <div className="p-1 rounded bg-violet-600/20 border border-violet-500/40 text-violet-400">
+            <Sparkles className="w-3.5 h-3.5" />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-white block">EVENT TIMELINE SPOTLIGHT</span>
+            {/* <span className="text-[9px] text-gray-500">Click dots on the timeline to inspect each event</span> */}
+          </div>
+        </div>
+
+        {/* Index counter & Prev/Next buttons */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-gray-400 font-bold">
+            Event {activeIndex + 1} of {events.length}
+          </span>
+          <div className="flex items-center bg-[#13131F] rounded border border-[#232336] p-0.5">
+            <button
+              onClick={handlePrev}
+              disabled={activeIndex <= 0}
+              title="Previous Event"
+              className="p-1 rounded text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition"
+            >
+              <ChevronLeft className="w-3 h-3" />
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={activeIndex >= events.length - 1}
+              title="Next Event"
+              className="p-1 rounded text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition"
+            >
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Timeline track */}
-      <div className="px-4 pt-5 pb-3">
+      {/* ─── 1. Continuous Timeline Track (Always Vivid Colors) ──────── */}
+      <div className="px-6 pt-5 pb-3 bg-[#0B0B12] border-b border-[#1A1A28]">
         <div className="relative">
-          {/* Horizontal line */}
-          <div className="absolute top-[5px] left-0 right-0 h-px bg-[#2A2A3D]" />
+          {/* Horizontal Line connecting events */}
+          <div className="absolute top-[6px] left-3 right-3 h-[2px] bg-gradient-to-r from-[#222238] via-[#3A3A55] to-[#222238]" />
 
-          {/* Dots */}
-          <div className="relative flex justify-between">
-            {events.map((event) => {
-              const isActive = activeId === event.id;
-              const dotColor = CATEGORY_COLOR[event.category] ?? 'border-gray-500 bg-gray-500';
+          {/* Glowing Category Colored Dots */}
+          <div className="relative flex justify-between items-center">
+            {events.map((event, idx) => {
+              const isSelected = activeEvent?.id === event.id;
+              const theme = CATEGORY_THEMES[event.category] || CATEGORY_THEMES.spike;
+
               return (
-                <div key={event.id} className="flex flex-col items-center gap-2 cursor-pointer group"
-                  onClick={() => handleDotClick(event.id)}
-                  title={event.title}
+                <div
+                  key={event.id}
+                  className="flex flex-col items-center gap-1.5 cursor-pointer group"
+                  onClick={() => handleSelectEvent(event.id)}
+                  title={`${theme.label} at ${event.time} UTC - Click to view`}
                 >
-                  {/* Dot */}
+                  {/* Dot (ALWAYS fully colored based on category) */}
                   <div
-                    className={`w-2.5 h-2.5 rounded-full border-2 transition-all duration-150 ${
-                      isActive
-                        ? `${dotColor} scale-[1.4] shadow-[0_0_8px_rgba(124,58,237,0.6)]`
-                        : 'border-[#3A3A52] bg-[#0A0A0F] group-hover:border-violet-400 group-hover:scale-110'
+                    className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 ${theme.dotBorder} ${theme.dotBg} ${theme.glow} ${
+                      isSelected
+                        ? 'scale-150 ring-4 ring-white/40 animate-pulse'
+                        : 'opacity-85 group-hover:scale-125 group-hover:opacity-100'
                     }`}
                   />
-                  {/* Time label */}
-                  <span className={`mono text-[9px] whitespace-nowrap ${isActive ? 'text-violet-400' : 'text-gray-600 group-hover:text-gray-400'}`}>
+                  {/* Time label with category color */}
+                  <span
+                    className={`text-[10px] font-bold transition-colors ${
+                      isSelected ? 'text-white' : `${theme.textColor} group-hover:text-white`
+                    }`}
+                  >
                     {event.time}
                   </span>
                 </div>
@@ -186,55 +313,83 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
         </div>
       </div>
 
-      {/* Event detail panel (opens on click) */}
+      {/* ─── 2. Single Active Event Spotlight (1 lúc chỉ hiện 1 news/event) ─── */}
       {activeEvent && (
-        <div className="mx-4 mb-4 border border-violet-600/30 rounded-[3px] bg-violet-600/5 px-4 py-3 fade-in">
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <span className={`tag text-[9px] px-1.5 py-0.5 rounded-sm border ${
-                activeEvent.category === 'spike'  ? 'border-violet-500/40 text-violet-400 bg-violet-500/10' :
-                activeEvent.category === 'news'   ? 'border-blue-500/40 text-blue-400 bg-blue-500/10' :
-                activeEvent.category === 'volume' ? 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10' :
-                'border-gray-500/40 text-gray-400 bg-gray-500/10'
-              }`}>
-                {CATEGORY_LABEL[activeEvent.category]}
+        <div className="p-4 bg-[#0A0A10]">
+          <div
+            className={`p-4 rounded-xl border transition-all duration-300 shadow-2xl ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
+          >
+            {/* Top Bar of Single Card: Badge, Time, and Status */}
+            <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-[#232338]">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-md font-bold border ${activeTheme.badgeBg} ${activeTheme.badgeText} ${activeTheme.badgeBorder} shadow-sm`}
+                >
+                  <ActiveIcon className="w-3 h-3" />
+                  <span>{activeTheme.label}</span>
+                </span>
+                <span className="text-gray-400 text-xs font-bold flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-gray-500" />
+                  {activeEvent.time} UTC
+                </span>
+              </div>
+
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#131320] border border-[#26263C] text-gray-400 font-mono">
+                Focused Event
               </span>
-              <span className="mono text-[10px] text-gray-500 ml-2">{activeEvent.time} UTC</span>
             </div>
-            <button
-              onClick={() => setActiveId(null)}
-              className="text-gray-600 hover:text-gray-400 text-[14px] leading-none"
-            >×</button>
+
+            {/* Event Title */}
+            <h3 className="text-sm font-black text-white mb-1.5 leading-snug">
+              {activeEvent.title}
+            </h3>
+
+            {/* Event Description */}
+            <p className="text-xs text-gray-300 leading-relaxed mb-3">
+              {activeEvent.description}
+            </p>
+
+            {/* Bottom Row: Price Movement & Action Link */}
+            <div className="pt-2.5 border-t border-[#232338] flex flex-wrap items-center justify-between gap-2">
+              {activeEvent.priceBefore !== undefined && activeEvent.priceAfter !== undefined ? (
+                <div className="flex items-center gap-2 text-xs font-mono">
+                  <span className="text-gray-500">Market Reaction:</span>
+                  <span className="font-bold text-white bg-[#11111C] px-2 py-0.5 rounded border border-[#232336] flex items-center gap-1.5">
+                    <span>${activeEvent.priceBefore.toFixed(2)}</span>
+                    <ArrowRight className="w-3 h-3 text-gray-500" />
+                    <span className="text-emerald-400">${activeEvent.priceAfter.toFixed(2)}</span>
+                  </span>
+                </div>
+              ) : (
+                <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  Verified RAG Ingestion Pipeline
+                </div>
+              )}
+
+              <div className="text-[10px] text-violet-400 font-bold flex items-center gap-1 ml-auto">
+                <span>Select other dots on the timeline above to switch</span>
+                <ArrowRight className="w-3 h-3 text-violet-400" />
+              </div>
+            </div>
           </div>
-
-          <p className="text-[12px] text-white font-medium mb-1">{activeEvent.title}</p>
-          <p className="text-[11px] text-gray-400 leading-relaxed mb-2">{activeEvent.description}</p>
-
-          {activeEvent.priceBefore !== undefined && activeEvent.priceAfter !== undefined && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="stat-label">MARKET MOVEMENT</span>
-              <span className="mono text-[11px] text-gray-400">
-                ${activeEvent.priceBefore.toFixed(4)}
-                <span className="text-gray-600 mx-1">→</span>
-                <span className="text-green-400">${activeEvent.priceAfter.toFixed(4)}</span>
-              </span>
-            </div>
-          )}
-
-          <button className="text-[10px] text-violet-400 hover:text-violet-300 border border-violet-600/30 hover:border-violet-500/50 px-2.5 py-1 rounded-[3px] transition-colors mono font-medium">
-            View Evidence →
-          </button>
         </div>
       )}
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 px-4 pb-3">
-        {Object.entries(CATEGORY_LABEL).map(([cat, label]) => (
-          <div key={cat} className="flex items-center gap-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${CATEGORY_COLOR[cat].split(' ')[1]}`} />
-            <span className="text-[9px] text-gray-600 uppercase font-medium tracking-wider">{label}</span>
-          </div>
-        ))}
+      {/* ─── 3. Footer Legend with Category Indicators ───────────────── */}
+      <div className="flex flex-wrap items-center justify-between px-4 py-2 border-t border-[#1F1F2E] bg-[#0A0A10] text-[9px]">
+        <div className="flex items-center gap-4 flex-wrap">
+          {Object.entries(CATEGORY_THEMES).map(([cat, theme]) => {
+            const Icon = theme.icon;
+            return (
+              <div key={cat} className="flex items-center gap-1.5">
+                <Icon className={`w-3 h-3 ${theme.textColor}`} />
+                <span className={`font-bold ${theme.textColor}`}>{theme.label}</span>
+              </div>
+            );
+          })}
+        </div>
+        <span className="text-gray-500 font-mono">1 Event Focused at a Time</span>
       </div>
     </div>
   );

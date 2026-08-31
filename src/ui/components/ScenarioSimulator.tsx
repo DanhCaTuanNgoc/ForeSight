@@ -28,6 +28,8 @@ interface ScenarioSimulatorProps {
   prefillOutcome?: "YES" | "NO";
   prefillEntryPrice?: number;
   prefillTargetExit?: number;
+  onEntryPriceChange?: (price: number) => void;
+  onTargetExitPriceChange?: (price: number) => void;
   onTrade: (symbol: string, outcome: "YES" | "NO", amount: number, price?: number) => Promise<void>;
   isSubmitting: boolean;
   showToast: (msg: string, type?: "success" | "error") => void;
@@ -38,6 +40,8 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   prefillOutcome = "YES",
   prefillEntryPrice,
   prefillTargetExit,
+  onEntryPriceChange,
+  onTargetExitPriceChange,
   onTrade,
   isSubmitting,
   showToast,
@@ -427,7 +431,9 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                   value={entryPrice}
                   onChange={(e) => {
                     sound.playClick();
-                    setEntryPrice(Number(e.target.value));
+                    const val = Number(e.target.value);
+                    setEntryPrice(val);
+                    if (onEntryPriceChange) onEntryPriceChange(val);
                   }}
                   className="w-full h-1 bg-[#1F1F2E] rounded cursor-pointer accent-violet-500"
                 />
@@ -446,7 +452,9 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                   value={targetExitPrice}
                   onChange={(e) => {
                     sound.playClick();
-                    setTargetExitPrice(Number(e.target.value));
+                    const val = Number(e.target.value);
+                    setTargetExitPrice(val);
+                    if (onTargetExitPriceChange) onTargetExitPriceChange(val);
                   }}
                   className="w-full h-1 bg-[#1F1F2E] rounded cursor-pointer accent-emerald-500"
                 />
