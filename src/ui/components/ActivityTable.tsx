@@ -36,28 +36,18 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
           <Activity className="w-3.5 h-3.5 text-violet-400" />
           <span className="stat-label">RECENT ACTIVITY</span>
         </div>
-        {onClaim && (
-          <button
-            onClick={onClaim}
-            disabled={isClaiming}
-            className="flex items-center gap-1 text-[11px] font-mono font-medium text-violet-400 border border-violet-600/40 hover:border-violet-400 hover:bg-violet-600/10 px-2.5 py-0.5 rounded transition disabled:opacity-50"
-          >
-            <Coins className="w-3 h-3" />
-            <span>{isClaiming ? "Claiming..." : "Sweep & Claim"}</span>
-          </button>
-        )}
       </div>
 
       {/* Table Header */}
       <div
         className="grid px-3 py-1.5 border-b border-[#2A2A3D]/40 text-[10px] text-gray-500 font-sans uppercase font-medium bg-[#111118]"
-        style={{ gridTemplateColumns: "70px 1fr 55px 70px 65px" }}
+        style={{ gridTemplateColumns: "80px 1fr 60px 75px 110px" }}
       >
         <span>TIME</span>
         <span>MARKET</span>
         <span>SIDE</span>
         <span>ENTRY</span>
-        <span className="text-right">STATUS</span>
+        <span className="text-right whitespace-nowrap">STATUS</span>
       </div>
 
       {/* Table Body */}
@@ -77,9 +67,9 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
             <div
               key={pos.id}
               className="grid px-3 py-2 border-b border-[#2A2A3D]/20 hover:bg-[#1C1C28]/60 transition-colors text-xs font-mono items-center"
-              style={{ gridTemplateColumns: "70px 1fr 55px 70px 65px" }}
+              style={{ gridTemplateColumns: "80px 1fr 60px 75px 110px" }}
             >
-              <span className="text-gray-500 text-[11px]">{timeStr}</span>
+              <span className="text-gray-400 text-[11px] font-mono">{timeStr}</span>
               <span className="text-gray-300 font-medium truncate pr-2 flex items-center gap-1.5">
                 <CryptoIcon symbol={pos.symbol} size={14} />
                 <span>{pos.symbol}</span>
@@ -97,12 +87,19 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
                 ${pos.entryPrice ? pos.entryPrice.toFixed(3) : "0.500"}
               </span>
               <span
-                className={`text-right text-[10px] font-semibold ${
-                  pos.status === "OPEN" ? (pos.isLiveOnChain ? "text-emerald-400" : "text-violet-400") : "text-gray-500"
+                className={`text-right text-[10px] font-semibold whitespace-nowrap flex items-center justify-end gap-1.5 ${
+                  pos.status === "OPEN" ? "text-emerald-400" : "text-gray-500"
                 }`}
                 title={pos.orderId ? `Order: ${pos.orderId}` : undefined}
               >
-                {pos.status === "OPEN" ? (pos.isLiveOnChain ? "LIVE" : "OPEN") : pos.status}
+                {pos.status === "OPEN" ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span>IN FLIGHT</span>
+                  </>
+                ) : (
+                  pos.status
+                )}
               </span>
             </div>
           );

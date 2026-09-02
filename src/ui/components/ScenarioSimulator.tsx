@@ -236,7 +236,12 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const handleExecuteTrade = async () => {
     if (!market?.symbol) return;
     sound.playClick();
-    if (wallet.isConnected && !wallet.isCorrectNetwork) {
+    if (!wallet.isConnected || !wallet.address) {
+      showToast("Please connect your Web3 wallet (MetaMask) to trade on Somnia L1", "error");
+      wallet.openWalletModal();
+      return;
+    }
+    if (!wallet.isCorrectNetwork) {
       showToast("Please switch to Somnia Shannon Testnet (50312) in your wallet", "error");
       await wallet.switchToSomnia();
       return;
@@ -480,24 +485,35 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
           {/* Action Execution Button */}
           <div className="space-y-1.5 pt-1">
-            <button
-              onClick={handleExecuteTrade}
-              disabled={isSubmitting}
-              className={`w-full py-2 rounded-lg font-mono font-bold text-xs uppercase tracking-wide transition-all shadow flex items-center justify-center gap-1.5 ${
-                outcome === "YES"
-                  ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                  : "bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]"
-              } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>
-                {isSubmitting
-                  ? "Submitting to Somnia CLOB..."
-                  : wallet.isConnected
-                  ? `1-Click Execute ${outcome} with ${wallet.walletName || "MetaMask"} (${calculation.contractsCount} Shares @ $${entryPrice.toFixed(2)})`
-                  : `1-Click Execute ${outcome} (${calculation.contractsCount} Shares @ $${entryPrice.toFixed(2)})`}
-              </span>
-            </button>
+            {!wallet.isConnected ? (
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  wallet.openWalletModal();
+                }}
+                className="w-full py-2.5 rounded-lg font-mono font-bold text-xs uppercase tracking-wide transition-all shadow flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white cursor-pointer shadow-[0_0_15px_rgba(124,58,237,0.4)]"
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                <span>Connect Wallet to Trade on Somnia L1</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleExecuteTrade}
+                disabled={isSubmitting}
+                className={`w-full py-2 rounded-lg font-mono font-bold text-xs uppercase tracking-wide transition-all shadow flex items-center justify-center gap-1.5 ${
+                  outcome === "YES"
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                    : "bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]"
+                } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>
+                  {isSubmitting
+                    ? "Submitting to Somnia CLOB..."
+                    : `1-Click Execute ${outcome} with ${wallet.walletName || "MetaMask"} (${calculation.contractsCount} Shares @ $${entryPrice.toFixed(2)})`}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>

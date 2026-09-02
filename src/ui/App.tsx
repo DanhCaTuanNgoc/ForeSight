@@ -210,20 +210,22 @@ function ForeSightTerminalApp() {
     }
   }, []);
 
-  // 5. Fetch Positions
+  // 5. Fetch Positions (Scoped exclusively to connected Web3 wallet)
   const fetchPositions = useCallback(async () => {
     try {
-      const url = wallet.address
-        ? `/api/positions?wallet=${encodeURIComponent(wallet.address)}`
-        : "/api/positions";
+      if (!wallet.address) {
+        setPositions([]);
+        return;
+      }
+      const url = `/api/positions?wallet=${encodeURIComponent(wallet.address)}`;
       const res = await fetch(apiUrl(url));
       if (res.ok) {
         const data = await res.json();
-        const list = Array.isArray(data) ? data : data.positions || data.simulatedPositions || [];
+        const list = Array.isArray(data) ? data : data.positions || [];
         setPositions(list);
       }
     } catch {
-      // Keep default
+      setPositions([]);
     }
   }, [wallet.address]);
 

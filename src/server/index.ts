@@ -412,57 +412,7 @@ app.get("/api/positions", async (req, res) => {
   }
 });
 
-/**
- * Sweep and Claim All Settled Contracts
- */
-app.post("/api/claim", async (req, res) => {
-  try {
-    const { walletAddress } = req.body || {};
-    const targetWallet = walletAddress?.toLowerCase();
 
-    if (!ctx.canTrade) {
-      // Simulate claiming positions
-      let claimedCount = 0;
-      for (const pos of recordedPositions) {
-        const matchesWallet = !targetWallet || !pos.walletAddress || pos.walletAddress === targetWallet;
-        if (pos.status === "OPEN" && matchesWallet) {
-          pos.status = "SETTLED";
-          claimedCount++;
-        }
-      }
-      return res.json({
-        success: true,
-        simulated: true,
-        message: `Settlement sweep completed: redeemed ${claimedCount} positions.`,
-        claimedCount,
-      });
-    }
-
-    const results = await sweeper.sweepSettledMarkets();
-    let claimedCount = results.filter((r) => r.claimed).length;
-
-    // Update matching recorded positions to SETTLED
-    for (const r of results) {
-      if (r.claimed) {
-        for (const pos of recordedPositions) {
-          if (pos.symbol === r.symbol && pos.status === "OPEN") {
-            pos.status = "SETTLED";
-          }
-        }
-      }
-    }
-
-    res.json({
-      success: true,
-      simulated: false,
-      results,
-      claimedCount,
-      message: `On-chain settlement sweep completed on Somnia Testnet: ${claimedCount} positions redeemed.`,
-    });
-  } catch (err: any) {
-    res.status(500).json({ error: err?.message || String(err) });
-  }
-});
 
 // ═══════════════════════════════════════════════════════════════
 // NEW PHASE 1 ENDPOINTS — Database-backed Intelligence Data
@@ -824,18 +774,23 @@ async function getSpikesData(params: { asset?: string; symbol?: string; limit?: 
 
 /**
  * GET /api/positions
- * Return on-chain and ledger positions for the connected wallet (or all if unspecified).
+ * Return on-chain and ledger positions for the connected wallet (or empty if wallet not connected).
  */
 app.get("/api/positions", async (req, res) => {
   try {
     const wallet = req.query.wallet as string | undefined;
-    let list = recordedPositions;
-    if (wallet && wallet.trim().length > 0) {
-      const q = wallet.trim().toLowerCase();
-      list = recordedPositions.filter(
-        (p) => !p.walletAddress || p.walletAddress.toLowerCase() === q
-      );
+    if (!wallet || wallet.trim().length === 0) {
+      return res.json({
+        count: 0,
+        positions: [],
+        message: "No wallet connected. Connect MetaMask to view your on-chain portfolio.",
+      });
     }
+
+    const q = wallet.trim().toLowerCase();
+    const list = recordedPositions.filter(
+      (p) => p.walletAddress && p.walletAddress.toLowerCase() === q
+    );
 
     res.json({
       count: list.length,
@@ -847,12 +802,28 @@ app.get("/api/positions", async (req, res) => {
 });
 
 /**
+ * POST /api/positions/reset
+ * Clean and reset positions ledger memory.
+ */
+app.post("/api/positions/reset", (req, res) => {
+  recordedPositions.length = 0;
+  res.json({ success: true, message: "Positions ledger cleared successfully." });
+});
+
+/**
  * POST /api/orders
  * Execute an authentic event contract order on Somnia Shannon L1.
  */
 app.post("/api/orders", async (req, res) => {
   try {
     const { symbol, outcome, amount, price, walletAddress, signerType } = req.body;
+
+    if (!walletAddress || typeof walletAddress !== "string") {
+      return res.status(401).json({
+        success: false,
+        error: "Web3 wallet connection required. Please connect MetaMask to execute on-chain orders on Somnia Shannon L1.",
+      });
+    }
 
     if (!symbol || !outcome || !amount) {
       return res.status(400).json({ error: "Missing required order parameters: symbol, outcome, amount" });
@@ -933,12 +904,19 @@ app.post("/api/claim", async (req, res) => {
     const targetWallet = walletAddress ? walletAddress.toLowerCase() : undefined;
 
     for (const pos of recordedPositions) {
-      if (pos.status === "SETTLED") {
+      if (pos.status === "SETTLED" || (pos as any).status === "RESOLVED") {
         if (!targetWallet || (pos.walletAddress && pos.walletAddress.toLowerCase() === targetWallet)) {
           (pos as any).status = "CLAIMED";
           claimCount++;
         }
       }
+    }
+
+    if (claimCount === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "No claimable settled payouts available yet. Active contracts are still In Flight.",
+      });
     }
 
     // Call on-chain sweeper if exchange is connected
@@ -960,7 +938,7 @@ app.post("/api/claim", async (req, res) => {
 
     res.json({
       success: true,
-      claimedCount: claimCount > 0 ? claimCount : 1,
+      claimedCount: claimCount,
       txHash: onChainTx,
       explorerUrl: `https://shannon-explorer.somnia.network/tx/${onChainTx}`,
     });

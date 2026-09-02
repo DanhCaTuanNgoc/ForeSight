@@ -37,10 +37,17 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
   const activeBalance = wallet.balance || propBalance;
   const isConnected = Boolean(activeAddress);
 
-  const openPositions = positions.filter((p) => p.status === "OPEN");
-  const settledPositions = positions.filter((p) => p.status === "SETTLED" || p.status === "RESOLVED");
+  // Strictly filter positions belonging to connected wallet only (clean phantom guest data)
+  const userPositions = isConnected
+    ? positions.filter(
+        (p) => p.walletAddress && activeAddress && p.walletAddress.toLowerCase() === activeAddress.toLowerCase()
+      )
+    : [];
 
-  const totalInvested = positions.reduce(
+  const openPositions = userPositions.filter((p) => p.status === "OPEN");
+  const settledPositions = userPositions.filter((p) => p.status === "SETTLED" || p.status === "RESOLVED");
+
+  const totalInvested = userPositions.reduce(
     (acc, p) => acc + (p.amount || 0) * (p.entryPrice || 0.5),
     0
   );
@@ -55,7 +62,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       ? openPositions
       : filter === "SETTLED"
       ? settledPositions
-      : positions;
+      : userPositions;
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#0A0A0F] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-4 space-y-4 font-mono">
@@ -107,7 +114,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           <div className="w-px h-7 bg-[#1F1F30]" />
           <div className="space-y-0.5">
             <span className="text-[10px] text-gray-400 block uppercase font-mono tracking-widest font-semibold">
-              Open
+              In Flight
             </span>
             <span className="text-base sm:text-lg font-black font-mono text-cyan-400 tracking-tight block">
               {openPositions.length}
@@ -182,8 +189,8 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
                   : "bg-[#141422] text-gray-400 hover:text-white border border-[#252538]"
               }`}
             >
-              {t === "ALL" && `All Positions (${positions.length})`}
-              {t === "OPEN" && `Open (${openPositions.length})`}
+              {t === "ALL" && `All Positions (${userPositions.length})`}
+              {t === "OPEN" && `In Flight (${openPositions.length})`}
               {t === "SETTLED" && `Settled (${settledPositions.length})`}
             </button>
           ))}
@@ -230,7 +237,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       {/* ─── 5. RECENT ON-CHAIN EXECUTION LEDGER ───────────────────────────── */}
       <div className="w-full">
         <ActivityTable
-          positions={positions.map((p) => ({
+          positions={userPositions.map((p) => ({
             id: p.id,
             symbol: p.symbol,
             outcome: p.outcome,
@@ -242,8 +249,6 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
             txHash: p.txHash,
             isLiveOnChain: p.isLiveOnChain,
           }))}
-          onClaim={onClaimAll}
-          isClaiming={isClaiming}
         />
       </div>
     </div>

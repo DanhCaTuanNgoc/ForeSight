@@ -116,19 +116,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         )}
 
-        {/* Claim Winnings */}
-        {onClaimAll && (
-          <button
-            onClick={onClaimAll}
-            disabled={isClaiming}
-            className="flex items-center gap-1 bg-violet-900/30 border border-violet-600/40 hover:bg-violet-800/40 text-violet-300 text-xs px-2.5 py-1 rounded transition disabled:opacity-50 font-mono"
-            title="Sweep & Claim Settled Positions"
-          >
-            <Coins className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isClaiming ? "Sweeping..." : "Sweep"}</span>
-          </button>
-        )}
-
         {/* Wallet Connect / Account Button */}
         {isConnected ? (
           <button
