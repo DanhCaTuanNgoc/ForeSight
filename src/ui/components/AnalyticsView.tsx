@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   BarChart3,
   Zap,
@@ -219,7 +219,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     return Number((spotPrice * mult).toFixed(spotPrice > 10 ? 1 : 4));
   }, [activeMarket, spotPrice, isUp]);
 
-  // D. Real-time Live Second-by-Second Countdown
+  // D. Real-time Live Second-by-Second Countdown & Rollover Transition State
   const initialTimeSec = useMemo(() => {
     return (activeMarket?.timeRemainingSec && typeof activeMarket.timeRemainingSec === "number" && activeMarket.timeRemainingSec > 0)
       ? activeMarket.timeRemainingSec
@@ -227,17 +227,53 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   }, [activeMarket]);
 
   const [countdownSec, setCountdownSec] = useState<number>(initialTimeSec);
+  const [rolloverNotice, setRolloverNotice] = useState<{ round: string; durationMin: number } | null>(null);
+  const prevMarketRef = useRef<string | null>(null);
+
+  // Round ID extraction
+  const roundId = useMemo(() => {
+    if (!activeMarket?.symbol) return `${activeSymbol}-35M`;
+    const parts = activeMarket.symbol.split('-');
+    if (parts.length >= 4) {
+      return `${parts[0]}-${parts[parts.length - 2]}`;
+    }
+    return activeMarket.symbol.split('/')[0];
+  }, [activeMarket, activeSymbol]);
 
   useEffect(() => {
     setCountdownSec(initialTimeSec);
   }, [initialTimeSec]);
 
+  // Detect Round Rollover (when market rolls over from end-of-round to new round)
+  useEffect(() => {
+    const currentSym = activeMarket?.symbol || "";
+    if (prevMarketRef.current && prevMarketRef.current !== currentSym) {
+      setRolloverNotice({
+        round: roundId,
+        durationMin: Math.round(initialTimeSec / 60),
+      });
+      const t = setTimeout(() => setRolloverNotice(null), 8000);
+      return () => clearTimeout(t);
+    }
+    prevMarketRef.current = currentSym;
+  }, [activeMarket?.symbol, roundId, initialTimeSec]);
+
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdownSec((prev) => (prev > 15 ? prev - 1 : initialTimeSec));
+      setCountdownSec((prev) => {
+        if (prev <= 1) {
+          setRolloverNotice({
+            round: roundId,
+            durationMin: Math.round(initialTimeSec / 60),
+          });
+          setTimeout(() => setRolloverNotice(null), 8000);
+          return initialTimeSec;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, [initialTimeSec]);
+  }, [initialTimeSec, roundId]);
 
   const formatCountdown = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -245,6 +281,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     return `${m}m ${String(s).padStart(2, "0")}s`;
   };
 
+  const isSettlingPhase = countdownSec <= 60;
   const remainingMinutes = Math.max(0.5, Number((countdownSec / 60).toFixed(2)));
 
   // E. 24H Volume across active contracts
@@ -317,75 +354,76 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#0A0A0F] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-4 space-y-4 font-mono">
 
-      {/* ─── 1. HERO BANNER: MARKET FORENSIC & CATALYST COMMAND BAR ──────── */}
-      <div className="w-full flex-shrink-0 p-4 rounded-2xl bg-gradient-to-r from-[#17112B] via-[#10101C] to-[#0A1624] border border-violet-500/50 shadow-2xl flex flex-wrap lg:flex-nowrap items-center justify-between gap-4">
-        {/* Left: Identity & Purpose */}
-        <div className="flex items-center gap-3.5">
-          <div className="p-2.5 rounded-xl bg-violet-600/20 border border-violet-500/60 shadow-[0_0_20px_rgba(124,58,237,0.5)]">
-            <CryptoIcon symbol={activeSymbol} size={36} />
+      {/* ─── 1. HERO BANNER: ASSET CONTROL & REAL-TIME QUOTE BAR ─────────── */}
+      <div className="w-full flex-shrink-0 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-[#141026] via-[#0E0E18] to-[#0A1220] border border-[#2B2B44] shadow-xl flex flex-wrap lg:flex-nowrap items-center justify-between gap-4">
+        {/* Left: Token Identity & Active Contract Context */}
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-violet-600/20 border border-violet-500/40 shadow-[0_0_15px_rgba(124,58,237,0.35)] flex-shrink-0">
+            <CryptoIcon symbol={activeSymbol} size={38} />
           </div>
-          <div>
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-violet-950/90 border border-violet-500/60 text-violet-300 font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                MARKET FORENSIC & CATALYST HUB
-              </span>
-              <span className="text-[10px] text-gray-400">Somnia Shannon L1</span>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                {activeSymbol} <span className="text-gray-400 font-normal text-lg">/ tUSDC</span>
+              </h2>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white mt-1 tracking-tight flex items-center gap-2">
-              <span>{activeSymbol} / tUSDC</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-[#1C1C2C] text-violet-300 border border-[#2F2F48] font-bold">
-                Binary Event Contract
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-mono font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Somnia Shannon L1
               </span>
-            </h2>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-violet-950/80 text-cyan-300 border border-violet-500/40 font-mono font-bold">
+                Round: {roundId}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Center: Live Arbitrage & Divergence Metrics */}
-        <div className="flex items-center gap-4 sm:gap-6 bg-[#080811]/90 border border-[#232338] px-4 py-2 rounded-xl shadow-inner flex-wrap sm:flex-nowrap">
+        {/* Center: Real-time Quantitative Quote Matrix */}
+        <div className="flex items-center gap-3 sm:gap-5 bg-[#090912]/90 border border-[#1F1F32] px-4 py-2 rounded-xl shadow-inner flex-wrap sm:flex-nowrap">
           <div>
-            <span className="text-[9px] text-gray-500 block uppercase font-bold">Implied Odds</span>
-            <span className={`text-base font-black ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
+            <span className="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Implied Odds</span>
+            <span className={`text-sm sm:text-base font-black font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
               {prob.toFixed(1)}% YES
             </span>
           </div>
-          <div className="w-px h-6 bg-[#232338]" />
+          <div className="w-px h-6 bg-[#212136]" />
           <div>
-            <span className="text-[9px] text-gray-500 block uppercase font-bold flex items-center gap-1">
-              Spot Price (Oracle)
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Live Binance Oracle Feed" />
+            <span className="text-[9px] text-gray-400 block uppercase font-bold tracking-wider flex items-center gap-1">
+              Spot (Oracle)
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Live Binance Feed" />
             </span>
-            <span className="text-base font-black text-cyan-300">
+            <span className="text-sm sm:text-base font-black font-mono text-cyan-300">
               ${spotPrice > 10 ? spotPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : spotPrice.toFixed(4)}
             </span>
           </div>
-          <div className="w-px h-6 bg-[#232338]" />
+          <div className="w-px h-6 bg-[#212136]" />
           <div>
-            <span className="text-[9px] text-gray-500 block uppercase font-bold">Target Strike</span>
-            <span className="text-base font-black text-white">
+            <span className="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Strike Target</span>
+            <span className="text-sm sm:text-base font-black font-mono text-white">
               ${strikePrice > 10 ? strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : strikePrice.toFixed(4)}
             </span>
           </div>
-          <div className="w-px h-6 bg-[#232338]" />
+          <div className="w-px h-6 bg-[#212136]" />
           <div>
-            <span className="text-[9px] text-gray-500 block uppercase font-bold">Quant Edge (Φ)</span>
-            <span className={`text-base font-black ${quantEdgeBps > 0 ? "text-emerald-400" : quantEdgeBps < 0 ? "text-rose-400" : "text-amber-300"}`}>
+            <span className="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Quant Edge (Φ)</span>
+            <span className={`text-sm sm:text-base font-black font-mono ${quantEdgeBps > 0 ? "text-emerald-400" : quantEdgeBps < 0 ? "text-rose-400" : "text-amber-300"}`}>
               {quantEdgeBps > 0 ? `+${quantEdgeBps}` : quantEdgeBps} bps
             </span>
           </div>
         </div>
 
-        {/* Right: Asset Switcher & Action CTA */}
-        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-          <div className="flex items-center bg-[#0B0B14] border border-[#24243A] rounded-xl p-1 gap-1">
+        {/* Right: Token Switcher, Refresh & Terminal CTA */}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center bg-[#090912] border border-[#222238] rounded-xl p-1 gap-1">
             {["BTC", "ETH", "SOL", "SOMI"].map((sym) => (
               <button
                 key={sym}
                 onClick={() => handleSelectSymbol(sym)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   sym === activeSymbol
-                    ? "bg-violet-600 text-white shadow-[0_0_12px_rgba(124,58,237,0.7)] border border-violet-400 scale-[1.03]"
-                    : "text-gray-400 hover:text-white hover:bg-[#181826]"
+                    ? "bg-violet-600 text-white shadow-[0_0_12px_rgba(124,58,237,0.7)] border border-violet-400 scale-[1.02]"
+                    : "text-gray-400 hover:text-white hover:bg-[#1C1C2C]"
                 }`}
               >
                 {sym}
@@ -395,22 +433,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
           <button
             onClick={handleManualRefresh}
-            title="Refresh Real-time Feeds"
-            className="p-2 rounded-lg bg-[#0B0B14] border border-[#24243A] text-gray-400 hover:text-white hover:border-violet-500/50 transition cursor-pointer"
+            disabled={isLoading}
+            title="Force refresh live Oracle & CLOB streams"
+            className="p-2 rounded-xl bg-[#0F0F1A] border border-[#232338] text-gray-400 hover:text-white hover:border-violet-500 transition-all cursor-pointer shadow-md disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-violet-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-violet-400" : ""}`} />
           </button>
-
-          {/* <button
-            onClick={() => {
-              sound.playClick();
-              onSelectMarket(activeSymbol);
-            }}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg cursor-pointer"
-          >
-            <span>Trade in Terminal</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </button> */}
         </div>
       </div>
 
@@ -480,7 +508,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-bold">
                 <span className="text-emerald-400 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" /> YES Conviction ({prob.toFixed(1)}%)
+                  <TrendingUp className="w-3 h-3" />
+                  YES Conviction ({prob.toFixed(1)}%)
                 </span>
                 <span className="text-rose-400">
                   NO Conviction ({(100 - prob).toFixed(1)}%)
@@ -552,12 +581,51 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <Scale className="w-3.5 h-3.5" />
               </div>
               <span className="text-xs font-bold text-white">QUANTITATIVE PRICING & SETTLEMENT TRAJECTORY</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded border border-cyan-500/30 text-cyan-300 font-bold">BLACK-SCHOLES Φ(d₂)</span>
             </div>
-            <span className="text-[10px] text-gray-400 font-mono">Deterministic Engine</span>
+            <span className="text-[10px] text-gray-400 font-mono flex items-center gap-1.5">
+              <span className="text-cyan-400 font-bold font-mono">Round: {roundId}</span>
+            </span>
           </div>
 
           <div className="p-4 space-y-4">
+            {/* Round Rollover Notification Banner */}
+            {rolloverNotice && (
+              <div className="px-3 py-2 rounded-lg bg-gradient-to-r from-violet-950/90 via-indigo-950/80 to-[#0A1624] border border-violet-500/60 text-violet-200 text-xs flex items-center justify-between font-mono shadow-[0_0_15px_rgba(124,58,237,0.3)] animate-pulse">
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '4s' }} />
+                  <div>
+                    <span className="font-black text-white block">
+                      🔄 NEW CADENCE ROUND ACTIVATED [{rolloverNotice.round}]
+                    </span>
+                    <span className="text-[10px] text-gray-300">
+                      Previous round settled. New {rolloverNotice.durationMin}m window opened — metrics re-calibrated.
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setRolloverNotice(null)}
+                  className="text-gray-400 hover:text-white text-xs px-2 py-1 rounded bg-black/40 border border-white/10 cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* Final 60-Second Pin-Risk Settlement Notice */}
+            {isSettlingPhase && (
+              <div className="px-3 py-2 rounded-lg bg-amber-950/90 border border-amber-500/60 text-amber-200 text-xs flex items-center gap-2.5 font-mono shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 animate-bounce" />
+                <div>
+                  <span className="font-black text-amber-300 block">
+                    🔒 FINAL SETTLEMENT EXPIRATION (&lt;60s)
+                  </span>
+                  <span className="text-[10px] text-amber-200/80">
+                    High pin-risk compression: Time decay forces probability toward binary 0% or 100%. Avoid new orders!
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* 1. Market vs Quant Valuation Comparison Table with Verdict Banner */}
             <div className="rounded-lg bg-[#0B0B13] border border-[#1E1E2E] p-3 space-y-3">
               {/* Plain-Language Verdict Banner */}

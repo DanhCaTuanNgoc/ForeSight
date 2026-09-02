@@ -32,9 +32,6 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
             <h3 className="font-bold text-white text-sm flex items-center gap-1.5">
               AI Copilot Reasoning Feed <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
             </h3>
-            <p className="text-[11px] text-gray-400">
-              Autonomous Micro-Volatility & Orderbook Skew Intelligence
-            </p>
           </div>
         </div>
         <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">

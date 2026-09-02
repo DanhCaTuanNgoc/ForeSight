@@ -204,16 +204,20 @@ async function callLiveLLM(
   interval: string,
   sources: DebateSource[]
 ): Promise<Partial<DualDebateResult> | null> {
-  if (process.env.DISABLE_GEMINI === "true" || process.env.DISABLE_LIVE_LLM === "true") {
-    return null; // Zero API consumption: use local deterministic quantitative synthesizer
+  if (process.env.DISABLE_LIVE_LLM === "true") {
+    return null; // Explicit hard kill-switch
   }
 
-  const geminiKey = process.env.GEMINI_API_KEY;
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  const groqKey = process.env.GROQ_API_KEY;
+  const geminiKey = (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10 && process.env.DISABLE_GEMINI !== "true")
+    ? process.env.GEMINI_API_KEY.trim()
+    : undefined;
+  const openRouterKey = (process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY.trim().length > 10)
+    ? process.env.OPENROUTER_API_KEY.trim()
+    : undefined;
+  const groqKey = process.env.GROQ_API_KEY?.trim();
 
   if (!geminiKey && !openRouterKey && !groqKey) {
-    return null; // Fallback to heuristic
+    return null; // Zero API consumption: fallback to local deterministic quantitative synthesizer
   }
 
   // ─── CASE 1: DUAL FRONTIER LLM ARENA (Gemini 2.5 Flash vs OpenRouter LLaMA 3.3 70B) ───
