@@ -27,7 +27,9 @@ export interface DualDebateResult {
   spikeId?: string;
   timestamp: number;
   currentProbability: number;
-  engineUsed: "live_llm" | "heuristic_rag";
+  engineUsed: "live_llm" | "heuristic_rag" | "dual_frontier_llm";
+  bullModel?: string;
+  bearModel?: string;
   bullCase: {
     agentName: "Alpha Bull AI";
     headline: string;
@@ -35,6 +37,7 @@ export interface DualDebateResult {
     targetProbability: number;
     keyArguments: string[];
     catalysts: string[];
+    modelUsed?: string;
   };
   bearCase: {
     agentName: "Macro Bear AI";
@@ -43,6 +46,7 @@ export interface DualDebateResult {
     targetProbability: number;
     keyArguments: string[];
     riskFactors: string[];
+    modelUsed?: string;
   };
   sources: DebateSource[];
   summary: string;
@@ -463,7 +467,7 @@ export async function generateDualDebate(params: {
   const cleanAsset = (market.underlyingAsset || asset).toUpperCase();
   const mid = (market.midPrice && market.midPrice > 0.05 && market.midPrice < 0.95 && market.midPrice !== 0.50)
     ? market.midPrice
-    : (market.probability && market.probability !== 50 ? market.probability / 100 : (defaultOddsMap[cleanAsset] || 0.55));
+    : ((market as any).probability && (market as any).probability !== 50 ? (market as any).probability / 100 : (defaultOddsMap[cleanAsset] || 0.55));
 
   // Retrieve RAG news around the spike window (or latest news)
   let sources: DebateSource[] = [];
@@ -519,11 +523,11 @@ export async function generateDualDebate(params: {
       spikeId,
       timestamp: spikeTimestamp,
       currentProbability: mid,
-      engineUsed: liveResult.engineUsed || "dual_frontier_llm",
-      bullModel: liveResult.bullModel,
-      bearModel: liveResult.bearModel,
-      bullCase: liveResult.bullCase,
-      bearCase: liveResult.bearCase,
+      engineUsed: (liveResult.engineUsed || "dual_frontier_llm") as any,
+      bullModel: (liveResult as any).bullModel,
+      bearModel: (liveResult as any).bearModel,
+      bullCase: liveResult.bullCase as any,
+      bearCase: liveResult.bearCase as any,
       sources,
       summary: liveResult.summary || `Live Dual AI generated perspective for ${asset}.`,
     };

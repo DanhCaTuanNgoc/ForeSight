@@ -148,7 +148,7 @@ function ForeSightTerminalApp() {
           // Ensure core Somnia assets (SOL, SOMI) are always available in the UI
           const existingAssets = new Set(parsed.map((p: any) => (p.underlyingAsset || p.symbol).toUpperCase()));
           FALLBACK_MARKETS.forEach((fb) => {
-            if (!existingAssets.has(fb.underlyingAsset.toUpperCase())) {
+            if (fb.underlyingAsset && !existingAssets.has(fb.underlyingAsset.toUpperCase())) {
               parsed.push(fb);
             }
           });
@@ -617,7 +617,7 @@ function ForeSightTerminalApp() {
                 midPrice={activeMarket?.midPrice || 0.50}
                 onSetEntryPrice={(price) => {
                   setPrefillEntryPrice(price);
-                  showToast(`Selected $${price.toFixed(3)} from Orderbook as Entry Odds!`, "info");
+                  showToast(`Selected $${price.toFixed(3)} from Orderbook as Entry Odds!`, "success");
                 }}
                 onViewInsights={() => setActiveTab("insights")}
               />

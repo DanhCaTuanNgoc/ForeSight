@@ -275,7 +275,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
     const url = canvas.toDataURL("image/png");
     const a = document.createElement("a");
     a.href = url;
-    a.download = ForeSight---AlphaCard.png;
+    a.download = `ForeSight-${assetName || "AlphaCard"}.png`;
     a.click();
   };
 

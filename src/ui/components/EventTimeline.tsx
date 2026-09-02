@@ -25,6 +25,7 @@ export interface TimelineEvent {
   priceBefore?: number;
   priceAfter?: number;
   category: 'spike' | 'news' | 'volume' | 'settle';
+  evidenceUrl?: string;
 }
 
 interface EventTimelineProps {
