@@ -105,9 +105,9 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const currentSpot = useMemo(() => {
     const sym = assetName.toUpperCase();
     if (liveSpotMap[sym]) return liveSpotMap[sym];
-    if (sym === "BTC") return 80120;
-    if (sym === "ETH") return 2514;
-    if (sym === "SOL") return 178;
+    if (sym === "BTC") return 77590;
+    if (sym === "ETH") return 2420;
+    if (sym === "SOL") return 100;
     return 0.742;
   }, [assetName, liveSpotMap]);
 

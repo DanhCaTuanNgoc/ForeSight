@@ -14,9 +14,6 @@ import {
   TrendingUp,
   Sparkles,
   Zap,
-  Layers,
-  Flame,
-  Clock,
   X,
   Volume2,
   CandlestickChart,
@@ -28,12 +25,9 @@ import {
   Timer,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
-import { DepthChart } from "./DepthChart.js";
-import { Heatmap } from "./Heatmap.js";
-import { EventTimeline } from "./EventTimeline.js";
 
 type TimeRange = "15m" | "1H" | "4H" | "1D";
-export type CanvasVisualMode = "probability" | "montecarlo" | "depth" | "heatmap" | "timeline";
+export type CanvasVisualMode = "probability" | "montecarlo";
 type VolatilityLevel = "low" | "normal" | "high";
 type CurveMode = "yes-only" | "dual";
 type RenderType = "area" | "candles";
@@ -133,11 +127,8 @@ function generateMockData(range: TimeRange, baseProbability: number, symbol: str
 
 // ─── Mode tab config ─────────────────────────────────────────────────────────
 const MODE_TABS: { mode: CanvasVisualMode; icon: React.ElementType; label: string; activeClass: string }[] = [
-  { mode: "probability", icon: TrendingUp, label: "Probability", activeClass: "bg-violet-600 text-white shadow-sm" },
+  { mode: "probability", icon: TrendingUp, label: "Price Chart", activeClass: "bg-violet-600 text-white shadow-sm" },
   { mode: "montecarlo", icon: Sparkles, label: "Monte Carlo", activeClass: "bg-cyan-600 text-white shadow-sm" },
-  { mode: "heatmap", icon: Flame, label: "Heatmap", activeClass: "bg-amber-600 text-white shadow-sm" },
-  { mode: "depth", icon: Layers, label: "Depth", activeClass: "bg-indigo-600 text-white shadow-sm" },
-  { mode: "timeline", icon: Clock, label: "Timeline", activeClass: "bg-emerald-600 text-white shadow-sm" },
 ];
 
 export const PriceChart: React.FC<PriceChartProps> = ({
@@ -920,11 +911,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             </div>
           </div>
         )}
-
-        {/* Mode 3–5 */}
-        {visualMode === "heatmap" && <div className="h-56 overflow-y-auto"><Heatmap /></div>}
-        {visualMode === "depth" && <div className="h-56 overflow-y-auto"><DepthChart symbol={symbol} midPrice={last || 0.5} /></div>}
-        {visualMode === "timeline" && <div className="h-56 overflow-y-auto"><EventTimeline symbol={symbol} /></div>}
 
         {/* Panning / Time Horizon Indicator */}
         {(zoomLevel > 1 || panOffset > 0) && (

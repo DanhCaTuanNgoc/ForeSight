@@ -5,6 +5,7 @@ import { apiUrl } from "../utils/api.js";
 interface DepthChartProps {
   symbol?: string;
   midPrice?: number;
+  onSelectPrice?: (price: number) => void;
 }
 
 interface DepthLevel {
@@ -16,19 +17,27 @@ interface DepthLevel {
 export const DepthChart: React.FC<DepthChartProps> = ({
   symbol = "BTC",
   midPrice = 0.612,
+  onSelectPrice,
 }) => {
   const [bids, setBids] = useState<DepthLevel[]>([]);
   const [asks, setAsks] = useState<DepthLevel[]>([]);
   const [realMidPrice, setRealMidPrice] = useState<number>(midPrice);
 
   useEffect(() => {
+    setRealMidPrice(midPrice);
+  }, [midPrice]);
+
+  useEffect(() => {
     let isMounted = true;
+    const currentMid = midPrice || 0.50;
+
     const fetchOrderbook = async () => {
       try {
         const res = await fetch(apiUrl(`/api/markets/${encodeURIComponent(symbol)}/orderbook`));
         if (res.ok) {
           const data = await res.json();
-          if (data.midPrice) setRealMidPrice(data.midPrice);
+          const targetMid = data.midPrice || currentMid;
+          if (isMounted) setRealMidPrice(targetMid);
 
           if (data.bids && data.bids.length > 0) {
             let bidTotal = 0;
@@ -40,12 +49,15 @@ export const DepthChart: React.FC<DepthChartProps> = ({
             });
             if (isMounted) setBids(parsedBids);
           } else {
+            // Deterministic distinct depth curve seeded by symbol name
+            let seed = 0;
+            for (let c = 0; c < symbol.length; c++) seed = (seed << 5) - seed + symbol.charCodeAt(c);
             let currentTotal = 0;
             const fallbackBids = Array.from({ length: 6 }, (_, i) => {
-              const price = realMidPrice - (i + 1) * 0.015;
-              const size = Math.floor(800 + ((i * 123) % 400));
+              const price = targetMid - (i + 1) * 0.015;
+              const size = Math.floor(600 + (Math.abs(seed * (i + 1) * 123) % 800));
               currentTotal += size;
-              return { price: Math.max(0.01, price), size, total: currentTotal };
+              return { price: Math.max(0.01, parseFloat(price.toFixed(3))), size, total: currentTotal };
             });
             if (isMounted) setBids(fallbackBids);
           }
@@ -60,12 +72,14 @@ export const DepthChart: React.FC<DepthChartProps> = ({
             });
             if (isMounted) setAsks(parsedAsks);
           } else {
+            let seed = 0;
+            for (let c = 0; c < symbol.length; c++) seed = (seed << 5) - seed + symbol.charCodeAt(c);
             let currentTotal = 0;
             const fallbackAsks = Array.from({ length: 6 }, (_, i) => {
-              const price = realMidPrice + (i + 1) * 0.015;
-              const size = Math.floor(750 + ((i * 157) % 350));
+              const price = targetMid + (i + 1) * 0.015;
+              const size = Math.floor(550 + (Math.abs(seed * (i + 1) * 157) % 750));
               currentTotal += size;
-              return { price: Math.min(0.99, price), size, total: currentTotal };
+              return { price: Math.min(0.99, parseFloat(price.toFixed(3))), size, total: currentTotal };
             });
             if (isMounted) setAsks(fallbackAsks);
           }
@@ -81,7 +95,7 @@ export const DepthChart: React.FC<DepthChartProps> = ({
       isMounted = false;
       clearInterval(interval);
     };
-  }, [symbol, midPrice, realMidPrice]);
+  }, [symbol, midPrice]);
 
   const maxTotal = Math.max(
     bids[bids.length - 1]?.total || 1,
@@ -94,7 +108,7 @@ export const DepthChart: React.FC<DepthChartProps> = ({
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2A2A3D]">
         <div className="flex items-center gap-1.5">
           <Layers className="w-3.5 h-3.5 text-violet-400" />
-          <span className="stat-label">ORDER BOOK DEPTH</span>
+          <span className="stat-label">ORDER BOOK DEPTH ({symbol}/tUSDC)</span>
         </div>
         <span className="text-[10px] text-gray-500 font-mono">
           Visual Analytics Only
@@ -115,7 +129,13 @@ export const DepthChart: React.FC<DepthChartProps> = ({
               return (
                 <div
                   key={idx}
-                  className="relative flex justify-between items-center py-0.5 px-1 rounded overflow-hidden"
+                  onClick={() => {
+                    if (onSelectPrice) onSelectPrice(b.price);
+                  }}
+                  title={`Click to set $${b.price.toFixed(3)} as Entry Odds`}
+                  className={`relative flex justify-between items-center py-1 px-1.5 rounded overflow-hidden transition-colors ${
+                    onSelectPrice ? "hover:bg-emerald-500/25 cursor-pointer" : ""
+                  }`}
                 >
                   <div
                     className="absolute right-0 top-0 bottom-0 bg-emerald-500/15 rounded-sm"
@@ -145,7 +165,13 @@ export const DepthChart: React.FC<DepthChartProps> = ({
               return (
                 <div
                   key={idx}
-                  className="relative flex justify-between items-center py-0.5 px-1 rounded overflow-hidden"
+                  onClick={() => {
+                    if (onSelectPrice) onSelectPrice(a.price);
+                  }}
+                  title={`Click to set $${a.price.toFixed(3)} as Entry Odds`}
+                  className={`relative flex justify-between items-center py-1 px-1.5 rounded overflow-hidden transition-colors ${
+                    onSelectPrice ? "hover:bg-rose-500/25 cursor-pointer" : ""
+                  }`}
                 >
                   <div
                     className="absolute left-0 top-0 bottom-0 bg-rose-500/15 rounded-sm"

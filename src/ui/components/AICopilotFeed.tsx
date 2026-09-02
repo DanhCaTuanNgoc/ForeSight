@@ -43,11 +43,16 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
       </div>
 
       {/* Signal Stream */}
-      <div className="space-y-3 overflow-y-auto max-h-[460px] pr-1 flex-1">
+      <div className="space-y-3 overflow-y-auto max-h-[460px] pr-1 flex-1 custom-scrollbar">
         {signals.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 text-xs">
-            <AlertCircle className="w-6 h-6 mx-auto mb-2 opacity-50" />
-            Scanning market books for AI catalysts...
+          <div className="text-center py-16 text-gray-400 text-xs flex flex-col items-center justify-center space-y-3">
+            <div className="w-10 h-10 rounded-full border-2 border-violet-500/30 border-t-violet-400 animate-spin flex items-center justify-center">
+              <Bot className="w-4 h-4 text-violet-400" />
+            </div>
+            <div>
+              <p className="font-bold text-white">Scanning Somnia CLOB Sockets...</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">Evaluating micro-volatility & orderbook asymmetry</p>
+            </div>
           </div>
         ) : (
           signals.map((sig, idx) => {
@@ -59,12 +64,12 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
               <div
                 key={idx}
                 onClick={() => onSelectMarket(sig.symbol)}
-                className="p-3.5 rounded-xl bg-[#0E1422] border border-brand-border hover:border-orange-500/50 hover:bg-[#131B2E] transition cursor-pointer group"
+                className="p-3.5 rounded-xl bg-[#0E1422] border border-brand-border hover:border-violet-500/60 hover:bg-[#131B2E] transition cursor-pointer group shadow-sm"
               >
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-mono text-xs font-bold text-white group-hover:text-orange-400 transition flex items-center gap-1.5">
+                  <span className="font-mono text-xs font-bold text-white group-hover:text-violet-300 transition flex items-center gap-1.5">
                     <CryptoIcon symbol={assetName} size={16} />
-                    <span>{assetName} • {sig.cadence || "15m"}</span>
+                    <span>{assetName} • {sig.cadence || "1h"}</span>
                   </span>
                   <div className="flex items-center gap-1.5">
                     <span
@@ -84,9 +89,14 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
                   {sig.reasoning}
                 </p>
 
-                <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1.5 border-t border-brand-border/40">
-                  <span>Suggested Price: <span className="font-mono text-white">${sig.suggestedPrice.toFixed(2)}</span></span>
-                  <span className="text-orange-400 font-medium group-hover:underline">Predict Now →</span>
+                <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1.5 border-t border-brand-border/40 font-mono">
+                  <span>
+                    Entry Target: <span className="font-bold text-white">{Math.round((sig.suggestedPrice <= 1 ? sig.suggestedPrice : sig.suggestedPrice / 100) * 100)}% (${(sig.suggestedPrice <= 1 ? sig.suggestedPrice : sig.suggestedPrice / 100).toFixed(2)})</span>
+                  </span>
+                  <span className="text-violet-400 font-bold group-hover:underline flex items-center gap-1">
+                    <span>Trade Signal</span>
+                    <Sparkles className="w-3 h-3" />
+                  </span>
                 </div>
               </div>
             );

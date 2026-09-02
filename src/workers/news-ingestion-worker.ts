@@ -195,10 +195,13 @@ export class NewsIngestionWorker {
       const cleanDesc = descMatch ? descMatch[1].replace(/<[^>]+>/g, "").trim() : "";
       const dateStr = pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString();
 
+      const rawLink = linkMatch ? linkMatch[1].trim() : "";
+      const cleanLink = rawLink.replace(/^<!\[CDATA\[/, "").replace(/\]\]>$/, "").trim();
+
       results.push({
         title,
         summary: cleanDesc.slice(0, 200) || null,
-        url: linkMatch ? linkMatch[1].trim() : null,
+        url: cleanLink || null,
         source: "cointelegraph",
         asset_tags: this.extractAssetTags(title + " " + cleanDesc),
         sentiment: "neutral" as const,

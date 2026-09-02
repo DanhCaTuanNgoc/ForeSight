@@ -187,19 +187,33 @@ export async function getNewsByTimeWindow(
 }
 
 /** Get latest N news events (for dashboard feed). */
-export async function getLatestNews(limit = 20): Promise<NewsEventRow[]> {
+export async function getLatestNews(limit = 20, asset?: string): Promise<NewsEventRow[]> {
   const sb = getSupabase();
   const { data, error } = await sb
     .from("news_events")
     .select("*")
     .order("published_at", { ascending: false })
-    .limit(limit);
+    .limit(limit * 3);
 
   if (error) {
     console.error("[repo] getLatestNews error:", error.message);
     return [];
   }
-  return (data ?? []) as unknown as NewsEventRow[];
+
+  const rows = (data ?? []) as unknown as NewsEventRow[];
+  if (!asset || asset === "ALL") {
+    return rows.slice(0, limit);
+  }
+
+  const target = asset.toUpperCase();
+  // Filter & prioritize articles directly mentioning the asset in tags or title
+  const assetMatched = rows.filter((r) =>
+    (r.asset_tags || []).some((t: string) => t.toUpperCase() === target) ||
+    r.title.toUpperCase().includes(target)
+  );
+  const others = rows.filter((r) => !assetMatched.includes(r));
+
+  return [...assetMatched, ...others].slice(0, limit);
 }
 
 // ────────────────────────────────────────────────────────────

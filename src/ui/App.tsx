@@ -145,6 +145,14 @@ function ForeSightTerminalApp() {
             status: m.status || "TRADING",
             volume24h: m.volume24h || 120000,
           }));
+          // Ensure core Somnia assets (SOL, SOMI) are always available in the UI
+          const existingAssets = new Set(parsed.map((p: any) => (p.underlyingAsset || p.symbol).toUpperCase()));
+          FALLBACK_MARKETS.forEach((fb) => {
+            if (!existingAssets.has(fb.underlyingAsset.toUpperCase())) {
+              parsed.push(fb);
+            }
+          });
+
           setMarkets(parsed);
           if (!selectedMarket) setSelectedMarket(parsed[0]);
           return;
@@ -364,6 +372,21 @@ function ForeSightTerminalApp() {
   const activeMarket = selectedMarket || markets[0] || FALLBACK_MARKETS[0];
   const activeSymbol = activeMarket.underlyingAsset || activeMarket.symbol;
 
+  const handleSelectSymbolGlobal = (sym: string) => {
+    const list = markets.length > 0 ? markets : FALLBACK_MARKETS;
+    let found = list.find(
+      (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
+    );
+    if (!found) {
+      found = FALLBACK_MARKETS.find(
+        (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
+      );
+    }
+    if (found) {
+      setSelectedMarket(found);
+    }
+  };
+
   // ─── If Landing Page is Active ───────────────────────────────────────────────
   if (activeTab === "landing") {
     return (
@@ -407,12 +430,10 @@ function ForeSightTerminalApp() {
       {activeTab === "analytics" && (
         <AnalyticsView
           markets={markets.length > 0 ? markets : FALLBACK_MARKETS}
+          selectedSymbol={activeSymbol}
+          onSelectSymbol={handleSelectSymbolGlobal}
           onSelectMarket={(sym) => {
-            const list = markets.length > 0 ? markets : FALLBACK_MARKETS;
-            const found = list.find(
-              (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
-            );
-            if (found) setSelectedMarket(found);
+            handleSelectSymbolGlobal(sym);
             setActiveTab("markets");
           }}
         />
@@ -420,12 +441,11 @@ function ForeSightTerminalApp() {
 
       {activeTab === "insights" && (
         <InsightsView
-          markets={markets}
+          markets={markets.length > 0 ? markets : FALLBACK_MARKETS}
+          selectedSymbol={activeSymbol}
+          onSelectSymbol={handleSelectSymbolGlobal}
           onTradeSignal={(sym, outcome, price) => {
-            const found = markets.find(
-              (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
-            );
-            if (found) setSelectedMarket(found);
+            handleSelectSymbolGlobal(sym);
             setPrefillOutcome(outcome);
             if (price) setPrefillEntryPrice(price);
             setActiveTab("markets");
@@ -565,18 +585,16 @@ function ForeSightTerminalApp() {
               </div>
             </main>
 
-            {/* ── RIGHT COLUMN: Dual AI Arena & Grounded RAG Evidence ──────── */}
+            {/* ── RIGHT COLUMN: Somnia CLOB Orderbook & Liquidity Depth ────── */}
             <aside className="w-72 xl:w-80 border-l border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
               <ContextPanel
                 symbol={activeSymbol}
-                debate={debate}
-                debateLoading={debateLoading}
-                news={news}
-                onViewDebate={() => setIsDebateModalOpen(true)}
-                onSimulate={({ outcome }) => {
-                  setPrefillOutcome(outcome);
-                  showToast(`Synced ${outcome} strategy to decision simulator!`, "success");
+                midPrice={activeMarket?.midPrice || 0.50}
+                onSetEntryPrice={(price) => {
+                  setPrefillEntryPrice(price);
+                  showToast(`Selected $${price.toFixed(3)} from Orderbook as Entry Odds!`, "info");
                 }}
+                onViewInsights={() => setActiveTab("insights")}
               />
             </aside>
           </div>

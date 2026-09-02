@@ -204,13 +204,121 @@ async function callLiveLLM(
   interval: string,
   sources: DebateSource[]
 ): Promise<Partial<DualDebateResult> | null> {
+  if (process.env.DISABLE_GEMINI === "true" || process.env.DISABLE_LIVE_LLM === "true") {
+    return null; // Zero API consumption: use local deterministic quantitative synthesizer
+  }
+
   const geminiKey = process.env.GEMINI_API_KEY;
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
   const groqKey = process.env.GROQ_API_KEY;
 
-  if (!geminiKey && !groqKey) {
+  if (!geminiKey && !openRouterKey && !groqKey) {
     return null; // Fallback to heuristic
   }
 
+  // ─── CASE 1: DUAL FRONTIER LLM ARENA (Gemini 2.5 Flash vs OpenRouter LLaMA 3.3 70B) ───
+  if (geminiKey && openRouterKey) {
+    try {
+      const bullPrompt = `You are Alpha Bull AI on Somnia L1.
+Market: ${asset} Event Contract (${interval} cadence), Current Implied Odds: ${Math.round(mid * 100)}%.
+Context: ${sources.map((s) => s.title).slice(0, 3).join("; ")}
+Write a sharp, high-conviction institutional BULL thesis for this binary prediction contract.
+Return strictly valid JSON:
+{
+  "headline": "concise institutional bull headline",
+  "confidence": 0.82,
+  "targetProbability": 0.78,
+  "keyArguments": ["bull argument 1", "bull argument 2", "bull argument 3"],
+  "catalysts": ["catalyst 1", "catalyst 2"]
+}`;
+
+      const bearPrompt = `You are Macro Bear AI on Somnia L1.
+Market: ${asset} Event Contract (${interval} cadence), Current Implied Odds: ${Math.round(mid * 100)}%.
+Context: ${sources.map((s) => s.title).slice(0, 3).join("; ")}
+Write a sharp, institutional BEAR thesis focusing on downside risks, theta time decay, overhead supply walls, and binary asymmetry.
+Return strictly valid JSON:
+{
+  "headline": "concise institutional bear headline",
+  "confidence": 0.75,
+  "targetProbability": 0.35,
+  "keyArguments": ["bear risk argument 1", "bear risk argument 2", "bear risk argument 3"],
+  "riskFactors": ["risk factor 1", "risk factor 2"]
+}`;
+
+      const [geminiResult, openRouterResult] = await Promise.allSettled([
+        // 1. Google Gemini 2.5 Flash -> Alpha Bull Case
+        fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: bullPrompt }] }],
+            generationConfig: { responseMimeType: "application/json" },
+          }),
+          signal: AbortSignal.timeout(15000),
+        }).then(async (r) => {
+          if (!r.ok) throw new Error(`Gemini Error ${r.status}`);
+          const data: any = await r.json();
+          return JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text);
+        }),
+
+        // 2. OpenRouter Meta LLaMA 3.3 70B -> Macro Bear Case
+        fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${openRouterKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://foresight.somnia.network",
+            "X-Title": "ForeSight Dual Arena",
+          },
+          body: JSON.stringify({
+            model: "meta-llama/llama-3.3-70b-instruct",
+            messages: [{ role: "user", content: bearPrompt }],
+            response_format: { type: "json_object" },
+            max_tokens: 450,
+          }),
+          signal: AbortSignal.timeout(15000),
+        }).then(async (r) => {
+          if (!r.ok) throw new Error(`OpenRouter Error ${r.status}`);
+          const data: any = await r.json();
+          return JSON.parse(data?.choices?.[0]?.message?.content);
+        }),
+      ]);
+
+      if (geminiResult.status === "fulfilled" && openRouterResult.status === "fulfilled") {
+        const bullData = geminiResult.value;
+        const bearData = openRouterResult.value;
+
+        return {
+          engineUsed: "dual_frontier_llm" as any,
+          bullModel: "Google Gemini 2.5 Flash",
+          bearModel: "Meta LLaMA 3.3 70B (OpenRouter)",
+          bullCase: {
+            agentName: "Alpha Bull AI",
+            modelUsed: "Google Gemini 2.5 Flash",
+            headline: bullData.headline || `Strong momentum on ${asset} supported by Gemini orderbook analysis.`,
+            confidence: Math.min(0.95, Math.max(0.1, Number(bullData.confidence) || 0.8)),
+            targetProbability: Math.min(0.99, Math.max(0.01, Number(bullData.targetProbability || bullData.target) || 0.75)),
+            keyArguments: Array.isArray(bullData.keyArguments) ? bullData.keyArguments : [],
+            catalysts: Array.isArray(bullData.catalysts) ? bullData.catalysts : [],
+          },
+          bearCase: {
+            agentName: "Macro Bear AI",
+            modelUsed: "Meta LLaMA 3.3 70B (OpenRouter)",
+            headline: bearData.headline || `Elevated risk skew on ${asset} identified by LLaMA 3.3 70B.`,
+            confidence: Math.min(0.95, Math.max(0.1, Number(bearData.confidence) || 0.7)),
+            targetProbability: Math.min(0.99, Math.max(0.01, Number(bearData.targetProbability || bearData.target) || 0.35)),
+            keyArguments: Array.isArray(bearData.keyArguments) ? bearData.keyArguments : [],
+            riskFactors: Array.isArray(bearData.riskFactors) ? bearData.riskFactors : [],
+          },
+          summary: `Dual Frontier Arena: Google Gemini 2.5 Flash defends Bull upside (${Math.round((bullData.confidence || 0.8) * 100)}%), while Meta LLaMA 3.3 70B defends Bear downside (${Math.round((bearData.confidence || 0.7) * 100)}%).`,
+        };
+      }
+    } catch (err: any) {
+      console.warn("[Dual Frontier Arena Partial Error, falling back to Single LLM]:", err?.message || err);
+    }
+  }
+
+  // ─── CASE 2: Single LLM Fallback (Gemini, OpenRouter, or Groq) ─────────
   const prompt = `You are ForeSight Dual AI Arena on Somnia L1.
 Market: ${asset} Event Contract (${interval} cadence), Current Implied Probability: ${Math.round(mid * 100)}%.
 Recent Real-Time News Context:
@@ -234,12 +342,12 @@ Output strictly valid JSON with this format:
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     let rawText = "";
 
     if (geminiKey) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -250,9 +358,31 @@ Output strictly valid JSON with this format:
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
-      if (!res.ok) return null;
-      const data = (await res.json()) as any;
-      rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      }
+    } else if (openRouterKey) {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openRouterKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://foresight.somnia.network",
+        },
+        body: JSON.stringify({
+          model: "meta-llama/llama-3.3-70b-instruct",
+          messages: [{ role: "user", content: prompt }],
+          response_format: { type: "json_object" },
+          max_tokens: 500,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        rawText = data?.choices?.[0]?.message?.content || "";
+      }
     } else if (groqKey) {
       const url = "https://api.groq.com/openai/v1/chat/completions";
       const res = await fetch(url, {
@@ -269,9 +399,10 @@ Output strictly valid JSON with this format:
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
-      if (!res.ok) return null;
-      const data = (await res.json()) as any;
-      rawText = data?.choices?.[0]?.message?.content || "";
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        rawText = data?.choices?.[0]?.message?.content || "";
+      }
     }
 
     if (!rawText) return null;
@@ -279,8 +410,11 @@ Output strictly valid JSON with this format:
 
     return {
       engineUsed: "live_llm",
+      bullModel: geminiKey ? "Google Gemini 2.5 Flash" : "Meta LLaMA 3.3 70B",
+      bearModel: geminiKey ? "Google Gemini 2.5 Flash" : "Meta LLaMA 3.3 70B",
       bullCase: {
         agentName: "Alpha Bull AI",
+        modelUsed: geminiKey ? "Google Gemini 2.5 Flash" : "Meta LLaMA 3.3 70B",
         headline: parsed.bullHeadline,
         confidence: Math.min(0.95, Math.max(0.1, Number(parsed.bullConfidence) || 0.8)),
         targetProbability: Math.min(0.99, Math.max(0.01, Number(parsed.bullTarget) || 0.75)),
@@ -289,6 +423,7 @@ Output strictly valid JSON with this format:
       },
       bearCase: {
         agentName: "Macro Bear AI",
+        modelUsed: geminiKey ? "Google Gemini 2.5 Flash" : "Meta LLaMA 3.3 70B",
         headline: parsed.bearHeadline,
         confidence: Math.min(0.95, Math.max(0.1, Number(parsed.bearConfidence) || 0.7)),
         targetProbability: Math.min(0.99, Math.max(0.01, Number(parsed.bearTarget) || 0.35)),
@@ -297,7 +432,8 @@ Output strictly valid JSON with this format:
       },
       summary: parsed.summary || `Market reflects balanced dual conviction across Bull and Bear models.`,
     };
-  } catch {
+  } catch (err: any) {
+    console.warn("[callLiveLLM Exception]:", err?.message || err);
     return null; // Graceful fallback
   }
 }
@@ -313,7 +449,17 @@ export async function generateDualDebate(params: {
 }): Promise<DualDebateResult> {
   const { market, spikeId, spikeTimestamp = Date.now() } = params;
   const asset = market.underlyingAsset || "BTC";
-  const mid = market.midPrice ?? 0.50;
+
+  const defaultOddsMap: Record<string, number> = {
+    BTC: 0.624,
+    ETH: 0.451,
+    SOL: 0.540,
+    SOMI: 0.738,
+  };
+  const cleanAsset = (market.underlyingAsset || asset).toUpperCase();
+  const mid = (market.midPrice && market.midPrice > 0.05 && market.midPrice < 0.95 && market.midPrice !== 0.50)
+    ? market.midPrice
+    : (market.probability && market.probability !== 50 ? market.probability / 100 : (defaultOddsMap[cleanAsset] || 0.55));
 
   // Retrieve RAG news around the spike window (or latest news)
   let sources: DebateSource[] = [];
@@ -369,7 +515,9 @@ export async function generateDualDebate(params: {
       spikeId,
       timestamp: spikeTimestamp,
       currentProbability: mid,
-      engineUsed: "live_llm",
+      engineUsed: liveResult.engineUsed || "dual_frontier_llm",
+      bullModel: liveResult.bullModel,
+      bearModel: liveResult.bearModel,
       bullCase: liveResult.bullCase,
       bearCase: liveResult.bearCase,
       sources,
@@ -378,7 +526,7 @@ export async function generateDualDebate(params: {
   }
 
   // Deterministic Dynamic Heuristic Synthesis
-  const bullConfidence = Math.min(0.92, Math.max(0.45, Number((mid * 0.9 + 0.15).toFixed(2))));
+  const bullConfidence = Math.min(0.92, Math.max(0.35, Number((mid * 0.75 + 0.20).toFixed(2))));
   const bullTarget = Math.min(0.95, Number((mid + 0.18).toFixed(2)));
   const bullCase = {
     agentName: "Alpha Bull AI" as const,
@@ -397,7 +545,7 @@ export async function generateDualDebate(params: {
     ],
   };
 
-  const bearConfidence = Math.min(0.92, Math.max(0.45, Number(((1 - mid) * 0.9 + 0.15).toFixed(2))));
+  const bearConfidence = Math.min(0.92, Math.max(0.35, Number(((1 - mid) * 0.75 + 0.20).toFixed(2))));
   const bearTarget = Math.max(0.05, Number((mid - 0.18).toFixed(2)));
   const bearCase = {
     agentName: "Macro Bear AI" as const,
