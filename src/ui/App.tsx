@@ -321,6 +321,28 @@ function ForeSightTerminalApp() {
     }
   };
 
+  // Early exit on CLOB: Sell open contracts before round expiry
+  const handleEarlyExit = async (positionId: string, exitPrice?: number) => {
+    try {
+      const res = await fetch(apiUrl(`/api/positions/${encodeURIComponent(positionId)}/close`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exitPrice }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        sound.playSuccessChime();
+        const pnlStr = data.realizedPnl >= 0 ? `+$${data.realizedPnl}` : `-$${Math.abs(data.realizedPnl)}`;
+        showToast(`Early exit on CLOB! Realized PnL: ${pnlStr} (${data.realizedRoiPercent > 0 ? "+" : ""}${data.realizedRoiPercent}%)`, "success");
+        await fetchPositions();
+      } else {
+        showToast(data.error || "Failed to exit position early", "error");
+      }
+    } catch (e: any) {
+      showToast(e.message || "Failed to exit position", "error");
+    }
+  };
+
   // Trade Execution
   const handleExecuteTrade = async (
     symbol: string,
@@ -462,6 +484,7 @@ function ForeSightTerminalApp() {
           onTradeNew={() => setActiveTab("markets")}
           walletAddress={wallet.address || undefined}
           walletBalance={wallet.balance || undefined}
+          onEarlyExit={handleEarlyExit}
         />
       )}
 

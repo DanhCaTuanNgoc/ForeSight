@@ -588,28 +588,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
 
           <div className="p-4 space-y-4">
-            {/* Round Rollover Notification Banner */}
-            {rolloverNotice && (
-              <div className="px-3 py-2 rounded-lg bg-gradient-to-r from-violet-950/90 via-indigo-950/80 to-[#0A1624] border border-violet-500/60 text-violet-200 text-xs flex items-center justify-between font-mono shadow-[0_0_15px_rgba(124,58,237,0.3)] animate-pulse">
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '4s' }} />
-                  <div>
-                    <span className="font-black text-white block">
-                      🔄 NEW CADENCE ROUND ACTIVATED [{rolloverNotice.round}]
-                    </span>
-                    <span className="text-[10px] text-gray-300">
-                      Previous round settled. New {rolloverNotice.durationMin}m window opened — metrics re-calibrated.
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setRolloverNotice(null)}
-                  className="text-gray-400 hover:text-white text-xs px-2 py-1 rounded bg-black/40 border border-white/10 cursor-pointer"
-                >
-                  Dismiss
-                </button>
-              </div>
-            )}
 
             {/* Final 60-Second Pin-Risk Settlement Notice */}
             {isSettlingPhase && (

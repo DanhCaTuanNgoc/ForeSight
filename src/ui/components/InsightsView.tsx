@@ -35,19 +35,22 @@ interface InsightsViewProps {
   onSelectSymbol?: (symbol: string) => void;
 }
 
+// Module-level cache across tab switches so debates are remembered without re-running
+const debateCache: Record<string, any> = {};
+
 export const InsightsView: React.FC<InsightsViewProps> = ({
   markets = [],
   onTradeSignal,
   selectedSymbol: propSymbol,
   onSelectSymbol,
 }) => {
-  const [signals, setSignals] = useState<any[]>([]);
   const [internalSymbol, setInternalSymbol] = useState<string>(
     propSymbol || markets[0]?.underlyingAsset || markets[0]?.symbol || "BTC"
   );
+  const [signals, setSignals] = useState<any[]>([]);
   const selectedSymbol = propSymbol || internalSymbol;
 
-  const [debate, setDebate] = useState<any>(null);
+  const [debate, setDebate] = useState<any>(() => debateCache[selectedSymbol] || null);
   const [debateLoading, setDebateLoading] = useState<boolean>(false);
   const [news, setNews] = useState<any[]>([]);
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
@@ -57,11 +60,17 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     sound.playClick();
     setInternalSymbol(sym);
     if (onSelectSymbol) onSelectSymbol(sym);
+    if (debateCache[sym]) {
+      setDebate(debateCache[sym]);
+    }
   };
 
   useEffect(() => {
     if (propSymbol) {
       setInternalSymbol(propSymbol);
+      if (debateCache[propSymbol]) {
+        setDebate(debateCache[propSymbol]);
+      }
     }
   }, [propSymbol]);
 
@@ -96,19 +105,20 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     }
   }, []);
 
-  // Fetch Debate for selected symbol
-  const fetchDebate = useCallback(async (sym: string) => {
+  // Explicit Re-Debate (Only called when user manually clicks Re-Debate or Refresh)
+  const handleExplicitReDebate = useCallback(async (sym: string) => {
     setDebateLoading(true);
-    setDebate(null); // Clear previous debate so UI immediately reacts to the selected token
     try {
       const res = await fetch(apiUrl(`/api/debate/${encodeURIComponent(sym)}`));
       if (res.ok) {
         const data = await res.json();
-        setDebate(data.debate || data);
+        const resDebate = data.debate || data;
+        debateCache[sym] = resDebate;
+        setDebate(resDebate);
         setLastGenTimestamp(Date.now());
       }
     } catch {
-      setDebate(null);
+      // Keep existing debate if refresh fails
     } finally {
       setDebateLoading(false);
     }
@@ -137,11 +147,31 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     return () => clearInterval(interval);
   }, [fetchSignals, fetchNews, selectedSymbol]);
 
+  // Quiet initial background loader: loads once if no cache exists, WITHOUT triggering Re-Debate loading animation
   useEffect(() => {
-    if (selectedSymbol) {
-      fetchDebate(selectedSymbol);
+    if (!selectedSymbol) return;
+
+    if (debateCache[selectedSymbol]) {
+      setDebate(debateCache[selectedSymbol]);
+      return;
     }
-  }, [selectedSymbol, fetchDebate]);
+
+    let isCancelled = false;
+    fetch(apiUrl(`/api/debate/${encodeURIComponent(selectedSymbol)}`))
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isCancelled && data) {
+          const resDebate = data.debate || data;
+          debateCache[selectedSymbol] = resDebate;
+          setDebate(resDebate);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedSymbol]);
 
   // Real-time confidence calculations tied directly to the active token's distinct market odds
   const defaultProbMap: Record<string, number> = {
@@ -281,7 +311,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           </div>
 
           <button
-            onClick={() => fetchDebate(selectedSymbol)}
+            onClick={() => handleExplicitReDebate(selectedSymbol)}
             disabled={debateLoading}
             title="Force refresh dual AI debate"
             className="p-2 rounded-xl bg-[#0F0F1A] border border-[#232338] text-gray-400 hover:text-white hover:border-violet-500 transition-all cursor-pointer shadow-md disabled:opacity-50"
@@ -385,7 +415,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
               {/* Action Controls */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => fetchDebate(selectedSymbol)}
+                  onClick={() => handleExplicitReDebate(selectedSymbol)}
                   disabled={debateLoading}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition border cursor-pointer ${
                     debateLoading
