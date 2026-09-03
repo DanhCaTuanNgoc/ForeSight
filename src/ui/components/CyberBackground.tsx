@@ -240,37 +240,35 @@ export const CyberBackground: React.FC = () => {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-      {/* ─── Layer 1: Multi-Zone Aurora Atmospheric Glowing Blobs ─── */}
-      {/* Top Center: ForeSight Violet Intelligence Core */}
-      <div className="absolute -top-36 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-violet-600/30 via-fuchsia-900/20 to-transparent rounded-full blur-[150px] animate-pulse duration-1000" />
+      {/* ─── Layer 1: Multi-Zone High-Tech Aurora Glowing Nebulae ─── */}
+      {/* Top Center: ForeSight Intelligence Core Glow */}
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[650px] bg-gradient-to-b from-violet-600/28 via-fuchsia-900/18 to-transparent rounded-full blur-[140px]" />
 
-      {/* Right Side: Somnia Emerald CLOB Liquidity Glow */}
-      <div className="absolute top-1/4 -right-40 w-[750px] h-[750px] bg-emerald-600/15 rounded-full blur-[180px]" />
+      {/* Right Flank: Somnia Emerald CLOB Liquidity Glow */}
+      <div className="absolute top-1/4 -right-48 w-[800px] h-[800px] bg-emerald-500/15 rounded-full blur-[180px]" />
 
-      {/* Bottom Left: Deep Cyan & Indigo Sub-surface Mist */}
-      <div className="absolute -bottom-40 -left-40 w-[800px] h-[800px] bg-gradient-to-tr from-cyan-600/15 via-indigo-900/20 to-transparent rounded-full blur-[180px]" />
+      {/* Bottom Left: Deep Cyan & Indigo Horizon Atmosphere */}
+      <div className="absolute -bottom-48 -left-48 w-[850px] h-[850px] bg-gradient-to-tr from-cyan-600/18 via-indigo-900/20 to-transparent rounded-full blur-[180px]" />
 
       {/* ─── Layer 2: Interactive Mouse Spotlight Aura ─── */}
       <div
         ref={spotlightRef}
-        className="absolute top-0 left-0 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.18)_0%,rgba(6,182,212,0.08)_40%,transparent_70%)] blur-3xl will-change-transform opacity-85 transition-opacity duration-300 pointer-events-none"
+        className="absolute top-0 left-0 w-[750px] h-[750px] rounded-full bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.18)_0%,rgba(6,182,212,0.08)_35%,transparent_70%)] blur-3xl will-change-transform opacity-85 transition-opacity duration-300 pointer-events-none"
         style={{ transform: "translate(-1000px, -1000px)" }}
       />
 
-      {/* ─── Layer 3: Tech Dot Matrix Grid ─── */}
-      <div className="absolute inset-0 bg-[radial-gradient(#38385266_1px,transparent_1px)] [background-size:24px_24px] opacity-70" />
+      {/* ─── Layer 3: Tech Grid Canvas with Radial Fade ─── */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4C4C7024_1px,transparent_1px),linear-gradient(to_bottom,#4C4C7024_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_75%_55%_at_50%_25%,#000_65%,transparent_100%)] opacity-80" />
 
-      {/* ─── Layer 4: Scanning Radar Beam Across Screen ─── */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="w-full h-1.5 bg-gradient-to-r from-transparent via-violet-400/40 to-transparent animate-laserSweep opacity-60" />
-      </div>
+      {/* ─── Layer 4: Micro Dot Matrix Grid ─── */}
+      <div className="absolute inset-0 bg-[radial-gradient(#56568244_1px,transparent_1px)] [background-size:22px_22px] opacity-50" />
 
       {/* ─── Layer 5: Dynamic Particle Constellation Canvas ─── */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-85" />
 
       {/* ─── Layer 6: Subtle Tactile Micro-Noise Texture ─── */}
       <div
-        className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
+        className="absolute inset-0 opacity-[0.035] mix-blend-overlay pointer-events-none"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
         }}
