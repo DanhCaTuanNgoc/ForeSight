@@ -370,7 +370,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
         {/* Network State & Primary CTA */}
         <div className="flex items-center gap-3 font-mono">
-          <div className="hidden sm:flex items-center gap-2 bg-white/[0.03] border border-white/[0.08] px-2.5 py-1 text-[11px] text-zinc-300 rounded-full">
+          <div className="hidden sm:flex items-center gap-2 bg-white/[0.03] border border-white/[0.08] px-3 py-1 text-[11px] text-zinc-300 rounded-none">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
             <span>Somnia Shannon (50312)</span>
           </div>
@@ -527,7 +527,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                     foresight-terminal :: live-radar
                   </span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[10px] text-emerald-300 font-mono">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-emerald-950/60 border border-emerald-500/30 text-[10px] text-emerald-300 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
                   <span className="font-semibold">CHAIN 50312</span>
                 </div>
@@ -552,7 +552,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   </div>
                 </div>
 
-                {/* Switcher Tabs with Sharp Borders */}
+                {/* Switcher Tabs with Sharp Rectangular Borders */}
                 <div className="flex items-center bg-[#07070B] p-0.5 border border-white/[0.08] text-[11px] font-mono rounded-none">
                   <button
                     onClick={() => setActiveCockpitTab("curve")}
@@ -742,7 +742,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
               <div className="p-3 bg-[#07070C] border-t border-white/[0.08]">
                 <button
                   onClick={onLaunchTerminal}
-                  className="rounded-none w-full py-2 bg-violet-600/20 hover:bg-violet-600/30 text-violet-200 border border-violet-500/40 text-xs font-mono font-medium transition-all flex items-center justify-center gap-2"
+                  className="rounded-none w-full py-2.5 bg-violet-600/20 hover:bg-violet-600/30 text-violet-200 border border-violet-500/40 text-xs font-mono font-medium transition-all flex items-center justify-center gap-2"
                 >
                   <span>Open Full Cockpit in Terminal</span>
                   <ArrowRight className="w-3.5 h-3.5" />
