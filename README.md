@@ -110,11 +110,21 @@ ForeSight resolves these bottlenecks by organizing raw CLOB orderbooks into a st
 
 ### 3️⃣ SIMULATE: Trajectory Physics & Feasibility Modeling
 * **Velocity Coverage Metric ($VC$):** Rather than speculative guesses, ForeSight calculates a physical trajectory feasibility ratio:
-  $$\Delta\%_{\text{required}} = \frac{|P_{\text{strike}} - P_{\text{current}}|}{P_{\text{current}}} \times 100\%$$
-  $$v_{\text{req}} = \frac{\Delta\%_{\text{required}}}{T_{\text{remaining}}} \quad (\%/\text{minute})$$
-  $$VC = \frac{v_{\text{obs}}}{v_{\text{req}}}$$
-  * If $VC = 1.35\times$: Observed spot momentum is running at 135% of the required velocity $\rightarrow$ **Trajectory mathematically feasible**.
-  * If $VC = 0.42\times$: Market requires immediate $2.4\times$ acceleration $\rightarrow$ **High risk of expiry at zero**.
+
+$$
+\Delta\%_{\text{required}} = \frac{|P_{\text{strike}} - P_{\text{current}}|}{P_{\text{current}}} \times 100\%
+$$
+
+$$
+v_{\text{req}} = \frac{\Delta\%_{\text{required}}}{T_{\text{remaining}}} \quad (\%/\text{minute})
+$$
+
+$$
+VC = \frac{v_{\text{obs}}}{v_{\text{req}}}
+$$
+
+* If $VC \ge 1.0\times$: Observed spot momentum is running at or above required speed $\rightarrow$ **Trajectory physically feasible**.
+* If $VC < 1.0\times$: Market requires spot acceleration $\rightarrow$ **Elevated risk of expiring out-of-the-money ($0.00)**.
 * **Zero-Latency Client-Side Math:** Sliders compute capital allocation, early-exit PnL, expiry payout, and breakeven boundaries directly in the browser with 0ms network lag.
 
 ### 4️⃣ EXECUTE: 1-Click CLOB Trading & Batch Auto-Claim
@@ -159,57 +169,85 @@ ForeSight strictly separates qualitative multi-agent analysis from **determinist
 ### 1. Velocity Coverage ($VC$) Trajectory Feasibility
 To evaluate: *"Does the underlying asset have sufficient spot momentum to cross the strike price before round expiry?"*
 
-* **Distance to Strike ($\Delta P$):**
-  $$\Delta P = |P_{\text{strike}} - P_{\text{current}}|$$
+**Distance to Strike ($\Delta P$):**
+$$
+\Delta P = |P_{\text{strike}} - P_{\text{current}}|
+$$
 
-* **Required Velocity ($v_{\text{req}}$):**
-  $$v_{\text{req}} = \frac{\Delta P / P_{\text{current}}}{T_{\text{remaining}}} \quad (\%/\text{minute})$$
+**Required Velocity ($v_{\text{req}}$):**
+$$
+v_{\text{req}} = \frac{\Delta P / P_{\text{current}}}{T_{\text{remaining}}} \quad (\%/\text{minute})
+$$
 
-* **Observed Velocity ($v_{\text{obs}}$):**
-  $$v_{\text{obs}} = \frac{P_{\text{current}} - P_{t-15\text{m}}}{15} \quad (\%/\text{minute})$$
+**Observed Velocity ($v_{\text{obs}}$):**
+$$
+v_{\text{obs}} = \frac{P_{\text{current}} - P_{t-15\text{m}}}{15} \quad (\%/\text{minute})
+$$
 
-* **Trajectory Coverage Ratio ($VC$):**
-  $$VC = \frac{v_{\text{obs}}}{v_{\text{req}}}$$
-  * $VC \ge 1.0\times$: Observed spot momentum is running at or above required speed $\rightarrow$ **Trajectory physically feasible**.
-  * $VC < 1.0\times$: Market requires spot acceleration $\rightarrow$ **Elevated risk of expiring out-of-the-money ($0.00)**.
+**Trajectory Coverage Ratio ($VC$):**
+$$
+VC = \frac{v_{\text{obs}}}{v_{\text{req}}}
+$$
+
+* $VC \ge 1.0\times$: Observed spot momentum is running at or above required speed $\rightarrow$ **Trajectory physically feasible**.
+* $VC < 1.0\times$: Market requires spot acceleration $\rightarrow$ **Elevated risk of expiring out-of-the-money ($0.00)**.
 
 ---
 
 ### 2. Closed-Form Black-Scholes Binary Option Pricing & Basis Point Edge
 To compute theoretical fair value independent of temporary orderbook imbalances, ForeSight implements the standard normal cumulative distribution $\Phi(d_2)$ via the **Abramowitz & Stegun rational Chebyshev approximation** (Formula 7.1.26, $|\epsilon| < 1.5 \times 10^{-7}$):
 
-* **Standard Binary $d_2$ Term:**
-  $$d_2 = \frac{\ln(S / K) + \left(r - \frac{1}{2}\sigma^2\right)\tau}{\sigma \sqrt{\tau}}$$
+**Standard Binary $d_2$ Term:**
+$$
+d_2 = \frac{\ln(S / K) + \left(r - \frac{1}{2}\sigma^2\right)\tau}{\sigma \sqrt{\tau}}
+$$
 
-* **Theoretical Fair Probability ($P_{\text{fair}}$):**
-  $$P_{\text{fair}} = \Phi(d_2)$$
+**Theoretical Fair Probability ($P_{\text{fair}}$):**
+$$
+P_{\text{fair}} = \Phi(d_2)
+$$
 
-* **Anti-Pin-Risk Diffusion Floor:** For short horizons ($1\text{m}, 5\text{m}$), ForeSight enforces a diffusion floor $\tau_{\text{floor}} = 45\text{s}$ to prevent step-function probability cliff collapses as $\tau \to 0$:
-  $$\tau_{\text{eff}} = \max(\tau, \, \tau_{\text{floor}})$$
+**Anti-Pin-Risk Diffusion Floor:**  
+For short horizons ($1\text{m}, 5\text{m}$), ForeSight enforces a diffusion floor $\tau_{\text{floor}} = 45\text{s}$ to prevent step-function probability cliff collapses as $\tau \to 0$:
+$$
+\tau_{\text{eff}} = \max(\tau, \, \tau_{\text{floor}})
+$$
 
-* **Theoretical Edge in Basis Points ($\text{Edge}_{\text{bps}}$):**
-  $$\text{Edge}_{\text{bps}} = (P_{\text{fair}} - P_{\text{market}}) \times 10{,}000 \quad (\text{bps})$$
+**Theoretical Edge in Basis Points ($\text{Edge}_{\text{bps}}$):**
+$$
+\text{Edge}_{\text{bps}} = (P_{\text{fair}} - P_{\text{market}}) \times 10{,}000 \quad (\text{bps})
+$$
 
-* **Half-Kelly Capital Allocation ($f^*$):**
-  $$f^* = \frac{1}{2} \left[ \frac{P_{\text{fair}} - P_{\text{market}}}{1 - P_{\text{market}}} \right]$$
-  *(Note: $f^*$ is automatically capped at $25\%$ of portfolio collateral to guard against tail variance).*
+**Half-Kelly Capital Allocation ($f^*$):**
+$$
+f^* = \frac{1}{2} \left[ \frac{P_{\text{fair}} - P_{\text{market}}}{1 - P_{\text{market}}} \right]
+$$
+*(Note: $f^*$ is automatically capped at $25\%$ of portfolio collateral to guard against tail variance).*
 
 ---
 
 ### 3. Discrete Binary Payoff & Early-Exit Formulation
 Given user allocation $C$ (Collateral) and entry market price $P_{\text{entry}} \in (0, 1)$:
 
-* **Contracts Minted ($N$):**
-  $$N = \frac{C}{P_{\text{entry}}}$$
+**Contracts Minted ($N$):**
+$$
+N = \frac{C}{P_{\text{entry}}}
+$$
 
-* **Early-Exit PnL (at target market price $P_{\text{target}}$):**
-  $$\text{PnL}_{\text{early}} = (N \times P_{\text{target}}) - C = C \times \left( \frac{P_{\text{target}} - P_{\text{entry}}}{P_{\text{entry}}} \right)$$
+**Early-Exit PnL (at target market price $P_{\text{target}}$):**
+$$
+\text{PnL}_{\text{early}} = (N \times P_{\text{target}}) - C = C \times \left( \frac{P_{\text{target}} - P_{\text{entry}}}{P_{\text{entry}}} \right)
+$$
 
-* **Expiry Settlement PnL (at settlement payout $\$1.00$):**
-  $$\text{PnL}_{\text{expiry}} = (N \times \$1.00) - C = C \times \left( \frac{1.00 - P_{\text{entry}}}{P_{\text{entry}}} \right)$$
+**Expiry Settlement PnL (at settlement payout $\$1.00$):**
+$$
+\text{PnL}_{\text{expiry}} = (N \times \$1.00) - C = C \times \left( \frac{1.00 - P_{\text{entry}}}{P_{\text{entry}}} \right)
+$$
 
-* **Maximum Downside Risk:**
-  $$\text{Max Loss} = -100\% \times C$$
+**Maximum Downside Risk:**
+$$
+\text{Max Loss} = -100\% \times C
+$$
 
 ---
 
