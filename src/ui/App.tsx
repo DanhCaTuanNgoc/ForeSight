@@ -423,17 +423,22 @@ function ForeSightTerminalApp() {
 
   // ─── Else Render All-in-One Zero-Scroll Single-Screen Cockpit ───────────────
   return (
-    <div className="h-screen w-screen bg-[#0A0A0F] text-[#E2E8F0] flex flex-col font-sans selection:bg-violet-600 selection:text-white overflow-hidden">
-      {/* Toast Notification */}
+    <div className="h-screen w-screen bg-[#07070B] text-[#E2E8F0] flex flex-col font-sans selection:bg-violet-600 selection:text-white overflow-hidden">
+      {/* Toast Notification (Sharp Precision Box with Signal LED) */}
       {toastMessage && (
         <div
-          className={`fixed top-14 right-5 z-50 px-4 py-2.5 rounded shadow-xl border font-mono text-xs fade-in ${
+          className={`fixed top-14 right-5 z-50 px-4 py-2.5 rounded-none shadow-2xl border font-mono text-xs fade-in flex items-center gap-2.5 backdrop-blur-md ${
             toastMessage.type === "success"
-              ? "bg-emerald-950/90 text-emerald-300 border-emerald-500/50"
-              : "bg-rose-950/90 text-rose-300 border-rose-500/50"
+              ? "bg-[#0E0E17]/95 text-emerald-300 border-emerald-500/50 shadow-emerald-950/40"
+              : "bg-[#0E0E17]/95 text-rose-300 border-rose-500/50 shadow-rose-950/40"
           }`}
         >
-          {toastMessage.msg}
+          <span
+            className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              toastMessage.type === "success" ? "bg-emerald-400" : "bg-rose-400"
+            }`}
+          />
+          <span>{toastMessage.msg}</span>
         </div>
       )}
 
@@ -492,32 +497,36 @@ function ForeSightTerminalApp() {
 
       {activeTab === "markets" && (
         <>
-          <div className="flex-1 flex min-h-0 overflow-hidden">
-            {/* ── LEFT COLUMN: Market Navigator & Live Radar ──────────────── */}
-            <aside className="w-56 xl:w-60 border-r border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
+          <div className="flex-1 flex min-h-0 overflow-hidden bg-[#07070B]">
+            {/* ── LEFT COLUMN: Market Navigator & Live Radar (Section 10 Spec) ── */}
+            <aside className="w-60 xl:w-64 border-r border-white/[0.08] bg-[#0E0E17] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
               {/* Search Bar */}
-              <div className="p-2.5 border-b border-[#222234]">
-                <div className="flex items-center bg-[#13131F] border border-[#222234] rounded px-2 py-1 gap-1.5">
-                  <Search className="w-3.5 h-3.5 text-gray-500" />
+              <div className="p-2.5 border-b border-white/[0.08] bg-[#0A0A12]">
+                <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] focus-within:border-violet-500/60 rounded-none px-2.5 py-1.5 gap-2 transition-colors">
+                  <Search className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                   <input
                     type="text"
-                    placeholder="Search event..."
+                    placeholder="SEARCH EVENT..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-transparent text-xs text-gray-200 placeholder-gray-600 outline-none w-full font-mono"
+                    className="bg-transparent text-xs text-gray-200 placeholder-gray-600 outline-none w-full font-mono uppercase tracking-wider"
                   />
                 </div>
               </div>
 
-              <div className="px-3 py-1.5 border-b border-[#222234] flex items-center justify-between">
-                <span className="stat-label text-[10px]">MARKET RADAR</span>
-                <span className="text-[10px] font-mono text-violet-400">
+              {/* Radar Header */}
+              <div className="px-3 py-2 border-b border-white/[0.08] bg-[#0B0B12] flex items-center justify-between">
+                <span className="stat-label text-[10px] flex items-center gap-1.5 font-mono">
+                  <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full" />
+                  MARKET RADAR
+                </span>
+                <span className="text-[10px] font-mono text-violet-300 bg-violet-950/60 border border-violet-500/30 px-1.5 py-0.5 rounded-none font-bold">
                   {filteredMarkets.length} LIVE
                 </span>
               </div>
 
               {/* Market List */}
-              <div className="flex-1 overflow-y-auto divide-y divide-[#1F1F2E] custom-scrollbar">
+              <div className="flex-1 overflow-y-auto divide-y divide-white/[0.04] custom-scrollbar">
                 {filteredMarkets.map((m) => {
                   const isSelected = activeMarket.id === m.id;
                   const prob = m.probability ?? 50;
@@ -530,23 +539,23 @@ function ForeSightTerminalApp() {
                         sound.playClick();
                         setSelectedMarket(m);
                       }}
-                      className={`w-full text-left p-2.5 transition-colors flex flex-col gap-0.5 ${
+                      className={`w-full text-left p-2.5 transition-colors flex flex-col gap-1 rounded-none border-l-2 ${
                         isSelected
-                          ? "bg-violet-950/30 border-l-2 border-violet-500"
-                          : "hover:bg-[#151522]"
+                          ? "bg-violet-950/30 border-violet-500 text-violet-300"
+                          : "border-transparent hover:bg-[#12121C] text-gray-300"
                       }`}
                     >
                       <div className="flex items-center justify-between font-mono">
                         <span
                           className={`text-xs font-bold flex items-center gap-1.5 ${
-                            isSelected ? "text-violet-300" : "text-gray-200"
+                            isSelected ? "text-violet-200" : "text-gray-200"
                           }`}
                         >
                           <CryptoIcon symbol={m.underlyingAsset || m.symbol} size={15} />
                           <span>{m.symbol}/tUSDC</span>
                         </span>
                         <span
-                          className={`text-xs font-bold ${
+                          className={`text-xs font-bold font-mono ${
                             isYes ? "text-emerald-400" : "text-rose-400"
                           }`}
                         >
@@ -554,13 +563,13 @@ function ForeSightTerminalApp() {
                         </span>
                       </div>
 
-                      <p className="text-[10px] text-gray-400 line-clamp-1 leading-tight">
+                      <p className="text-[10px] text-gray-400 line-clamp-1 leading-tight font-sans">
                         {m.question}
                       </p>
 
                       <div className="flex items-center justify-between text-[9px] text-gray-500 font-mono pt-0.5">
                         <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</span>
-                        <span className="text-gray-600">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
+                        <span className="text-gray-500">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
                       </div>
                     </button>
                   );
@@ -569,11 +578,11 @@ function ForeSightTerminalApp() {
             </aside>
 
             {/* ── CENTER COLUMN: Visual Intelligence Canvas + Decision Stress Test ── */}
-            <main className="flex-1 flex flex-col min-w-0 bg-[#0A0A0F] overflow-hidden">
+            <main className="flex-1 flex flex-col min-w-0 bg-[#07070B] overflow-hidden">
               {/* Header Stats Bar */}
               <MarketStats market={activeMarket} serverMode={health?.mode} />
 
-              {/* Unified Visual Board (Scroll-Free Bento Split) */}
+              {/* Unified Visual Board (Zero-Scroll Bento Split) */}
               <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
                 {/* Top Half: Multi-Mode Visual Intelligence Canvas */}
                 <div className="flex-shrink-0">
