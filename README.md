@@ -109,12 +109,14 @@ ForeSight resolves these bottlenecks by organizing raw CLOB orderbooks into a st
 * **Verifiable Source Citations:** Every thesis cites real-world articles (`[View Evidence]`) ingested via live crypto RSS streams (CoinDesk, Cointelegraph, Decrypt). Subjective reasoning is strictly separated from deterministic mathematics.
 
 ### 3️⃣ SIMULATE: Trajectory Physics & Feasibility Modeling
-* **Velocity Coverage Metric ($VC$):** Rather than speculative guesses, ForeSight calculates a physical trajectory feasibility ratio:
-  $$\Delta\%_{\text{required}} = \frac{|P_{\text{strike}} - P_{\text{current}}|}{P_{\text{current}}} \times 100\%$$
-  $$v_{\text{req}} = \frac{\Delta\%_{\text{required}}}{T_{\text{remaining}}} \quad (\%/\text{minute})$$
-  $$VC = \frac{v_{\text{obs}}}{v_{\text{req}}}$$
-  * If $VC = 1.35\times$: Observed spot momentum is running at 135% of the required velocity $\rightarrow$ **Trajectory mathematically feasible**.
-  * If $VC = 0.42\times$: Market requires immediate $2.4\times$ acceleration $\rightarrow$ **High risk of expiry at zero**.
+* **Velocity Coverage Metric (`VC`):** Rather than speculative guesses, ForeSight calculates a physical trajectory feasibility ratio:
+  ```text
+  ΔP_required = | P_strike - P_current | / P_current × 100%
+  v_required  = ΔP_required / T_remaining  (%/minute)
+  VC          = v_observed / v_required
+  ```
+  * If `VC ≥ 1.00×`: Observed spot momentum is running at or above required velocity → **Trajectory physically feasible**.
+  * If `VC < 1.00×`: Market requires spot acceleration → **Elevated risk of expiring at zero ($0.00)**.
 * **Zero-Latency Client-Side Math:** Sliders compute capital allocation, early-exit PnL, expiry payout, and breakeven boundaries directly in the browser with 0ms network lag.
 
 ### 4️⃣ EXECUTE: 1-Click CLOB Trading & Batch Auto-Claim
@@ -139,7 +141,7 @@ ForeSight resolves these bottlenecks by organizing raw CLOB orderbooks into a st
 │  └─────────────────────────────┘ └─────────────────────────────┘ └───────────────────┘ │
 │  ┌─────────────────────────────┐ ┌─────────────────────────────┐ ┌───────────────────┐ │
 │  │  Deterministic Math Core    │ │   Settlement Sweeper Worker │ │   Spot Oracle Feed│ │
-│  │ (Velocity $VC$, PnL & ROI)  │ │ (Batch Auto-Claim Finalized)│ │ (Binance 24h Live)│ │
+│  │ (Velocity VC, PnL & ROI)    │ │ (Batch Auto-Claim Finalized)│ │ (Binance 24h Live)│ │
 │  └─────────────────────────────┘ └─────────────────────────────┘ └───────────────────┘ │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                         3. BLOCKCHAIN & AUTOMATION LAYER                               │
@@ -156,30 +158,67 @@ ForeSight resolves these bottlenecks by organizing raw CLOB orderbooks into a st
 
 ForeSight strictly separates qualitative multi-agent analysis from **deterministic financial mathematics**:
 
-### 1. Velocity Coverage ($VC$) Trajectory Feasibility
-To evaluate: *"Does the underlying asset have sufficient momentum to cross the strike before round expiry?"*
-* **Distance to Strike:** $\Delta P = |P_{\text{strike}} - P_{\text{current}}|$
-* **Required Velocity:** $v_{\text{req}} = \frac{\Delta P / P_{\text{current}}}{T_{\text{remaining}}}$
-* **Observed Velocity:** $v_{\text{obs}} = \frac{P_{\text{current}} - P_{t-15\text{m}}}{15}$
-* **Trajectory Coverage Ratio:**
-  $$VC = \frac{v_{\text{obs}}}{v_{\text{req}}}$$
+---
 
-### 2. Closed-Form Black-Scholes Binary Option Pricing & Basis Point Edge
-To compute theoretical fair value independent of temporary orderbook imbalances, ForeSight implements standard normal cumulative distribution $\Phi(z)$ via **Abramowitz & Stegun rational Chebyshev approximation** (Formula 7.1.26, $|\epsilon| < 1.5 \times 10^{-7}$):
-$$d_2 = \frac{\ln(S / K) + \left(r - \frac{1}{2}\sigma^2\right)\tau}{\sigma \sqrt{\tau}}$$
-$$\text{Fair Probability} = \Phi(d_2)$$
-* **Anti-Pin-Risk Diffusion Floor:** For short horizons ($1\text{m}, 5\text{m}$), enforces $\tau_{\text{floor}} = 45\text{s}$ to prevent step-function probability cliff collapses as $\tau \to 0$.
-* **Theoretical Edge in Basis Points ($bps$):**
-  $$\text{Edge}_{bps} = (\text{Fair Probability} - P_{\text{market}}) \times 10{,}000 \quad (bps)$$
-* **Half-Kelly Capital Allocation:** Computes recommended bankroll fraction $f^* = \frac{1}{2} \left[ \frac{\text{Fair} - P_{\text{market}}}{1 - P_{\text{market}}} \right]$, capped at $25\%$ for capital preservation.
+### 1. Velocity Coverage (`VC`) Trajectory Feasibility
+Evaluates whether the underlying spot asset has sufficient momentum to reach the strike price before round expiry.
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  1. Distance to Strike:    ΔP = | P_strike - P_current |               │
+│  2. Required Velocity:     v_req = (ΔP / P_current) / T_remaining      │
+│  3. Observed Velocity:     v_obs = (P_current - P_t-15m) / 15m         │
+│  4. Velocity Coverage:     VC = v_obs / v_req                          │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+| Metric | Formulation | Interpretation |
+| :--- | :--- | :--- |
+| **`v_req`** | `(ΔP / P_current) / T_remaining` | Required price drift rate (% per minute) to cross strike |
+| **`v_obs`** | `(P_current - P_t-15m) / 15` | Realized 15-minute price drift rate from spot oracle |
+| **`VC ≥ 1.0×`** | `v_obs / v_req ≥ 1.0` | **Feasible Trajectory:** Current momentum exceeds required drift |
+| **`VC < 1.0×`** | `v_obs / v_req < 1.0` | **High Decay Risk:** Asset requires external momentum |
+
+---
+
+### 2. Closed-Form Black-Scholes Binary Option Pricing & Model Edge
+To compute theoretical fair value independent of temporary orderbook imbalances, ForeSight implements the standard normal cumulative distribution `Φ(d2)` via the **Abramowitz & Stegun rational Chebyshev approximation** (Formula 7.1.26, error `|ε| < 1.5 × 10⁻⁷`):
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  d2 = [ ln(S / K) + (r - 0.5 * σ²) * τ ] / [ σ * sqrt(τ) ]             │
+│  Fair Probability (P_fair) = Φ(d2)                                     │
+│  Theoretical Edge (bps)   = (P_fair - P_market) × 10,000 bps           │
+│  Half-Kelly Fraction (f*) = 0.5 × [ (P_fair - P_market) / (1 - P_market) ]│
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+| Parameter / Metric | Definition & Value Range | Operational Role |
+| :--- | :--- | :--- |
+| **`S / K`** | Spot Price `S` / Strike Price `K` | Moneyness ratio from spot oracle |
+| **`τ_eff` (Anti-Pin Risk)** | `max(τ, 45s)` | Diffusion floor preventing probability cliff collapses near expiry |
+| **`Edge (bps)`** | `(P_fair - P_market) × 10,000` | Mispricing spread in basis points relative to CLOB mid-price |
+| **`Half-Kelly (f*)`** | `min(f*, 25%)` | Recommended capital allocation percentage, capped for preservation |
+
+---
 
 ### 3. Discrete Binary Payoff & Early-Exit Formulation
-Given user allocation $C$ (Collateral) and entry odds $P_{\text{entry}} \in [0.01, 0.99]$:
-* **Contracts Minted:** $N = \frac{C}{P_{\text{entry}}}$
-* **Early-Exit PnL (at target odds $P_{\text{target}}$):**
-  $$\text{PnL}_{\text{early}} = (N \times P_{\text{target}}) - C = C \times \left( \frac{P_{\text{target}} - P_{\text{entry}}}{P_{\text{entry}}} \right)$$
-* **Expiry Settlement PnL (at payout $\$1.00$):**
-  $$\text{PnL}_{\text{expiry}} = (N \times \$1.00) - C = C \times \left( \frac{1.00 - P_{\text{entry}}}{P_{\text{entry}}} \right)$$
+Given user collateral `C` and market entry price `P_entry ∈ (0.01, 0.99)`:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  Contracts Minted (N) = C / P_entry                                    │
+│  Early-Exit PnL       = C × [ (P_target - P_entry) / P_entry ]         │
+│  Expiry Settlement    = C × [ (1.00 - P_entry) / P_entry ]             │
+│  Maximum Loss         = -100% × C  (Explicit downside cap)             │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+| Scenario | Payoff Equation | Example ($100 Collateral @ 0.60 Entry) |
+| :--- | :--- | :--- |
+| **Early Take-Profit** | `PnL = C × ((P_exit - P_entry) / P_entry)` | Exit @ 0.85 → **+$41.67 (+41.7% ROI)** |
+| **Expiry Win (YES)** | `PnL = C × ((1.00 - P_entry) / P_entry)` | Settle @ $1.00 → **+$66.67 (+66.7% ROI)** |
+| **Expiry Loss (NO)** | `PnL = -C` | Settle @ $0.00 → **-$100.00 (-100.0% Max Loss)** |
 
 ---
 
@@ -187,7 +226,7 @@ Given user allocation $C$ (Collateral) and entry odds $P_{\text{entry}} \in [0.0
 
 To support viral social prediction sharing across the Somnia ecosystem, ForeSight provides an in-terminal **Alpha Card Studio**:
 * **1200×675 HD Canvas Export:** Generates high-resolution cybernetic trading cards formatted for X / Twitter (16:9) and Telegram.
-* **Dual Evidence Stamps:** Displays quantitative metrics ($VC$ momentum ratio, Model Edge in bps) alongside Dual AI consensus excerpts.
+* **Dual Evidence Stamps:** Displays quantitative metrics (VC momentum ratio, Model Edge in bps) alongside Dual AI consensus excerpts.
 * **Network Verification Seal:** Certified watermark referencing Somnia Shannon Testnet (`Chain ID: 50312`) and DreamDEX CLOB.
 * **1-Click Social Sharing:** 1-click copy raw image to clipboard, download PNG, or open a pre-populated tweet intent on X.
 
