@@ -220,29 +220,22 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
   return (
     <div className="terminal-panel p-3 bg-[#0A0A12] border border-white/[0.08] rounded-none space-y-2.5 font-mono">
-      {/* ─── Header: Decision Stress Test & Outcome Switcher (Section 12 Spec) ─── */}
+      {/* ─── Header: Scenario Simulator & Outcome Switcher ─── */}
       <div className="flex flex-wrap items-center justify-between border-b border-white/[0.08] pb-2 gap-2">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+          <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
             <Compass className="w-3.5 h-3.5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-white font-mono font-bold text-xs tracking-wider uppercase">
-                SCENARIO STRESS TEST & 1-CLICK CLOB
-              </h3>
-              <span className="text-[9px] px-1.5 py-0.5 rounded-none bg-violet-950/60 text-violet-300 font-mono border border-violet-500/30 flex items-center gap-1 font-bold">
-                <Sparkles className="w-2.5 h-2.5 text-violet-400" /> STAGE 03 & 04
-              </span>
-            </div>
-          </div>
+          <h3 className="text-white font-mono font-bold text-xs tracking-wider uppercase">
+            SIMULATOR & EXECUTION
+          </h3>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Black-Scholes Fair Value Badge */}
-          <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 bg-[#12121C] border border-cyan-500/30 text-[10px] text-cyan-300 rounded-none">
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 bg-[#12121C] border border-cyan-500/30 text-[10px] text-cyan-300 rounded-none font-mono">
             <Gauge className="w-3 h-3 text-cyan-400" />
-            <span>BS FAIR: <b>${(quantModel.fairProbabilityPercent / 100).toFixed(3)}</b></span>
+            <span>MODEL FAIR VALUE: <b>${(quantModel.fairProbabilityPercent / 100).toFixed(3)}</b></span>
           </div>
 
           {/* Export Alpha Card Button */}
@@ -251,7 +244,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
               sound.playClick();
               setShowAlphaCard(true);
             }}
-            className="px-2 py-0.5 rounded-none text-[11px] font-mono font-bold bg-[#16161F] hover:bg-[#1C1C28] text-gray-300 hover:text-white border border-white/[0.08] flex items-center gap-1 transition-colors cursor-pointer"
+            className="px-2 py-0.5 rounded-none text-[10px] font-mono font-bold bg-[#16161F] hover:bg-[#1C1C28] text-gray-300 hover:text-white border border-white/[0.08] flex items-center gap-1 transition-colors cursor-pointer"
             title="Export High-Resolution Proof-of-Thesis Alpha Card"
           >
             <Share2 className="w-3 h-3 text-violet-400" />
@@ -265,28 +258,28 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 sound.playClick();
                 setOutcome("YES");
               }}
-              className={`px-3 py-1 rounded-none text-xs font-mono font-bold transition-colors flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-3 py-0.5 rounded-none text-xs font-mono font-bold transition-colors flex items-center gap-1 cursor-pointer border ${
                 outcome === "YES"
                   ? "bg-emerald-950/80 border-emerald-500 text-emerald-300"
                   : "bg-transparent text-gray-400 hover:text-white border-transparent"
               }`}
             >
               <TrendingUp className="w-3 h-3" />
-              <span>YES ▲</span>
+              <span>BUY YES</span>
             </button>
             <button
               onClick={() => {
                 sound.playClick();
                 setOutcome("NO");
               }}
-              className={`px-3 py-1 rounded-none text-xs font-mono font-bold transition-colors flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-3 py-0.5 rounded-none text-xs font-mono font-bold transition-colors flex items-center gap-1 cursor-pointer border ${
                 outcome === "NO"
                   ? "bg-rose-950/80 border-rose-500 text-rose-300"
                   : "bg-transparent text-gray-400 hover:text-white border-transparent"
               }`}
             >
               <TrendingDown className="w-3 h-3" />
-              <span>NO ▼</span>
+              <span>BUY NO</span>
             </button>
           </div>
         </div>
@@ -300,7 +293,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             <div className="flex items-center justify-between text-[10px] text-gray-400 border-b border-white/[0.06] pb-1.5">
               <span className="text-gray-300 font-bold uppercase flex items-center gap-1.5">
                 <CryptoIcon symbol={assetName} size={14} />
-                <span>{assetName} Path to Settlement</span>
+                <span>{assetName} Settlement Target</span>
               </span>
               <span>
                 Spot: <b className="text-white">${trajectory.currentSpot.toLocaleString()}</b> → Strike: <b className="text-violet-300">${trajectory.strikePrice.toLocaleString()}</b>
@@ -312,7 +305,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
               <div className="flex items-center justify-between text-[10px]">
                 <span className="text-gray-400">Velocity Coverage:</span>
                 <span className={`font-bold ${trajectory.isCoverageSufficient ? "text-emerald-400" : "text-amber-400"}`}>
-                  {trajectory.velocityCoverage}× Req Pace {trajectory.isCoverageSufficient ? "(Sufficient ✓)" : "(Lags ⚠)"}
+                  {trajectory.velocityCoverage}× Required Pace
                 </span>
               </div>
               <div className="w-full bg-[#0A0A12] h-1.5 rounded-none overflow-hidden border border-white/[0.04]">
@@ -331,10 +324,10 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             <div className="p-2 rounded-none bg-[#161014] border border-rose-500/30 text-[10px] space-y-1">
               <div className="flex items-center gap-1 text-rose-300 font-bold">
                 <AlertTriangle className="w-3 h-3 text-rose-400" />
-                <span>Invalidation Break Level:</span>
+                <span>Stop Level / Invalidation:</span>
               </div>
               <p className="text-gray-300 font-sans text-[11px] leading-tight">
-                Spot {outcome === "YES" ? "<" : ">"} <b className="text-rose-300 font-mono">${trajectory.breakPrice.toLocaleString()}</b> or momentum slows with &lt;10m remaining.
+                Spot {outcome === "YES" ? "<" : ">"} <b className="text-rose-300 font-mono">${trajectory.breakPrice.toLocaleString()}</b> or momentum decelerates before expiry.
               </p>
             </div>
 
@@ -343,12 +336,12 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
               <div className="flex items-center justify-between font-mono">
                 <span className="text-cyan-300 font-bold flex items-center gap-1">
                   <Gauge className="w-3 h-3 text-cyan-400" />
-                  Model Fair Value Φ(d₂):
+                  Model Fair Value:
                 </span>
                 <span className="text-white font-bold">{quantModel.fairProbabilityPercent}%</span>
               </div>
               <div className="flex items-center justify-between text-gray-400 text-[9px]">
-                <span>vs Implied Book: {(entryPrice * 100).toFixed(0)}%</span>
+                <span>Orderbook Implied: {(entryPrice * 100).toFixed(0)}%</span>
                 <span className={`font-bold ${quantModel.isFavorable ? "text-emerald-400" : "text-amber-400"}`}>
                   {quantModel.edgeBps !== undefined ? `${quantModel.edgeBps > 0 ? "+" : ""}${quantModel.edgeBps} bps Edge` : ""}
                 </span>
@@ -375,7 +368,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             <div className="space-y-1 text-xs">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-gray-400 flex items-center gap-1">
-                  <DollarSign className="w-3 h-3 text-violet-400" /> Capital Allocation
+                  <DollarSign className="w-3 h-3 text-violet-400" /> Order Size
                 </span>
                 <span className="font-bold text-white bg-[#12121C] px-2 py-0.5 rounded-none border border-white/[0.08]">
                   ${investment} tUSDC
@@ -391,7 +384,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                       sound.playClick();
                       setInvestment(amt);
                     }}
-                    className={`flex-1 py-0.5 text-[9px] font-mono font-bold rounded-none border transition-colors ${
+                    className={`flex-1 py-0.5 text-[9px] font-mono font-bold rounded-none border transition-colors cursor-pointer ${
                       investment === amt
                         ? "bg-violet-600/30 text-violet-300 border-violet-500/50"
                         : "bg-[#12121C] text-gray-400 border-white/[0.06] hover:text-white hover:bg-[#161622]"
@@ -420,7 +413,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-400">Entry Odds</span>
+                  <span className="text-gray-400">Limit Price</span>
                   <span className="font-bold text-violet-300 font-mono">${entryPrice.toFixed(2)} ({Math.round(entryPrice * 100)}%)</span>
                 </div>
                 <input
@@ -441,7 +434,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-400">Target Exit</span>
+                  <span className="text-gray-400">Target Take-Profit</span>
                   <span className="font-bold text-emerald-300 font-mono">${targetExitPrice.toFixed(2)} ({Math.round(targetExitPrice * 100)}%)</span>
                 </div>
                 <input
@@ -495,7 +488,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             </div>
           </div>
 
-          {/* Action Execution Button (Section 12 Spec) */}
+          {/* Action Execution Button */}
           <div className="pt-1">
             {!wallet.isConnected ? (
               <button
@@ -506,7 +499,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 className="w-full h-10 rounded-none font-mono font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white border border-violet-400/40 cursor-pointer"
               >
                 <Wallet className="w-3.5 h-3.5" />
-                <span>CONNECT WALLET TO EXECUTE ON SOMNIA L1</span>
+                <span>CONNECT WALLET</span>
               </button>
             ) : (
               <button
@@ -521,8 +514,8 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 <Zap className="w-3.5 h-3.5" />
                 <span>
                   {isSubmitting
-                    ? "● SUBMITTING TO SOMNIA CLOB..."
-                    : `EXECUTE ${outcome} ORDER (1-CLICK ON SOMNIA L1)`}
+                    ? "SUBMITTING ORDER..."
+                    : `BUY ${outcome} · ${calculation.contractsCount} SHARES @ $${entryPrice.toFixed(2)}`}
                 </span>
               </button>
             )}

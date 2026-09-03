@@ -29,18 +29,18 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
   const list = positions;
 
   return (
-    <div className="panel rounded-[4px] flex flex-col">
+    <div className="rounded-none bg-[#0A0A12] border border-white/[0.08] flex flex-col font-mono">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2A2A3D]">
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.08] bg-[#0E0E17]">
         <div className="flex items-center gap-1.5">
           <Activity className="w-3.5 h-3.5 text-violet-400" />
-          <span className="stat-label">RECENT ACTIVITY</span>
+          <span className="text-xs font-bold text-white uppercase tracking-wider">RECENT ACTIVITY LOG</span>
         </div>
       </div>
 
       {/* Table Header */}
       <div
-        className="grid px-3 py-1.5 border-b border-[#2A2A3D]/40 text-[10px] text-gray-500 font-sans uppercase font-medium bg-[#111118]"
+        className="grid px-3 py-1.5 border-b border-white/[0.08] text-[9px] text-gray-400 font-mono uppercase tracking-wider bg-[#0E0E17]"
         style={{ gridTemplateColumns: "80px 1fr 60px 75px 110px" }}
       >
         <span>TIME</span>
@@ -66,7 +66,7 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
           return (
             <div
               key={pos.id}
-              className="grid px-3 py-2 border-b border-[#2A2A3D]/20 hover:bg-[#1C1C28]/60 transition-colors text-xs font-mono items-center"
+              className="grid px-3 py-2 border-b border-white/[0.04] hover:bg-[#12121C] transition-colors text-xs font-mono items-center"
               style={{ gridTemplateColumns: "80px 1fr 60px 75px 110px" }}
             >
               <span className="text-gray-400 text-[11px] font-mono">{timeStr}</span>
@@ -75,19 +75,19 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
                 <span>{pos.symbol}</span>
               </span>
               <span
-                className={`text-[10px] font-bold px-1.5 py-0.2 rounded w-fit ${
+                className={`text-[9px] font-bold px-1.5 py-0.2 rounded-none border w-fit ${
                   pos.outcome === "YES"
-                    ? "bg-emerald-950/60 text-emerald-400 border border-emerald-700/40"
-                    : "bg-rose-950/60 text-rose-400 border border-rose-700/40"
+                    ? "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"
+                    : "bg-rose-950/60 text-rose-400 border-rose-500/40"
                 }`}
               >
                 {pos.outcome}
               </span>
-              <span className="text-gray-300">
+              <span className="text-gray-300 font-mono">
                 ${pos.entryPrice ? pos.entryPrice.toFixed(3) : "0.500"}
               </span>
               <span
-                className={`text-right text-[10px] font-semibold whitespace-nowrap flex items-center justify-end gap-1.5 ${
+                className={`text-right text-[9px] font-bold whitespace-nowrap flex items-center justify-end gap-1 ${
                   pos.status === "OPEN" ? "text-emerald-400" : "text-gray-500"
                 }`}
                 title={pos.orderId ? `Order: ${pos.orderId}` : undefined}

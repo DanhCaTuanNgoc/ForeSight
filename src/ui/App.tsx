@@ -16,17 +16,7 @@ import { WalletProvider, useWallet } from "./context/WalletContext.js";
 import { CryptoIcon } from "./components/CryptoIcon.js";
 import { sound } from "./utils/sound-fx.js";
 import { apiUrl } from "./utils/api.js";
-import {
-  Search,
-  Bot,
-  Sparkles,
-  TrendingUp,
-  TrendingDown,
-  ArrowUpDown,
-  Filter,
-  Layers,
-  Zap,
-} from "lucide-react";
+import { Search, ArrowUpDown } from "lucide-react";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 export interface Market {
@@ -542,22 +532,22 @@ function ForeSightTerminalApp() {
       {activeTab === "markets" && (
         <>
           <div className="flex-1 flex min-h-0 overflow-hidden bg-[#07070B]">
-            {/* ── LEFT COLUMN: Market Navigator & Live Radar (Section 10 Spec) ── */}
+            {/* ── LEFT COLUMN: Markets Navigator ── */}
             <aside className="w-60 xl:w-64 border-r border-white/[0.08] bg-[#0E0E17] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
-              {/* Search Bar & Quick Categories */}
+              {/* Search Bar & Categories */}
               <div className="p-2 border-b border-white/[0.08] bg-[#0A0A12] space-y-1.5">
                 <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] focus-within:border-violet-500/60 rounded-none px-2 py-1 gap-2 transition-colors">
                   <Search className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                   <input
                     type="text"
-                    placeholder="SEARCH EVENT..."
+                    placeholder="SEARCH MARKETS..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-transparent text-[11px] text-gray-200 placeholder-gray-600 outline-none w-full font-mono uppercase tracking-wider"
                   />
                 </div>
 
-                {/* Quick Category Filter Presets */}
+                {/* Filter Presets */}
                 <div className="grid grid-cols-4 gap-1">
                   {(["ALL", "HOT", "SOMNIA", "VOL"] as const).map((cat) => (
                     <button
@@ -566,7 +556,7 @@ function ForeSightTerminalApp() {
                         sound.playClick();
                         setCategoryFilter(cat);
                       }}
-                      className={`text-[9px] font-mono py-0.5 rounded-none font-bold uppercase transition-colors border ${
+                      className={`text-[9px] font-mono py-0.5 rounded-none font-bold uppercase transition-colors border cursor-pointer ${
                         categoryFilter === cat
                           ? "bg-violet-600/30 text-violet-300 border-violet-500/50"
                           : "bg-[#12121C] text-gray-400 border-white/[0.06] hover:text-gray-200 hover:bg-[#161622]"
@@ -578,11 +568,11 @@ function ForeSightTerminalApp() {
                 </div>
               </div>
 
-              {/* Radar Header with Live Count and Sort */}
+              {/* Radar Header with Count and Sort */}
               <div className="px-2.5 py-1.5 border-b border-white/[0.08] bg-[#0B0B12] flex items-center justify-between">
                 <span className="stat-label text-[10px] flex items-center gap-1.5 font-mono">
-                  <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full animate-pulse" />
-                  MARKET RADAR
+                  <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full" />
+                  MARKETS
                 </span>
                 <div className="flex items-center gap-1.5">
                   <button
@@ -590,14 +580,14 @@ function ForeSightTerminalApp() {
                       sound.playClick();
                       setMarketSort((s) => (s === "DEFAULT" ? "ODDS" : s === "ODDS" ? "VOL" : "DEFAULT"));
                     }}
-                    className="text-[9px] font-mono text-gray-400 hover:text-violet-300 flex items-center gap-0.5 px-1 py-0.5 border border-white/[0.06] rounded-none hover:border-violet-500/30 transition-colors"
-                    title="Toggle Sort Order: Default / Implied Odds / 24h Volume"
+                    className="text-[9px] font-mono text-gray-400 hover:text-violet-300 flex items-center gap-0.5 px-1 py-0.5 border border-white/[0.06] rounded-none hover:border-violet-500/30 transition-colors cursor-pointer"
+                    title="Toggle Sort: Default / Odds / Volume"
                   >
                     <ArrowUpDown className="w-2.5 h-2.5" />
                     <span>{marketSort === "DEFAULT" ? "SORT" : marketSort}</span>
                   </button>
                   <span className="text-[10px] font-mono text-violet-300 bg-violet-950/60 border border-violet-500/30 px-1 py-0.2 rounded-none font-bold">
-                    {filteredMarkets.length} LIVE
+                    {filteredMarkets.length} ACTIVE
                   </span>
                 </div>
               </div>
@@ -662,18 +652,18 @@ function ForeSightTerminalApp() {
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                   SOMNIA L1
                 </span>
-                <span className="text-gray-400 font-bold">24h Vol: ${(total24hVol / 1000).toFixed(0)}K</span>
+                <span className="text-gray-400 font-bold">24H VOL: ${(total24hVol / 1000).toFixed(0)}K</span>
               </div>
             </aside>
 
-            {/* ── CENTER COLUMN: Visual Intelligence Canvas + Decision Stress Test ── */}
+            {/* ── CENTER COLUMN: Visual Intelligence Canvas & Order Simulator ── */}
             <main className="flex-1 flex flex-col min-w-0 bg-[#07070B] overflow-hidden">
               {/* Header Stats Bar */}
               <MarketStats market={activeMarket} serverMode={health?.mode} />
 
               {/* Unified Visual Board (Zero-Scroll Bento Split) */}
               <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
-                {/* Top Half: Multi-Mode Visual Intelligence Canvas */}
+                {/* Top Half: Multi-Mode Chart Canvas */}
                 <div className="flex-shrink-0">
                   <PriceChart
                     symbol={activeSymbol}
@@ -691,7 +681,7 @@ function ForeSightTerminalApp() {
                   />
                 </div>
 
-                {/* Bottom Half: Deterministic Decision Stress Test & 1-Click CLOB */}
+                {/* Bottom Half: Order Simulator & 1-Click CLOB Execution */}
                 <div className="flex-shrink-0">
                   <ScenarioSimulator
                     market={activeMarket}
@@ -708,7 +698,7 @@ function ForeSightTerminalApp() {
               </div>
             </main>
 
-            {/* ── RIGHT COLUMN: Somnia CLOB Orderbook & Liquidity Depth ────── */}
+            {/* ── RIGHT COLUMN: Somnia CLOB Orderbook ────── */}
             <aside className="w-72 xl:w-80 border-l border-white/[0.08] bg-[#0E0E17] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
               <ContextPanel
                 symbol={activeSymbol}

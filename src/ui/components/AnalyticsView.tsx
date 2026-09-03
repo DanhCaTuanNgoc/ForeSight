@@ -34,7 +34,7 @@ const OrderbookRow: React.FC<{ price: number; size: number; side: "bid" | "ask";
   const safeSize = typeof size === "number" && !isNaN(size) ? size : 100;
   const pct = maxSize > 0 ? Math.min(100, (safeSize / maxSize) * 100) : 20;
   return (
-    <div className="relative flex items-center justify-between text-[11px] font-mono py-1 px-2.5 rounded overflow-hidden">
+    <div className="relative flex items-center justify-between text-[11px] font-mono py-1 px-2.5 rounded-none overflow-hidden">
       <div
         className={`absolute inset-y-0 ${side === "bid" ? "left-0 bg-emerald-500/15" : "right-0 bg-rose-500/15"}`}
         style={{ width: `${pct}%` }}
@@ -42,7 +42,7 @@ const OrderbookRow: React.FC<{ price: number; size: number; side: "bid" | "ask";
       <span className={`relative font-bold ${side === "bid" ? "text-emerald-400" : "text-rose-400"}`}>
         ${safePrice.toFixed(3)}
       </span>
-      <span className="relative text-gray-300 font-mono text-[10px]">{Math.round(safeSize).toLocaleString()} shares</span>
+      <span className="relative text-gray-400 font-mono text-[10px]">{Math.round(safeSize).toLocaleString()} shares</span>
     </div>
   );
 };
@@ -187,7 +187,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     if (activeMarket?.spotPrice && typeof activeMarket.spotPrice === "number") {
       return activeMarket.spotPrice;
     }
-    // Realistic fallback matching live market conditions if offline
     if (activeSymbol === "BTC") return 77590;
     if (activeSymbol === "ETH") return 2420;
     if (activeSymbol === "SOL") return 100;
@@ -316,19 +315,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const distDollar = Math.abs(strikePrice - spotPrice);
   const distPercent = (distDollar / Math.max(1, spotPrice)) * 100;
   const reqVelocityPerMin = (distPercent / remainingMinutes);
-  // Real observed volatility from 24h ticker delta (or active regime)
   const dailyAbsChange = Math.abs(liveSpotMap[activeSymbol]?.change ?? 1.8);
   const observedVelocityPerMin = Math.max(0.015, (dailyAbsChange / 1440) * 18);
   const velocityCoverage = Number((observedVelocityPerMin / Math.max(0.001, reqVelocityPerMin)).toFixed(2));
   const isVcSufficient = velocityCoverage >= 1.0;
-  const feasibilityPct = Math.min(99, Math.max(5, Math.round(Math.min(2.0, velocityCoverage) * 50)));
 
   // I. Invalidation Price Level
   const invalidationPrice = isUp
     ? Number((spotPrice * 0.994).toFixed(spotPrice > 10 ? 0 : 4))
     : Number((spotPrice * 1.006).toFixed(spotPrice > 10 ? 0 : 4));
 
-  // I. Live Orderbook Rows
+  // Live Orderbook Rows
   const displayBids: [number, number][] = orderbook?.bids?.length
     ? orderbook.bids
     : [[bestBid, 1250], [bestBid - 0.01, 840], [bestBid - 0.02, 620], [bestBid - 0.03, 490], [bestBid - 0.04, 310]];
@@ -352,27 +349,27 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#0A0A0F] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-4 space-y-4 font-mono">
+    <div className="flex-1 flex flex-col min-h-0 bg-[#07070B] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 font-mono">
 
-      {/* ─── 1. HERO BANNER: ASSET CONTROL & REAL-TIME QUOTE BAR ─────────── */}
-      <div className="w-full flex-shrink-0 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-[#141026] via-[#0E0E18] to-[#0A1220] border border-[#2B2B44] shadow-xl flex flex-wrap lg:flex-nowrap items-center justify-between gap-4">
+      {/* ─── 1. ASSET CONTROL & REAL-TIME QUOTE BAR ─────────── */}
+      <div className="w-full flex-shrink-0 p-3 sm:p-3.5 bg-[#0A0A12] border border-white/[0.08] rounded-none flex flex-wrap lg:flex-nowrap items-center justify-between gap-3">
         {/* Left: Token Identity & Active Contract Context */}
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-violet-600/20 border border-violet-500/40 shadow-[0_0_15px_rgba(124,58,237,0.35)] flex-shrink-0">
-            <CryptoIcon symbol={activeSymbol} size={38} />
+          <div className="p-1.5 bg-[#12121C] border border-white/[0.08] rounded-none flex-shrink-0">
+            <CryptoIcon symbol={activeSymbol} size={32} />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                {activeSymbol} <span className="text-gray-400 font-normal text-lg">/ tUSDC</span>
+              <h2 className="text-lg font-bold text-white tracking-wide font-mono">
+                {activeSymbol} <span className="text-gray-400 font-normal text-sm">/ tUSDC</span>
               </h2>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-mono font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Somnia Shannon L1
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.2 bg-[#12121C] border border-white/[0.08] text-gray-300 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                Somnia L1
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-violet-950/80 text-cyan-300 border border-violet-500/40 font-mono font-bold">
+              <span className="text-[9px] px-1.5 py-0.2 bg-[#12121C] text-cyan-300 border border-cyan-500/30 font-mono font-bold">
                 Round: {roundId}
               </span>
             </div>
@@ -380,50 +377,50 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
 
         {/* Center: Real-time Quantitative Quote Matrix */}
-        <div className="flex items-center gap-3 sm:gap-5 bg-[#090912]/90 border border-[#1F1F32] px-4 py-2 rounded-xl shadow-inner flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-3 sm:gap-4 bg-[#0E0E17] border border-white/[0.08] px-3.5 py-1.5 rounded-none flex-wrap sm:flex-nowrap">
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Implied Odds</span>
-            <span className={`text-sm sm:text-base font-black font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
+            <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Implied Odds</span>
+            <span className={`text-sm font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
               {prob.toFixed(1)}% YES
             </span>
           </div>
-          <div className="w-px h-6 bg-[#212136]" />
+          <div className="w-px h-5 bg-white/[0.08]" />
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold tracking-wider flex items-center gap-1">
+            <span className="text-[9px] text-gray-400 block uppercase tracking-wider flex items-center gap-1">
               Spot (Oracle)
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Live Binance Feed" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Live Oracle Feed" />
             </span>
-            <span className="text-sm sm:text-base font-black font-mono text-cyan-300">
+            <span className="text-sm font-bold font-mono text-cyan-300">
               ${spotPrice > 10 ? spotPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : spotPrice.toFixed(4)}
             </span>
           </div>
-          <div className="w-px h-6 bg-[#212136]" />
+          <div className="w-px h-5 bg-white/[0.08]" />
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Strike Target</span>
-            <span className="text-sm sm:text-base font-black font-mono text-white">
+            <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Strike Target</span>
+            <span className="text-sm font-bold font-mono text-white">
               ${strikePrice > 10 ? strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : strikePrice.toFixed(4)}
             </span>
           </div>
-          <div className="w-px h-6 bg-[#212136]" />
+          <div className="w-px h-5 bg-white/[0.08]" />
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Quant Edge (Φ)</span>
-            <span className={`text-sm sm:text-base font-black font-mono ${quantEdgeBps > 0 ? "text-emerald-400" : quantEdgeBps < 0 ? "text-rose-400" : "text-amber-300"}`}>
+            <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Model Edge (Φ)</span>
+            <span className={`text-sm font-bold font-mono ${quantEdgeBps > 0 ? "text-emerald-400" : quantEdgeBps < 0 ? "text-rose-400" : "text-amber-300"}`}>
               {quantEdgeBps > 0 ? `+${quantEdgeBps}` : quantEdgeBps} bps
             </span>
           </div>
         </div>
 
-        {/* Right: Token Switcher, Refresh & Terminal CTA */}
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          <div className="flex items-center bg-[#090912] border border-[#222238] rounded-xl p-1 gap-1">
+        {/* Right: Token Switcher, Refresh */}
+        <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] p-0.5 gap-1 rounded-none">
             {["BTC", "ETH", "SOL", "SOMI"].map((sym) => (
               <button
                 key={sym}
                 onClick={() => handleSelectSymbol(sym)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-mono font-bold rounded-none transition-colors cursor-pointer border ${
                   sym === activeSymbol
-                    ? "bg-violet-600 text-white shadow-[0_0_12px_rgba(124,58,237,0.7)] border border-violet-400 scale-[1.02]"
-                    : "text-gray-400 hover:text-white hover:bg-[#1C1C2C]"
+                    ? "bg-violet-600/30 text-violet-300 border-violet-500/50"
+                    : "bg-[#12121C] text-gray-400 border-white/[0.06] hover:text-white hover:bg-[#161622]"
                 }`}
               >
                 {sym}
@@ -434,79 +431,78 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <button
             onClick={handleManualRefresh}
             disabled={isLoading}
-            title="Force refresh live Oracle & CLOB streams"
-            className="p-2 rounded-xl bg-[#0F0F1A] border border-[#232338] text-gray-400 hover:text-white hover:border-violet-500 transition-all cursor-pointer shadow-md disabled:opacity-50"
+            title="Refresh live streams"
+            className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.08] text-gray-400 hover:text-white hover:border-violet-500/40 transition-colors cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-violet-400" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-violet-400" : ""}`} />
           </button>
         </div>
       </div>
 
       {/* ─── 2. TOP MACRO HEALTH RIBBON ─────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-shrink-0">
-        <div className="p-3 rounded-xl bg-[#0E0E16] border border-[#222234] flex items-center justify-between shadow-sm">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 flex-shrink-0">
+        <div className="p-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-center justify-between">
           <div>
-            <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider block">24H CLOB Volume</span>
-            <span className="text-base font-bold font-mono text-white">${(totalVolume / 1000).toFixed(1)}K USDC</span>
+            <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">24H Volume</span>
+            <span className="text-sm font-bold font-mono text-white">${(totalVolume / 1000).toFixed(1)}K USDC</span>
           </div>
-          <div className="p-2 rounded-lg bg-violet-600/10 border border-violet-500/30 text-violet-400">
-            <BarChart3 className="w-4 h-4" />
+          <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] text-violet-400">
+            <BarChart3 className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-[#0E0E16] border border-[#222234] flex items-center justify-between shadow-sm">
+        <div className="p-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-center justify-between">
           <div>
-            <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider block">Active Contracts</span>
-            <span className="text-base font-bold font-mono text-emerald-400">{Math.max(4, allMarkets.length)} Live Pairs</span>
+            <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">Active Contracts</span>
+            <span className="text-sm font-bold font-mono text-emerald-400">{Math.max(4, allMarkets.length)} Live Pairs</span>
           </div>
-          <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-            <Zap className="w-4 h-4" />
+          <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] text-emerald-400">
+            <Zap className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-[#0E0E16] border border-[#222234] flex items-center justify-between shadow-sm">
+        <div className="p-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-center justify-between">
           <div>
-            <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider block">CLOB Imbalance</span>
-            <span className={`text-base font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
-              {isUp ? "1.82× Bid Wall" : "1.45× Ask Wall"}
+            <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">Order Flow Bias</span>
+            <span className={`text-sm font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
+              {isUp ? "1.82× Bid Depth" : "1.45× Ask Depth"}
             </span>
           </div>
-          <div className={`p-2 rounded-lg ${isUp ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-rose-500/10 border border-rose-500/30 text-rose-400"}`}>
-            {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+          <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] text-gray-300">
+            {isUp ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-400" />}
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-[#0E0E16] border border-[#222234] flex items-center justify-between shadow-sm">
+        <div className="p-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-center justify-between">
           <div>
-            <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider block">Somnia Fast-Path</span>
-            <span className="text-base font-bold font-mono text-cyan-400">~15ms Sub-Second</span>
+            <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">CLOB Latency</span>
+            <span className="text-sm font-bold font-mono text-cyan-400">~15ms Sub-Second</span>
           </div>
-          <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-            <Radio className="w-4 h-4" />
+          <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] text-cyan-400">
+            <Radio className="w-3.5 h-3.5" />
           </div>
         </div>
       </div>
 
       {/* ─── 3. MID-TIER FORENSIC MATRIX (2 BALANCED CARDS) ─────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-shrink-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-shrink-0">
 
-        {/* ── Card A: CLOB Order Flow & Liquidity Depth Forensics ─────────── */}
-        <div className="lg:col-span-6 rounded-xl border border-[#222234] bg-[#0E0E16] overflow-hidden flex flex-col shadow-xl">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1F1F2E] bg-[#0A0A10]">
+        {/* ── Card A: Order Flow & Liquidity Depth ─────────── */}
+        <div className="lg:col-span-6 rounded-none border border-white/[0.08] bg-[#0A0A12] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.08] bg-[#0E0E17]">
             <div className="flex items-center gap-2">
-              <div className="p-1 rounded bg-violet-600/20 border border-violet-500/40 text-violet-400">
-                <BookOpen className="w-3.5 h-3.5" />
+              <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+                <BookOpen className="w-3 h-3" />
               </div>
-              <span className="text-xs font-bold text-white">SMART ORDER FLOW & CLOB DEPTH</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded border border-violet-500/30 text-violet-300 font-bold">FORENSIC</span>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">ORDER FLOW & CLOB DEPTH</span>
             </div>
-            <span className="text-[10px] text-gray-400 font-mono">DreamDEX Shannon CLOB</span>
+            <span className="text-[9px] text-gray-400 font-mono">DreamDEX CLOB</span>
           </div>
 
-          <div className="p-4 space-y-4">
+          <div className="p-3 space-y-3">
             {/* Conviction Bar */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-mono font-bold">
                 <span className="text-emerald-400 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
                   YES Conviction ({prob.toFixed(1)}%)
@@ -515,25 +511,25 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   NO Conviction ({(100 - prob).toFixed(1)}%)
                 </span>
               </div>
-              <div className="h-3 w-full bg-[#1A1A28] rounded-full overflow-hidden flex p-0.5 border border-[#26263A]">
+              <div className="h-2 w-full bg-[#12121C] rounded-none overflow-hidden flex border border-white/[0.06]">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-l-full transition-all duration-700 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                  className="h-full bg-emerald-500 transition-all duration-500"
                   style={{ width: `${prob}%` }}
                 />
                 <div
-                  className="h-full bg-gradient-to-r from-rose-600 to-rose-400 rounded-r-full transition-all duration-700"
+                  className="h-full bg-rose-500 transition-all duration-500"
                   style={{ width: `${100 - prob}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between text-[10px] text-gray-500">
-                <span>Order Pressure: <b className={isUp ? "text-emerald-300" : "text-rose-300"}>{isUp ? "Aggressive Bids Accumulation" : "Heavy Asks Distribution"}</b></span>
+              <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono">
+                <span>Order Pressure: <b className={isUp ? "text-emerald-300" : "text-rose-300"}>{isUp ? "Bid Accumulation" : "Ask Distribution"}</b></span>
                 <span>Spread: <b className="text-white">{spreadCents}¢ USDC</b></span>
               </div>
             </div>
 
             {/* Live Depth Snapshot */}
-            <div className="rounded-lg bg-[#0B0B13] border border-[#1E1E2E] p-2 space-y-1">
-              <div className="flex items-center justify-between text-[9px] text-gray-500 uppercase px-2 font-bold">
+            <div className="rounded-none bg-[#0E0E17] border border-white/[0.06] p-1.5 space-y-0.5">
+              <div className="flex items-center justify-between text-[9px] text-gray-400 uppercase px-2 font-bold font-mono">
                 <span>Contract Price (YES)</span>
                 <span>Depth Volume</span>
               </div>
@@ -542,10 +538,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <OrderbookRow key={`ask-${i}`} price={price} size={size} side="ask" maxSize={maxAskSize} />
               ))}
               {/* Mid Price Divider */}
-              <div className="flex items-center justify-center gap-2 py-1 my-1 bg-[#131322] rounded border border-[#292940]">
-                <span className="text-[10px] text-gray-400">Mid Equilibrium:</span>
-                <span className="text-xs font-black text-white">${(activeMarket?.midPrice || 0.50).toFixed(3)}</span>
-                <span className={`text-[9px] font-bold ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
+              <div className="flex items-center justify-center gap-2 py-0.5 my-0.5 bg-[#12121C] rounded-none border border-white/[0.06] text-mono">
+                <span className="text-[10px] text-gray-400 font-mono">Mid Equilibrium:</span>
+                <span className="text-xs font-bold text-white font-mono">${(activeMarket?.midPrice || 0.50).toFixed(3)}</span>
+                <span className={`text-[9px] font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
                   ({prob.toFixed(1)}% Implied)
                 </span>
               </div>
@@ -556,87 +552,85 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
 
             {/* Microstructure Metrics Bar */}
-            <div className="grid grid-cols-3 gap-2 text-center pt-1">
-              <div className="p-2 rounded-lg bg-[#12121E] border border-[#222234]">
-                <span className="text-[9px] text-gray-500 block">BEST BID</span>
-                <span className="text-xs font-black text-emerald-400">${bestBid.toFixed(3)}</span>
+            <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
+              <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
+                <span className="text-[9px] text-gray-400 block uppercase">BEST BID</span>
+                <span className="text-xs font-bold text-emerald-400">${bestBid.toFixed(3)}</span>
               </div>
-              <div className="p-2 rounded-lg bg-[#12121E] border border-[#222234]">
-                <span className="text-[9px] text-gray-500 block">BEST ASK</span>
-                <span className="text-xs font-black text-rose-400">${bestAsk.toFixed(3)}</span>
+              <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
+                <span className="text-[9px] text-gray-400 block uppercase">BEST ASK</span>
+                <span className="text-xs font-bold text-rose-400">${bestAsk.toFixed(3)}</span>
               </div>
-              <div className="p-2 rounded-lg bg-[#12121E] border border-[#222234]">
-                <span className="text-[9px] text-gray-500 block">EST. SLIPPAGE</span>
-                <span className="text-xs font-black text-amber-300">~0.12% ($100)</span>
+              <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
+                <span className="text-[9px] text-gray-400 block uppercase">EST. SLIPPAGE</span>
+                <span className="text-xs font-bold text-amber-300">~0.12% ($100)</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Card B: Quantitative Valuation & Settlement Trajectory ─────── */}
-        <div className="lg:col-span-6 rounded-xl border border-[#222234] bg-[#0E0E16] overflow-hidden flex flex-col shadow-xl">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1F1F2E] bg-[#0A0A10]">
+        <div className="lg:col-span-6 rounded-none border border-white/[0.08] bg-[#0A0A12] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.08] bg-[#0E0E17]">
             <div className="flex items-center gap-2">
-              <div className="p-1 rounded bg-cyan-600/20 border border-cyan-500/40 text-cyan-400">
-                <Scale className="w-3.5 h-3.5" />
+              <div className="p-1 rounded-none bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
+                <Scale className="w-3 h-3" />
               </div>
-              <span className="text-xs font-bold text-white">QUANTITATIVE PRICING & SETTLEMENT TRAJECTORY</span>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">QUANTITATIVE PRICING & TRAJECTORY</span>
             </div>
-            <span className="text-[10px] text-gray-400 font-mono flex items-center gap-1.5">
-              <span className="text-cyan-400 font-bold font-mono">Round: {roundId}</span>
-            </span>
+            <span className="text-[9px] text-cyan-300 font-bold font-mono">Round: {roundId}</span>
           </div>
 
-          <div className="p-4 space-y-4">
+          <div className="p-3 space-y-3">
 
             {/* Final 60-Second Pin-Risk Settlement Notice */}
             {isSettlingPhase && (
-              <div className="px-3 py-2 rounded-lg bg-amber-950/90 border border-amber-500/60 text-amber-200 text-xs flex items-center gap-2.5 font-mono shadow-[0_0_12px_rgba(245,158,11,0.2)]">
-                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 animate-bounce" />
+              <div className="px-2.5 py-1.5 rounded-none bg-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center gap-2 font-mono">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                 <div>
-                  <span className="font-black text-amber-300 block">
-                    🔒 FINAL SETTLEMENT EXPIRATION (&lt;60s)
+                  <span className="font-bold text-amber-300 block text-[11px]">
+                    SETTLEMENT EXPIRY (&lt;60s)
                   </span>
                   <span className="text-[10px] text-amber-200/80">
-                    High pin-risk compression: Time decay forces probability toward binary 0% or 100%. Avoid new orders!
+                    High pin-risk compression: Time decay forces probability toward binary outcome.
                   </span>
                 </div>
               </div>
             )}
 
             {/* 1. Market vs Quant Valuation Comparison Table with Verdict Banner */}
-            <div className="rounded-lg bg-[#0B0B13] border border-[#1E1E2E] p-3 space-y-3">
+            <div className="rounded-none bg-[#0E0E17] border border-white/[0.06] p-2.5 space-y-2">
               {/* Plain-Language Verdict Banner */}
-              <div className={`px-3 py-2 rounded-lg text-xs flex items-center justify-between font-mono border ${
+              <div className={`px-2.5 py-1.5 rounded-none text-xs flex items-center justify-between font-mono border ${
                 isFavorable
-                  ? "bg-emerald-950/70 border-emerald-500/50 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                  ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
                   : quantEdgeBps < -50
-                  ? "bg-rose-950/70 border-rose-500/50 text-rose-300"
-                  : "bg-[#141422] border-[#292940] text-gray-300"
+                  ? "bg-rose-950/60 border-rose-500/40 text-rose-300"
+                  : "bg-[#12121C] border-white/[0.06] text-gray-300"
               }`}>
-                <span className="font-bold flex items-center gap-1.5">
-                  {isFavorable ? "🔥 UNDERPRICED OPPORTUNITY: YES contract traded at a discount to fair value" : quantEdgeBps < -50 ? "⚠️ OVERPRICED WARNING: YES contract trading at a premium" : "⚖ FAIR EQUILIBRIUM: Market odds match theoretical diffusion"}
+                <span className="font-bold text-[11px] flex items-center gap-1.5">
+                  {isFavorable ? "VALUATION: YES contract traded at a discount to theoretical fair value" : quantEdgeBps < -50 ? "VALUATION: YES contract trading at a premium" : "VALUATION: Market odds in equilibrium with model"}
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-black/40 border border-white/10 font-bold flex-shrink-0">
+                <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-black/40 border border-white/10 font-bold flex-shrink-0">
                   {quantEdgeBps > 0 ? `+${(quantEdgeBps / 100).toFixed(1)}% Edge (+${quantEdgeBps} bps)` : `${quantEdgeBps} bps`}
                 </span>
               </div>
 
               {/* 3-Column Valuation Matrix */}
-              <div className="grid grid-cols-3 gap-2 text-center font-mono">
-                <div className="p-2 rounded-lg bg-[#10101C] border border-[#212133]">
-                  <span className="text-[9px] text-gray-400 block uppercase">DreamDEX CLOB Price</span>
-                  <span className="text-sm font-black text-white">{prob.toFixed(1)}% YES</span>
-                  <span className="text-[9px] text-gray-500 block">(${(prob / 100).toFixed(2)} / share)</span>
+              <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
+                <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.06]">
+                  <span className="text-[9px] text-gray-400 block uppercase">Orderbook Odds</span>
+                  <span className="text-xs font-bold text-white">{prob.toFixed(1)}% YES</span>
+                  <span className="text-[9px] text-gray-500 block">(${(prob / 100).toFixed(2)})</span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#10101C] border border-cyan-500/30">
-                  <span className="text-[9px] text-cyan-400 block uppercase">Theoretical Fair Value</span>
-                  <span className="text-sm font-black text-cyan-300">{fairProb.toFixed(1)}% YES</span>
+                <div className="p-1.5 rounded-none bg-[#12121C] border border-cyan-500/30">
+                  <span className="text-[9px] text-cyan-400 block uppercase">Model Fair Value</span>
+                  <span className="text-xs font-bold text-cyan-300">{fairProb.toFixed(1)}% YES</span>
                   <span className="text-[9px] text-gray-500 block">(Black-Scholes Φ)</span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#10101C] border border-[#212133]">
-                  <span className="text-[9px] text-gray-400 block uppercase">Pricing Discrepancy</span>
-                  <span className={`text-sm font-black ${quantEdgeBps > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.06]">
+                  <span className="text-[9px] text-gray-400 block uppercase">Model Discrepancy</span>
+                  <span className={`text-xs font-bold ${quantEdgeBps > 0 ? "text-emerald-400" : "text-rose-400"}`}>
                     {quantEdgeBps > 0 ? `+${(quantEdgeBps / 100).toFixed(1)}%` : `${(quantEdgeBps / 100).toFixed(1)}%`}
                   </span>
                   <span className="text-[9px] text-gray-500 block">({quantEdgeBps > 0 ? "+" : ""}{quantEdgeBps} bps)</span>
@@ -645,75 +639,74 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
 
             {/* 2. Trajectory & Velocity Coverage (VC) */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs flex-wrap gap-1">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs flex-wrap gap-1 font-mono">
                 <span className="text-gray-300 font-bold flex items-center gap-1.5">
                   <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-                  Physical Momentum (Velocity Coverage)
+                  Velocity Coverage
                 </span>
-                <span className={`text-xs px-2.5 py-0.5 rounded-full font-black border ${
+                <span className={`text-[10px] px-2 py-0.2 rounded-none font-bold border ${
                   isVcSufficient
-                    ? "text-emerald-300 bg-emerald-950/70 border-emerald-500/50 shadow-sm"
-                    : "text-amber-300 bg-amber-950/70 border-amber-500/50"
+                    ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
+                    : "text-amber-300 bg-amber-950/60 border-amber-500/40"
                 }`}>
-                  {isVcSufficient ? `🏎️ SUFFICIENT PACE (VC: ${velocityCoverage}×)` : `⚠️ LAGGING PACE (VC: ${velocityCoverage}×)`}
+                  {isVcSufficient ? `SUFFICIENT PACE (VC: ${velocityCoverage}×)` : `LAGGING PACE (VC: ${velocityCoverage}×)`}
                 </span>
               </div>
 
               {/* Progress Bar */}
-              <div className="h-3 w-full bg-[#1A1A28] rounded-full overflow-hidden border border-[#26263A] p-0.5">
+              <div className="h-1.5 w-full bg-[#12121C] rounded-none overflow-hidden border border-white/[0.06]">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 shadow-sm ${
-                    isVcSufficient ? "bg-gradient-to-r from-emerald-600 to-emerald-400" : "bg-gradient-to-r from-amber-600 to-amber-400"
+                  className={`h-full rounded-none transition-all duration-500 ${
+                    isVcSufficient ? "bg-emerald-400" : "bg-amber-400"
                   }`}
                   style={{ width: `${Math.min(100, Math.max(10, velocityCoverage * 60))}%` }}
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-gray-400 font-mono">
+              <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono">
                 <span>Distance to Strike: <b className="text-white">${distDollar > 10 ? distDollar.toFixed(1) : distDollar.toFixed(4)} ({distPercent.toFixed(2)}%)</b></span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                <span className="flex items-center gap-1">
                   Time Remaining: <b className="text-cyan-300 font-mono">{formatCountdown(countdownSec)}</b>
                 </span>
               </div>
             </div>
 
             {/* 3. Actionable Risk Management & Capital Allocation */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="p-3 rounded-lg bg-[#12121E] border border-[#222234] space-y-1">
-                <span className="text-[10px] text-gray-400 uppercase font-bold block flex items-center gap-1">
-                  🛡️ Optimal Sizing (Half-Kelly)
+            <div className="grid grid-cols-2 gap-2 font-mono">
+              <div className="p-2 rounded-none bg-[#0E0E17] border border-white/[0.06] space-y-0.5">
+                <span className="text-[9px] text-gray-400 uppercase font-bold block flex items-center gap-1">
+                  Optimal Sizing (Half-Kelly)
                   <HelpCircle className="w-2.5 h-2.5 text-gray-500" />
                 </span>
-                <span className="text-base font-black text-amber-300">Max {kellyPercent}% Bankroll</span>
-                <span className="text-[9px] text-gray-500 block">Statistically optimal capital cap</span>
+                <span className="text-sm font-bold text-amber-300">Max {kellyPercent}% Bankroll</span>
+                <span className="text-[9px] text-gray-500 block">Statistical capital cap</span>
               </div>
 
-              <div className="p-3 rounded-lg bg-[#12121E] border border-[#222234] space-y-1">
-                <span className="text-[10px] text-gray-400 uppercase font-bold block flex items-center gap-1">
-                  🚨 Thesis Invalidation Stop
+              <div className="p-2 rounded-none bg-[#0E0E17] border border-white/[0.06] space-y-0.5">
+                <span className="text-[9px] text-gray-400 uppercase font-bold block">
+                  Invalidation Stop Level
                 </span>
-                <span className="text-base font-black text-rose-400">
+                <span className="text-sm font-bold text-rose-400">
                   ${invalidationPrice > 10 ? invalidationPrice.toLocaleString() : invalidationPrice.toFixed(4)}
                 </span>
-                <span className="text-[9px] text-gray-500 block">Exit early if spot crosses this level</span>
+                <span className="text-[9px] text-gray-500 block">Exit early if spot crosses level</span>
               </div>
             </div>
 
             {/* Invalidation Trigger Context */}
-            <div className="p-2.5 rounded-lg bg-[#15101F] border border-violet-500/40 text-[11px] text-gray-300 leading-relaxed flex items-start gap-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="p-2 rounded-none bg-[#161014] border border-rose-500/30 text-[10px] text-gray-300 leading-tight flex items-start gap-1.5 font-sans">
+              <AlertTriangle className="w-3 h-3 text-rose-400 flex-shrink-0 mt-0.5" />
               <span>
-                <b>Early Exit Protocol:</b> If spot price crosses <b className="text-rose-400">${invalidationPrice > 10 ? invalidationPrice.toLocaleString() : invalidationPrice.toFixed(4)}</b> before expiry, momentum velocity is broken. Recommend early exit to protect capital!
+                <b>Early Exit Protocol:</b> If spot crosses <b className="text-rose-300 font-mono">${invalidationPrice > 10 ? invalidationPrice.toLocaleString() : invalidationPrice.toFixed(4)}</b> before expiry, momentum velocity is broken. Recommend early exit.
               </span>
             </div>
 
             {/* Time Expiry & Oracle Status Footer */}
-            <div className="flex items-center justify-between text-[10px] text-gray-400 px-1 pt-0.5">
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3 h-3 text-cyan-400 animate-spin" style={{ animationDuration: '6s' }} />
-                <span>Window Expiration: <b className="text-white font-mono">{formatCountdown(countdownSec)}</b></span>
+            <div className="flex items-center justify-between text-[9px] text-gray-400 pt-0.5 font-mono">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3 text-cyan-400" />
+                <span>Expiry Window: <b className="text-white font-mono">{formatCountdown(countdownSec)}</b></span>
               </span>
               <span className="flex items-center gap-1 text-emerald-400 font-mono">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -724,8 +717,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
       </div>
 
-      {/* ─── 4. THE CORE ENGINE: REAL-TIME EVENT & CATALYST TIMELINE ─────────── */}
-      <div className="w-full flex-shrink-0 pt-2">
+      {/* ─── 4. REAL-TIME EVENT & CATALYST TIMELINE ─────────── */}
+      <div className="w-full flex-shrink-0 pt-1">
         <EventTimeline symbol={activeSymbol} />
       </div>
 

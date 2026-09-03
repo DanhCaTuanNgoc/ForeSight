@@ -62,14 +62,14 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
     <footer className="bg-[#0A0A10] border-t border-white/[0.08] z-30 font-mono flex flex-col flex-shrink-0">
       {/* ─── Compact Top Dock Bar (Always visible) ──────────────────── */}
       <div className="h-10 px-3.5 flex items-center justify-between text-xs">
-        {/* Left: Active Position & Live Thesis Health Status */}
+        {/* Left: Active Position & Settlement Status */}
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="flex items-center gap-1.5 text-gray-400 font-bold uppercase tracking-wider text-[10px] shrink-0">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="text-gray-300 hidden sm:inline">LIVE THESIS MONITOR</span>
+            <span className="text-gray-300 hidden sm:inline">POSITIONS & SETTLEMENT</span>
           </div>
 
           <div className="h-3.5 w-px bg-white/[0.08] hidden sm:block shrink-0" />
@@ -90,9 +90,9 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
               </span>
 
               {/* Thesis Health Pill */}
-              <div className="hidden md:flex items-center gap-1.5 bg-[#12121C] border border-emerald-500/30 px-2 py-0.5 rounded-none text-[10px] text-emerald-300">
+              <div className="hidden md:flex items-center gap-1.5 bg-[#12121C] border border-white/[0.08] px-2 py-0.5 rounded-none text-[10px] text-gray-300">
                 <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                <span className="font-bold">Health: {thesisScore}% Valid</span>
+                <span className="font-bold">Thesis: {thesisScore}% Valid</span>
               </div>
 
               {/* Velocity Coverage */}
@@ -115,9 +115,9 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
             </div>
           ) : (
             <div className="flex items-center gap-2 text-gray-400 text-[11px]">
-              <span className="text-gray-500">No active positions.</span>
-              <span className="text-violet-300 hidden sm:inline">
-                {activeSymbol} Momentum: <b>+0.041%/m</b> (Sufficient for YES strike)
+              <span className="text-gray-500">No open positions.</span>
+              <span className="text-gray-400 hidden sm:inline">
+                {activeSymbol} Momentum: <b className="text-white">+0.041%/m</b>
               </span>
             </div>
           )}
@@ -127,7 +127,7 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
         <div className="flex items-center gap-2 shrink-0">
           {settledPositions.length > 0 && (
             <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-none hidden sm:inline font-bold">
-              {settledPositions.length} Settled Ready
+              {settledPositions.length} Settled
             </span>
           )}
 
@@ -139,10 +139,10 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
                 ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
                 : "bg-[#16161F] hover:bg-[#1C1C28] text-gray-300 border-white/[0.08]"
             } disabled:opacity-50 cursor-pointer`}
-            title="Auto-Claim Winnings on Somnia"
+            title="Claim Settled Payouts on Somnia"
           >
             <Coins className="w-3 h-3 text-violet-400" />
-            <span>{isClaiming ? "CLAIMING..." : "CLAIM ALL PAYOUTS"}</span>
+            <span>{isClaiming ? "CLAIMING..." : "CLAIM PAYOUTS"}</span>
           </button>
 
           <button
@@ -151,10 +151,10 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
               setIsExpanded(!isExpanded);
             }}
             className="p-1 rounded-none text-gray-400 hover:text-white hover:bg-[#1A1A28] border border-white/[0.08] transition-colors flex items-center gap-1 text-[10px] cursor-pointer"
-            title="Toggle Full Activity History"
+            title="Toggle Order History"
           >
-            <span>{positions.length} Orders</span>
-            {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+            <span>Orders ({positions.length})</span>
+            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>

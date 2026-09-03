@@ -65,19 +65,19 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       : userPositions;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#0A0A0F] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-4 space-y-4 font-mono">
-      {/* ─── CYPHERPUNK LUXURY HEADER: STREAMLINED & MINIMAL ─────────── */}
-      <div className="w-full flex-shrink-0 px-4 py-3 rounded-xl bg-[#09090F] border border-[#1C1C28] flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 text-xs font-mono">
-        {/* Left: Cypher Identity & Network */}
+    <div className="flex-1 flex flex-col min-h-0 bg-[#07070B] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 font-mono">
+      {/* ─── 1. TOP PORTFOLIO STATS & WALLET BAR ─────────── */}
+      <div className="w-full flex-shrink-0 px-3.5 py-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 text-xs font-mono">
+        {/* Left: Identity & Network */}
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-[#12121C] border border-[#222234] flex items-center justify-center text-violet-400 flex-shrink-0">
+          <div className="w-6 h-6 rounded-none bg-[#12121C] border border-white/[0.08] flex items-center justify-center text-violet-300 flex-shrink-0">
             <Wallet className="w-3.5 h-3.5" />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-white tracking-wider">
+            <span className="font-bold text-white tracking-wider uppercase">
               PORTFOLIO
             </span>
-            <span className="text-[10px] text-gray-500 font-normal">
+            <span className="text-[10px] text-gray-500 font-normal font-mono">
               //
             </span>
             <span className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold">
@@ -86,14 +86,14 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
             </span>
             <span className="text-gray-600 text-[10px]">•</span>
             {isConnected ? (
-              <span className="text-gray-300 flex items-center gap-1 text-[11px]">
+              <span className="text-gray-300 flex items-center gap-1 text-[11px] font-mono">
                 <ShieldCheck className="w-3 h-3 text-cyan-400" />
                 <span>{wallet.shortAddress || (activeAddress ? `${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)}` : "")}</span>
               </span>
             ) : (
               <button
                 onClick={wallet.openWalletModal}
-                className="text-amber-400 hover:text-amber-300 underline cursor-pointer text-[11px]"
+                className="text-amber-400 hover:text-amber-300 underline cursor-pointer text-[11px] font-mono"
               >
                 Connect Wallet
               </button>
@@ -101,53 +101,53 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           </div>
         </div>
 
-        {/* Center: High-Definition Cypher Ticker Matrix */}
-        <div className="flex items-center gap-4 sm:gap-7 bg-[#05050A] border border-[#1E1E2C] px-5 py-2 rounded-xl shadow-inner">
+        {/* Center: High-Definition Ticker Matrix */}
+        <div className="flex items-center gap-3 sm:gap-6 bg-[#0E0E17] border border-white/[0.08] px-4 py-1.5 rounded-none shadow-inner">
           <div className="space-y-0.5">
-            <span className="text-[10px] text-gray-400 block uppercase font-mono tracking-widest font-semibold">
+            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
               Invested
             </span>
-            <span className="text-base sm:text-lg font-black font-mono text-white tracking-tight block">
+            <span className="text-sm sm:text-base font-bold font-mono text-white tracking-tight block">
               ${totalInvested.toFixed(2)}
             </span>
           </div>
-          <div className="w-px h-7 bg-[#1F1F30]" />
+          <div className="w-px h-6 bg-white/[0.08]" />
           <div className="space-y-0.5">
-            <span className="text-[10px] text-gray-400 block uppercase font-mono tracking-widest font-semibold">
+            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
               In Flight
             </span>
-            <span className="text-base sm:text-lg font-black font-mono text-cyan-400 tracking-tight block">
+            <span className="text-sm sm:text-base font-bold font-mono text-cyan-400 tracking-tight block">
               {openPositions.length}
             </span>
           </div>
-          <div className="w-px h-7 bg-[#1F1F30]" />
+          <div className="w-px h-6 bg-white/[0.08]" />
           <div className="space-y-0.5">
-            <span className="text-[10px] text-gray-400 block uppercase font-mono tracking-widest font-semibold">
+            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
               Claimable
             </span>
-            <span className="text-base sm:text-lg font-black font-mono text-emerald-400 tracking-tight block">
+            <span className="text-sm sm:text-base font-bold font-mono text-emerald-400 tracking-tight block">
               ${totalClaimable.toFixed(2)}
             </span>
           </div>
-          <div className="w-px h-7 bg-[#1F1F30]" />
+          <div className="w-px h-6 bg-white/[0.08]" />
           <div className="space-y-0.5">
-            <span className="text-[10px] text-gray-400 block uppercase font-mono tracking-widest font-semibold">
+            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
               STT Gas
             </span>
-            <span className="text-base sm:text-lg font-black font-mono text-amber-300 tracking-tight block">
+            <span className="text-sm sm:text-base font-bold font-mono text-amber-300 tracking-tight block">
               {isConnected ? (activeBalance ? `${activeBalance} STT` : "0.0000 STT") : "—"}
             </span>
           </div>
         </div>
 
-        {/* Right: Low-profile Cypher Actions */}
-        <div className="flex items-center gap-2">
+        {/* Right: Low-profile Actions */}
+        <div className="flex items-center gap-1.5">
           <a
             href="https://testnet.somnia.network/"
             target="_blank"
             rel="noopener noreferrer"
             title="Claim free testnet STT tokens for gas fees"
-            className="px-2.5 py-1 rounded-lg bg-[#11111A] border border-[#222234] hover:border-amber-500/50 text-gray-300 hover:text-amber-300 flex items-center gap-1.5 transition text-[11px]"
+            className="px-2.5 py-1 rounded-none bg-[#0E0E17] border border-white/[0.08] hover:border-amber-500/50 text-gray-300 hover:text-amber-300 flex items-center gap-1.5 transition-colors text-[10px] font-mono"
           >
             <Droplets className="w-3 h-3 text-amber-400" />
             <span>Faucet ↗</span>
@@ -159,7 +159,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               title="View on Somnia Shannon Explorer"
-              className="p-1.5 rounded-lg bg-[#11111A] border border-[#222234] hover:border-violet-500/50 text-gray-400 hover:text-white transition"
+              className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.08] hover:border-violet-500/50 text-gray-400 hover:text-white transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
             </a>
@@ -167,37 +167,37 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
 
           <button
             onClick={onTradeNew}
-            className="px-3 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-bold text-[11px] flex items-center gap-1 transition shadow-sm cursor-pointer"
+            className="px-2.5 py-1 rounded-none bg-violet-600 hover:bg-violet-500 text-white font-bold text-[10px] flex items-center gap-1 transition-colors border border-violet-400/40 cursor-pointer font-mono"
           >
-            <span>+ Trade</span>
+            <span>+ TRADE</span>
             <ArrowUpRight className="w-3 h-3" />
           </button>
         </div>
       </div>
 
-      {/* ─── 3. ACTION CONTROLS & FILTER PILLS ─────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0E0E18] p-3 rounded-xl border border-[#222238]">
+      {/* ─── 2. ACTION CONTROLS & FILTER PILLS ─────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#0A0A12] p-2.5 rounded-none border border-white/[0.08]">
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-1 text-xs font-mono">
           {(["ALL", "OPEN", "SETTLED"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setFilter(t)}
-              className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+              className={`px-2.5 py-1 text-xs font-bold rounded-none transition-colors cursor-pointer border ${
                 filter === t
-                  ? "bg-violet-600 text-white shadow-md border border-violet-400 scale-[1.02]"
-                  : "bg-[#141422] text-gray-400 hover:text-white border border-[#252538]"
+                  ? "bg-violet-600/30 text-violet-300 border-violet-500/50"
+                  : "bg-[#0E0E17] text-gray-400 hover:text-white border-white/[0.06] hover:bg-[#12121C]"
               }`}
             >
-              {t === "ALL" && `All Positions (${userPositions.length})`}
-              {t === "OPEN" && `In Flight (${openPositions.length})`}
-              {t === "SETTLED" && `Settled (${settledPositions.length})`}
+              {t === "ALL" && `ALL (${userPositions.length})`}
+              {t === "OPEN" && `IN FLIGHT (${openPositions.length})`}
+              {t === "SETTLED" && `SETTLED (${settledPositions.length})`}
             </button>
           ))}
         </div>
 
         {/* Claim / Sweep Action Button */}
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-xs font-mono">
           <button
             onClick={onClaimAll}
             disabled={isClaiming || settledPositions.length === 0}
@@ -206,25 +206,25 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
                 ? "No settled payouts available yet. Contracts must reach round expiry to be claimed."
                 : `Sweep and redeem ${settledPositions.length} winning contract(s) directly to your wallet`
             }
-            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-md ${
+            className={`px-3 py-1.5 rounded-none font-bold text-xs flex items-center gap-1.5 transition-colors border ${
               settledPositions.length > 0
-                ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] cursor-pointer"
-                : "bg-[#141420] text-gray-500 border border-[#252538] cursor-not-allowed opacity-50"
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/40 cursor-pointer"
+                : "bg-[#0E0E17] text-gray-500 border-white/[0.06] cursor-not-allowed opacity-50"
             }`}
           >
-            <Coins className="w-4 h-4 text-emerald-400" />
+            <Coins className="w-3.5 h-3.5 text-emerald-400" />
             <span>
               {isClaiming
-                ? "Redeeming On-Chain..."
+                ? "CLAIMING ON-CHAIN..."
                 : settledPositions.length > 0
-                ? `Sweep & Claim Payouts (${settledPositions.length})`
-                : "No Settled Payouts Yet"}
+                ? `CLAIM PAYOUTS (${settledPositions.length})`
+                : "NO SETTLED PAYOUTS"}
             </span>
           </button>
         </div>
       </div>
 
-      {/* ─── 4. DETAILED POSITIONS TABLE (VERIFIABLE ON-CHAIN DATA) ──────── */}
+      {/* ─── 3. DETAILED POSITIONS TABLE (VERIFIABLE ON-CHAIN DATA) ──────── */}
       <div className="w-full">
         <PositionsTable
           positions={filteredPositions}
@@ -234,7 +234,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
         />
       </div>
 
-      {/* ─── 5. RECENT ON-CHAIN EXECUTION LEDGER ───────────────────────────── */}
+      {/* ─── 4. RECENT ON-CHAIN EXECUTION LEDGER ───────────────────────────── */}
       <div className="w-full">
         <ActivityTable
           positions={userPositions.map((p) => ({

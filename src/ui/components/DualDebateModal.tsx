@@ -63,100 +63,102 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#13131D] w-full max-w-4xl max-h-[90vh] rounded-xl border border-[#2A2A3D] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-[#0A0A12] w-full max-w-4xl max-h-[90vh] rounded-none border border-white/[0.08] flex flex-col shadow-2xl overflow-hidden font-mono">
         {/* Modal Top Header */}
-        <div className="p-4 px-6 border-b border-[#2A2A3D] flex items-center justify-between bg-[#0E0E17]">
+        <div className="p-3.5 px-5 border-b border-white/[0.08] flex items-center justify-between bg-[#0E0E17]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-600/20 text-violet-400 border border-violet-500/30">
-              <Zap className="w-4 h-4" />
+            <div className="p-1.5 rounded-none bg-violet-950/80 text-violet-300 border border-violet-500/40">
+              <Zap className="w-3.5 h-3.5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white">Dual AI Agent Arena</h2>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-violet-950/60 text-violet-300 font-mono border border-violet-700/40 flex items-center gap-1">
-                  <Sparkles className="w-2.5 h-2.5" /> What Changed?
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider">DUAL AGENT DEBATE ARENA</h2>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/60 text-violet-300 font-mono border border-violet-500/30 font-bold">
+                  CATALYST SYNTHESIS
                 </span>
               </div>
-              <p className="text-xs text-gray-400 font-mono">
-                Market: <span className="text-violet-400 font-semibold">{symbol}</span> | RAG Evidence Synthesis
+              <p className="text-[11px] text-gray-400 font-mono">
+                Market: <span className="text-violet-300 font-bold">{symbol}</span> · Grounded RAG Ingestion
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-[#1A1A26] transition-all"
+            className="p-1 rounded-none text-gray-400 hover:text-white hover:bg-[#12121C] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Body / Scrollable */}
-        <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+        <div className="p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar bg-[#07070B]">
           {isLoading ? (
-            <div className="py-16 text-center text-gray-400 space-y-3">
-              <Bot className="w-8 h-8 mx-auto text-violet-400 animate-spin" />
-              <p className="font-semibold text-xs font-mono">Synthesizing Alpha Bull & Macro Bear arguments via RAG...</p>
+            <div className="py-16 text-center text-gray-400 space-y-2 font-mono">
+              <Bot className="w-6 h-6 mx-auto text-violet-400 animate-spin" />
+              <p className="font-bold text-xs">Synthesizing Alpha Bull & Macro Bear arguments...</p>
             </div>
           ) : debateData ? (
             <>
               {/* Executive Summary */}
-              <div className="p-4 rounded-lg bg-[#161624] border border-violet-600/30 flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-violet-300 uppercase tracking-wider font-mono">
-                    AI Consensus & Context
+              <div className="p-3 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-start gap-2.5">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <h4 className="text-[10px] font-bold text-violet-300 uppercase tracking-wider font-mono">
+                    SYNTHESIS & ARBITRATION
                   </h4>
-                  <p className="text-xs text-gray-200 leading-relaxed">{debateData.summary}</p>
+                  <p className="text-xs text-gray-300 leading-relaxed font-sans">{debateData.summary}</p>
                 </div>
               </div>
 
               {/* The Arena: Bull vs Bear Side-by-Side */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* 🐂 ALPHA BULL CARD */}
-                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/10 flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                        <TrendingUp className="w-4 h-4" />
-                        <span>Alpha Bull AI</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* ALPHA BULL CARD */}
+                <div className="p-3.5 rounded-none border border-emerald-500/30 bg-[#0A0A12] flex flex-col justify-between space-y-3">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+                      <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        <span>ALPHA BULL THESIS</span>
                       </div>
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold">
-                        {Math.round(debateData.bullCase.confidence * 100)}% Confidence
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 font-bold">
+                        {Math.round(debateData.bullCase.confidence * 100)}% Conviction
                       </span>
                     </div>
 
-                    <p className="text-xs font-semibold text-gray-200 italic">
+                    <p className="text-xs text-gray-200 font-sans leading-relaxed">
                       "{debateData.bullCase.headline}"
                     </p>
 
-                    <div className="space-y-1.5 pt-1">
-                      <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">
-                        Key Theses:
+                    <div className="space-y-1 pt-0.5">
+                      <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">
+                        Key Arguments:
                       </p>
-                      <ul className="space-y-1 text-xs text-gray-300">
+                      <ul className="space-y-1 text-xs text-gray-300 font-sans">
                         {debateData.bullCase.keyArguments.map((arg: string, i: number) => (
-                          <li key={i} className="flex items-start gap-1.5">
+                          <li key={i} className="flex items-start gap-1.5 bg-[#0E0E17] p-1.5 rounded-none border border-white/[0.04]">
                             <span className="text-emerald-400 font-bold">•</span>
-                            <span>{arg}</span>
+                            <span className="text-[11px] leading-snug">{arg}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div className="space-y-1 pt-1">
-                      <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">
-                        Catalysts:
-                      </p>
-                      {debateData.bullCase.catalysts.map((cat: string, i: number) => (
-                        <div
-                          key={i}
-                          className="text-[11px] text-emerald-200/90 bg-emerald-900/20 p-1.5 rounded border border-emerald-800/40 font-mono"
-                        >
-                          ⚡ {cat}
-                        </div>
-                      ))}
-                    </div>
+                    {debateData.bullCase.catalysts && debateData.bullCase.catalysts.length > 0 && (
+                      <div className="space-y-1 pt-0.5">
+                        <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">
+                          Catalysts:
+                        </p>
+                        {debateData.bullCase.catalysts.map((cat: string, i: number) => (
+                          <div
+                            key={i}
+                            className="text-[10px] text-emerald-300 bg-[#0E0E17] p-1.5 rounded-none border border-emerald-500/20 font-mono"
+                          >
+                            {cat}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -164,57 +166,59 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                       onLoadScenario("YES", debateData.bullCase.targetProbability);
                       onClose();
                     }}
-                    className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 font-mono"
+                    className="w-full py-2 rounded-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-emerald-400/40 cursor-pointer"
                   >
-                    <span>Simulate Bull (YES @ {(debateData.bullCase.targetProbability * 100).toFixed(0)}%)</span>
+                    <span>LOAD BULL · BUY YES @ {(debateData.bullCase.targetProbability * 100).toFixed(0)}%</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                {/* 🐻 MACRO BEAR CARD */}
-                <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-950/10 flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
-                        <TrendingDown className="w-4 h-4" />
-                        <span>Macro Bear AI</span>
+                {/* MACRO BEAR CARD */}
+                <div className="p-3.5 rounded-none border border-rose-500/30 bg-[#0A0A12] flex flex-col justify-between space-y-3">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+                      <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs">
+                        <TrendingDown className="w-3.5 h-3.5" />
+                        <span>MACRO BEAR THESIS</span>
                       </div>
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold">
-                        {Math.round(debateData.bearCase.confidence * 100)}% Confidence
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-rose-950/60 text-rose-300 border border-rose-500/40 font-bold">
+                        {Math.round(debateData.bearCase.confidence * 100)}% Risk Skew
                       </span>
                     </div>
 
-                    <p className="text-xs font-semibold text-gray-200 italic">
+                    <p className="text-xs text-gray-200 font-sans leading-relaxed">
                       "{debateData.bearCase.headline}"
                     </p>
 
-                    <div className="space-y-1.5 pt-1">
-                      <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider font-mono">
+                    <div className="space-y-1 pt-0.5">
+                      <p className="text-[9px] font-bold text-rose-400 uppercase tracking-wider font-mono">
                         Counter Arguments:
                       </p>
-                      <ul className="space-y-1 text-xs text-gray-300">
+                      <ul className="space-y-1 text-xs text-gray-300 font-sans">
                         {debateData.bearCase.keyArguments.map((arg: string, i: number) => (
-                          <li key={i} className="flex items-start gap-1.5">
+                          <li key={i} className="flex items-start gap-1.5 bg-[#0E0E17] p-1.5 rounded-none border border-white/[0.04]">
                             <span className="text-rose-400 font-bold">•</span>
-                            <span>{arg}</span>
+                            <span className="text-[11px] leading-snug">{arg}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div className="space-y-1 pt-1">
-                      <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider font-mono">
-                        Risk Warnings:
-                      </p>
-                      {debateData.bearCase.riskFactors.map((risk: string, i: number) => (
-                        <div
-                          key={i}
-                          className="text-[11px] text-rose-200/90 bg-rose-900/20 p-1.5 rounded border border-rose-800/40 font-mono"
-                        >
-                          ⚠ {risk}
-                        </div>
-                      ))}
-                    </div>
+                    {debateData.bearCase.riskFactors && debateData.bearCase.riskFactors.length > 0 && (
+                      <div className="space-y-1 pt-0.5">
+                        <p className="text-[9px] font-bold text-rose-400 uppercase tracking-wider font-mono">
+                          Risk Factors:
+                        </p>
+                        {debateData.bearCase.riskFactors.map((risk: string, i: number) => (
+                          <div
+                            key={i}
+                            className="text-[10px] text-rose-300 bg-[#0E0E17] p-1.5 rounded-none border border-rose-500/20 font-mono"
+                          >
+                            {risk}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -222,27 +226,27 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                       onLoadScenario("NO", debateData.bearCase.targetProbability);
                       onClose();
                     }}
-                    className="w-full py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 font-mono"
+                    className="w-full py-2 rounded-none bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-rose-400/40 cursor-pointer"
                   >
-                    <span>Simulate Bear (NO @ {(debateData.bearCase.targetProbability * 100).toFixed(0)}%)</span>
+                    <span>LOAD BEAR · BUY NO @ {(debateData.bearCase.targetProbability * 100).toFixed(0)}%</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
               {/* RAG News & Evidence Sources */}
-              <div className="space-y-2.5 pt-1">
+              <div className="space-y-2 pt-1 font-mono">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-300 uppercase tracking-wider font-mono">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-300 uppercase tracking-wider">
                     <ExternalLink className="w-3.5 h-3.5 text-violet-400" />
-                    <span>Evidence & News Sources (RAG Citations)</span>
+                    <span>VERIFIED RAG INGESTION CITATIONS</span>
                   </div>
-                  <span className="text-[10px] text-gray-500 font-mono">
-                    {debateData.sources?.length || 0} Sources Verified
+                  <span className="text-[9px] text-gray-400">
+                    {debateData.sources?.length || 0} Citations
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-sans">
                   {debateData.sources && debateData.sources.length > 0 ? (
                     debateData.sources.map((src: any) => (
                       <a
@@ -250,24 +254,24 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                         href={src.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-2.5 rounded-lg bg-[#0E0E17] hover:bg-[#181826] border border-[#2A2A3D] transition-all flex items-start justify-between group"
+                        className="p-2 rounded-none bg-[#0A0A12] hover:bg-[#12121C] border border-white/[0.06] hover:border-violet-500/40 transition-colors flex items-start justify-between group"
                       >
                         <div className="space-y-0.5 pr-2">
                           <p className="text-xs text-gray-200 group-hover:text-violet-300 line-clamp-2">
                             {src.title}
                           </p>
                           <div className="flex items-center gap-1.5 text-[9px] text-gray-500 font-mono">
-                            <span className="text-violet-400">{src.source}</span>
-                            <span>•</span>
+                            <span className="text-violet-400 font-bold">{src.source}</span>
+                            <span>·</span>
                             <span>{new Date(src.publishedAt).toLocaleTimeString()}</span>
                           </div>
                         </div>
-                        <ExternalLink className="w-3.5 h-3.5 text-gray-500 group-hover:text-violet-400 shrink-0 mt-0.5" />
+                        <ExternalLink className="w-3 h-3 text-gray-500 group-hover:text-violet-400 shrink-0 mt-0.5" />
                       </a>
                     ))
                   ) : (
                     <div className="col-span-2 text-xs text-gray-500 italic">
-                      No direct external sources indexed for this round.
+                      No external sources indexed for this round.
                     </div>
                   )}
                 </div>
@@ -281,13 +285,13 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 px-6 border-t border-[#2A2A3D] bg-[#0E0E17] flex items-center justify-between text-xs text-gray-400 font-mono">
-          <span>Deterministic AI Multi-Agent Engine • Somnia L1</span>
+        <div className="p-2.5 px-5 border-t border-white/[0.08] bg-[#0E0E17] flex items-center justify-between text-[10px] text-gray-400 font-mono">
+          <span>AI Multi-Agent Consensus · Somnia L1</span>
           <button
             onClick={onClose}
-            className="px-3 py-1 rounded bg-[#1C1C28] hover:bg-[#2A2A3D] text-gray-200 text-xs transition-all font-mono"
+            className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#161622] text-gray-200 text-[10px] font-bold border border-white/[0.08] transition-colors cursor-pointer"
           >
-            Close Arena
+            CLOSE
           </button>
         </div>
       </div>

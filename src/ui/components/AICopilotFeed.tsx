@@ -21,34 +21,35 @@ interface AICopilotFeedProps {
 
 export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectMarket }) => {
   return (
-    <div className="glass-panel rounded-2xl p-6 border border-brand-border/80 h-full flex flex-col">
+    <div className="bg-[#0A0A12] border border-white/[0.08] rounded-none p-3.5 h-full flex flex-col font-mono">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-brand-border/50">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
-            <Bot className="w-5 h-5" />
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/[0.08]">
+        <div className="flex items-center gap-2">
+          <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+            <Bot className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h3 className="font-bold text-white text-sm flex items-center gap-1.5">
-              AI Copilot Reasoning Feed <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+            <h3 className="font-bold text-white text-xs uppercase tracking-wider">
+              REAL-TIME SIGNALS
             </h3>
           </div>
         </div>
-        <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-          Live Agent
+        <span className="text-[9px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded-none font-bold flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          LIVE
         </span>
       </div>
 
       {/* Signal Stream */}
-      <div className="space-y-3 overflow-y-auto max-h-[460px] pr-1 flex-1 custom-scrollbar">
+      <div className="space-y-2 overflow-y-auto max-h-[520px] pr-0.5 flex-1 custom-scrollbar">
         {signals.length === 0 ? (
-          <div className="text-center py-16 text-gray-400 text-xs flex flex-col items-center justify-center space-y-3">
-            <div className="w-10 h-10 rounded-full border-2 border-violet-500/30 border-t-violet-400 animate-spin flex items-center justify-center">
-              <Bot className="w-4 h-4 text-violet-400" />
+          <div className="text-center py-16 text-gray-400 text-xs flex flex-col items-center justify-center space-y-2">
+            <div className="w-6 h-6 rounded-none border border-violet-500/40 border-t-violet-400 animate-spin flex items-center justify-center">
+              <Bot className="w-3 h-3 text-violet-400" />
             </div>
             <div>
-              <p className="font-bold text-white">Scanning Somnia CLOB Sockets...</p>
-              <p className="text-[11px] text-gray-500 mt-0.5">Evaluating micro-volatility & orderbook asymmetry</p>
+              <p className="font-bold text-white text-[11px]">SCANNING SOMNIA CLOB...</p>
+              <p className="text-[10px] text-gray-500 mt-0.5">Evaluating volatility & orderbook asymmetry</p>
             </div>
           </div>
         ) : (
@@ -61,38 +62,38 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
               <div
                 key={idx}
                 onClick={() => onSelectMarket(sig.symbol)}
-                className="p-3.5 rounded-xl bg-[#0E1422] border border-brand-border hover:border-violet-500/60 hover:bg-[#131B2E] transition cursor-pointer group shadow-sm"
+                className="p-2.5 rounded-none bg-[#0E0E17] border border-white/[0.06] hover:border-violet-500/40 hover:bg-[#12121C] transition-colors cursor-pointer group"
               >
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-mono text-xs font-bold text-white group-hover:text-violet-300 transition flex items-center gap-1.5">
-                    <CryptoIcon symbol={assetName} size={16} />
-                    <span>{assetName} • {sig.cadence || "1h"}</span>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="font-mono text-xs font-bold text-white group-hover:text-violet-300 transition-colors flex items-center gap-1.5">
+                    <CryptoIcon symbol={assetName} size={15} />
+                    <span>{assetName} · {sig.cadence || "1h"}</span>
                   </span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                      className={`text-[9px] font-bold font-mono px-1.5 py-0.2 rounded-none flex items-center gap-1 border ${
                         isUp
-                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                          : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
+                          ? "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"
+                          : "bg-rose-950/60 text-rose-400 border-rose-500/40"
                       }`}
                     >
-                      {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                      {isUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
                       {sig.direction} ({confPercent}%)
                     </span>
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-300 leading-relaxed mb-2">
+                <p className="text-[11px] text-gray-300 leading-snug mb-1.5 font-sans">
                   {sig.reasoning}
                 </p>
 
-                <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1.5 border-t border-brand-border/40 font-mono">
+                <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-white/[0.06] font-mono">
                   <span>
-                    Entry Target: <span className="font-bold text-white">{Math.round((sig.suggestedPrice <= 1 ? sig.suggestedPrice : sig.suggestedPrice / 100) * 100)}% (${(sig.suggestedPrice <= 1 ? sig.suggestedPrice : sig.suggestedPrice / 100).toFixed(2)})</span>
+                    Entry: <span className="font-bold text-white font-mono">${(sig.suggestedPrice <= 1 ? sig.suggestedPrice : sig.suggestedPrice / 100).toFixed(2)}</span>
                   </span>
-                  <span className="text-violet-400 font-bold group-hover:underline flex items-center gap-1">
-                    <span>Trade Signal</span>
-                    <Sparkles className="w-3 h-3" />
+                  <span className="text-violet-400 font-bold group-hover:text-violet-300 transition-colors flex items-center gap-1">
+                    <span>LOAD</span>
+                    <Sparkles className="w-2.5 h-2.5" />
                   </span>
                 </div>
               </div>

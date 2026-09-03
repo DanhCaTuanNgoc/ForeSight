@@ -27,18 +27,6 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
             <h2 className="text-white font-mono font-bold text-sm tracking-wide">
               {market.symbol} / tUSDC
             </h2>
-            <span
-              className={`text-[9px] font-mono px-1.5 py-0.5 rounded-none uppercase font-bold border ${
-                market.status === "TRADING"
-                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                  : "bg-gray-900 text-gray-400 border-white/[0.08]"
-              }`}
-            >
-              {market.status || "TRADING"}
-            </span>
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-none bg-violet-950/60 text-violet-300 border border-violet-500/30 font-bold hidden sm:inline-block">
-              SOMNIA CLOB
-            </span>
           </div>
           <p className="text-[11px] text-gray-400 max-w-xl truncate mt-0.5 font-sans">
             {market.question || "Binary Event Prediction Market"}
@@ -52,7 +40,7 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
         <div className="flex flex-col">
           <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
             <TrendingUp className="w-3 h-3 text-violet-400" />
-            YES Implied Odds
+            YES Odds
           </span>
           <span
             className={`text-base font-mono font-bold ${
@@ -66,20 +54,20 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
         {/* Best Bid */}
         <div className="flex flex-col pl-3 xl:pl-4">
           <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
-            Best Bid
+            Bid
           </span>
           <span className="text-xs font-mono font-bold text-emerald-400">
-            ${market.bestBid !== undefined ? market.bestBid.toFixed(4) : "—"}
+            ${market.bestBid !== undefined ? market.bestBid.toFixed(3) : "—"}
           </span>
         </div>
 
         {/* Best Ask */}
         <div className="flex flex-col pl-3 xl:pl-4">
           <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
-            Best Ask
+            Ask
           </span>
           <span className="text-xs font-mono font-bold text-rose-400">
-            ${market.bestAsk !== undefined ? market.bestAsk.toFixed(4) : "—"}
+            ${market.bestAsk !== undefined ? market.bestAsk.toFixed(3) : "—"}
           </span>
         </div>
 
@@ -100,8 +88,8 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
             <BarChart3 className="w-3 h-3 text-gray-500" />
             24h Volume
           </span>
-          <span className="text-xs font-mono font-bold text-slate-200">
-            ${market.volume24h ? market.volume24h.toLocaleString() : "142,580"}
+          <span className="text-xs font-mono font-bold text-white">
+            ${market.volume24h ? `${(market.volume24h / 1000).toFixed(0)}K` : "$100K"}
           </span>
         </div>
       </div>

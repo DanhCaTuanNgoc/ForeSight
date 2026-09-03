@@ -156,9 +156,9 @@ const DECISION_WORKFLOW = [
     step: "01",
     phase: "DETECT",
     subtitle: "Real-Time Volatility Scanner",
-    title: "Spot Implied Probability Spikes",
-    desc: "Continuously monitors 500+ DreamDEX event contracts. When an implied probability shift exceeds ≥10%, the 10-second indexer surfaces an interactive anomaly marker on the probability timeline.",
-    highlights: ["Live 10-second Indexer", "≥10% Shift Detection", "Clickable Chart Markers"],
+    title: "Orderbook Anomaly Detection",
+    desc: "Monitors DreamDEX event contracts. Surfaces real-time implied probability shifts exceeding ≥10% on the probability timeline.",
+    highlights: ["10-Second Indexing", "≥10% Shift Detection", "Interactive Timeline Markers"],
     accentColor: "text-cyan-400",
     badgeBg: "bg-cyan-950/60 border-cyan-500/30 text-cyan-300",
   },
@@ -166,9 +166,9 @@ const DECISION_WORKFLOW = [
     step: "02",
     phase: "CHALLENGE",
     subtitle: "Adversarial Consensus",
-    title: "Dual AI Debate & RAG Evidence",
-    desc: "Clicking an anomaly summons the Dual AI Arena. Alpha Bull and Macro Bear debate the real driver behind the move, backed by verifiable news RSS citations so you never rely on black-box signals.",
-    highlights: ["Bull vs Bear Adversarial Debate", "Verifiable News Citations", "Consensus Divergence Metric"],
+    title: "Dual-Agent Thesis Debate",
+    desc: "Alpha Bull and Macro Bear agents analyze drivers behind order flow moves with verified news citations to eliminate single-model bias.",
+    highlights: ["Adversarial Multi-Agent Debate", "Verified RAG Citations", "Consensus Divergence Metric"],
     accentColor: "text-fuchsia-400",
     badgeBg: "bg-fuchsia-950/60 border-fuchsia-500/30 text-fuchsia-300",
   },
@@ -176,9 +176,9 @@ const DECISION_WORKFLOW = [
     step: "03",
     phase: "SIMULATE",
     subtitle: "Deterministic Trajectory",
-    title: "Stress-Test Trajectory Physics",
-    desc: "Adjust capital and exit targets in real time. Validate whether the required price movement is physically feasible using Velocity Coverage (VC) and Black-Scholes implied odds with zero network latency.",
-    highlights: ["Velocity Coverage (VC) Feasibility", "Client-Side Greeks Modeling", "Instant PnL & Breakeven Curves"],
+    title: "Trajectory & Feasibility Modeling",
+    desc: "Simulates capital allocation, breakeven curves, and Velocity Coverage (VC) under Black-Scholes implied odds with zero client latency.",
+    highlights: ["Velocity Coverage (VC) Math", "Client-Side Greeks Modeling", "Instant PnL & Breakeven Curves"],
     accentColor: "text-rose-400",
     badgeBg: "bg-rose-950/60 border-rose-500/30 text-rose-300",
   },
@@ -186,9 +186,9 @@ const DECISION_WORKFLOW = [
     step: "04",
     phase: "EXECUTE",
     subtitle: "Precision Settlement",
-    title: "Dispatch CLOB Orders & Batch Claim",
-    desc: "Submit limit orders directly to the DreamDEX CLOB on Somnia L1 or test strategies in risk-free Simulation Mode. Once markets resolve, the Settlement Sweeper claims all payouts in a single batch transaction.",
-    highlights: ["1-Click DreamDEX CLOB Orders", "Risk-Free Simulation Sandbox", "Batch MultiCall Auto-Sweeper"],
+    title: "Order Dispatch & Settlement Claim",
+    desc: "Dispatches limit orders directly to DreamDEX CLOB on Somnia L1. Settlement Sweeper claims winning contract payouts in a single batch.",
+    highlights: ["DreamDEX CLOB Execution", "Simulation Sandbox", "Batch MultiCall Settlement"],
     accentColor: "text-emerald-400",
     badgeBg: "bg-emerald-950/60 border-emerald-500/30 text-emerald-300",
   },
@@ -357,7 +357,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
       <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-[#07070B]/90 backdrop-blur-xl border-b border-white/[0.08] px-4 sm:px-8 lg:px-12 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <ForeSightLogo size={30} animated={false} />
+          <ForeSightLogo size={38} animated={false} />
           <div className="flex items-center gap-2">
             <span className="font-mono font-bold text-sm sm:text-base text-white tracking-wider">
               FORESIGHT
@@ -662,7 +662,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                               : "text-zinc-400 hover:text-zinc-200 border border-transparent"
                           }`}
                         >
-                          🐂 Alpha Bull Thesis
+                          Alpha Bull Thesis
                         </button>
                         <button
                           onClick={() => setActiveDebateSide("bear")}
@@ -672,7 +672,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                               : "text-zinc-400 hover:text-zinc-200 border border-transparent"
                           }`}
                         >
-                          🐻 Macro Bear Thesis
+                          Macro Bear Thesis
                         </button>
                       </div>
                       <span className="text-[10px] text-zinc-500 font-mono">SAMPLE PREVIEW</span>
@@ -704,7 +704,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
                       <div className="bg-[#0E0E17] p-2.5 border border-white/[0.08] flex items-center justify-between rounded-none">
                         <span className="text-zinc-400">Velocity Coverage:</span>
-                        <span className="font-semibold text-emerald-400 tabular-nums">1.28× Req ✓</span>
+                        <span className="font-semibold text-emerald-400 tabular-nums">1.28× Req (Pass)</span>
                       </div>
                       <div className="bg-[#0E0E17] p-2.5 border border-white/[0.08] flex items-center justify-between rounded-none">
                         <span className="text-zinc-400">Break Level:</span>

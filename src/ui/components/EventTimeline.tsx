@@ -340,16 +340,16 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
   };
 
   return (
-    <div className="rounded-xl border border-[#222234] bg-[#0E0E16] overflow-hidden flex flex-col shadow-xl">
+    <div className="rounded-none border border-white/[0.08] bg-[#0A0A12] overflow-hidden flex flex-col font-mono">
       {/* Header with Title and Nav Controls */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1F1F2E] bg-[#0A0A10]">
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.08] bg-[#0E0E17]">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded bg-violet-600/20 border border-violet-500/40 text-violet-400">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+            <Sparkles className="w-3 h-3" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-white">EVENT TIMELINE SPOTLIGHT</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-950/80 border border-violet-500/40 text-violet-300 font-bold font-mono">
+            <span className="text-xs font-bold text-white uppercase tracking-wider">EVENT & CATALYST TIMELINE</span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300 font-bold font-mono">
               {cleanAsset}
             </span>
           </div>
@@ -360,12 +360,12 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           <span className="text-[10px] text-gray-400 font-bold">
             Event {activeIndex + 1} of {events.length}
           </span>
-          <div className="flex items-center bg-[#13131F] rounded border border-[#232336] p-0.5">
+          <div className="flex items-center bg-[#12121C] rounded-none border border-white/[0.08] p-0.5">
             <button
               onClick={handlePrev}
               disabled={activeIndex <= 0}
               title="Previous Event"
-              className="p-1 rounded text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition"
+              className="p-1 rounded-none text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-3 h-3" />
             </button>
@@ -373,7 +373,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
               onClick={handleNext}
               disabled={activeIndex >= events.length - 1}
               title="Next Event"
-              className="p-1 rounded text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition"
+              className="p-1 rounded-none text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400 transition-colors cursor-pointer"
             >
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -381,15 +381,15 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
         </div>
       </div>
 
-      {/* ─── 1. Continuous Timeline Track (Always Vivid Colors) ──────── */}
-      <div className="px-6 pt-5 pb-3 bg-[#0B0B12] border-b border-[#1A1A28]">
+      {/* ─── 1. Continuous Timeline Track ──────── */}
+      <div className="px-6 pt-4 pb-2.5 bg-[#07070B] border-b border-white/[0.06]">
         <div className="relative">
           {/* Horizontal Line connecting events */}
-          <div className="absolute top-[6px] left-3 right-3 h-[2px] bg-gradient-to-r from-[#222238] via-[#3A3A55] to-[#222238]" />
+          <div className="absolute top-[6px] left-3 right-3 h-[1px] bg-white/[0.12]" />
 
-          {/* Glowing Category Colored Dots */}
+          {/* Category Colored Dots */}
           <div className="relative flex justify-between items-center">
-            {events.map((event, idx) => {
+            {events.map((event) => {
               const isSelected = activeEvent?.id === event.id;
               const theme = CATEGORY_THEMES[event.category] || CATEGORY_THEMES.spike;
 
@@ -400,17 +400,17 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   onClick={() => handleSelectEvent(event.id)}
                   title={`${theme.label} at ${event.time} UTC - Click to view`}
                 >
-                  {/* Dot (ALWAYS fully colored based on category) */}
+                  {/* Dot */}
                   <div
-                    className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 ${theme.dotBorder} ${theme.dotBg} ${theme.glow} ${
+                    className={`w-3 h-3 rounded-full border transition-transform duration-200 ${theme.dotBorder} ${theme.dotBg} ${
                       isSelected
-                        ? 'scale-150 ring-4 ring-white/40 animate-pulse'
-                        : 'opacity-85 group-hover:scale-125 group-hover:opacity-100'
+                        ? 'scale-125 ring-2 ring-white/60'
+                        : 'opacity-85 group-hover:scale-110 group-hover:opacity-100'
                     }`}
                   />
-                  {/* Time label with category color */}
+                  {/* Time label */}
                   <span
-                    className={`text-[10px] font-bold transition-colors ${
+                    className={`text-[9px] font-bold font-mono transition-colors ${
                       isSelected ? 'text-white' : `${theme.textColor} group-hover:text-white`
                     }`}
                   >
@@ -423,55 +423,55 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
         </div>
       </div>
 
-      {/* ─── 2. Single Active Event Spotlight (1 lúc chỉ hiện 1 news/event) ─── */}
+      {/* ─── 2. Single Active Event Spotlight ─── */}
       {activeEvent && (
-        <div className="p-4 bg-[#0A0A10]">
+        <div className="p-3.5 bg-[#0A0A12]">
           <div
-            className={`p-4 rounded-xl border transition-all duration-300 shadow-2xl ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
+            className={`p-3.5 rounded-none border transition-colors ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
           >
-            {/* Top Bar of Single Card: Badge, Time, and Status */}
-            <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-[#232338]">
+            {/* Top Bar: Badge, Time, Status */}
+            <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/[0.08]">
               <div className="flex items-center gap-2">
                 <span
-                  className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-md font-bold border ${activeTheme.badgeBg} ${activeTheme.badgeText} ${activeTheme.badgeBorder} shadow-sm`}
+                  className={`flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-none font-bold border ${activeTheme.badgeBg} ${activeTheme.badgeText} ${activeTheme.badgeBorder}`}
                 >
                   <ActiveIcon className="w-3 h-3" />
                   <span>{activeTheme.label}</span>
                 </span>
-                <span className="text-gray-400 text-xs font-bold flex items-center gap-1">
+                <span className="text-gray-400 text-[11px] font-bold flex items-center gap-1">
                   <Clock className="w-3 h-3 text-gray-500" />
                   {activeEvent.time} UTC
                 </span>
               </div>
 
-              <span className="text-[10px] px-2 py-0.5 rounded bg-[#131320] border border-[#26263C] text-gray-400 font-mono">
+              <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-[#12121C] border border-white/[0.08] text-gray-400 font-mono">
                 Focused Event
               </span>
             </div>
 
             {/* Event Title */}
-            <h3 className="text-sm font-black text-white mb-1.5 leading-snug">
+            <h3 className="text-xs font-bold text-white mb-1 leading-snug font-sans">
               {activeEvent.title}
             </h3>
 
             {/* Event Description */}
-            <p className="text-xs text-gray-300 leading-relaxed mb-3">
+            <p className="text-[11px] text-gray-300 leading-relaxed mb-2.5 font-sans">
               {activeEvent.description}
             </p>
 
             {/* Bottom Row: Price Movement & Action Link */}
-            <div className="pt-2.5 border-t border-[#232338] flex flex-wrap items-center justify-between gap-2">
+            <div className="pt-2 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-2">
               {activeEvent.priceBefore !== undefined && activeEvent.priceAfter !== undefined ? (
                 <div className="flex items-center gap-2 text-xs font-mono">
-                  <span className="text-gray-500">Market Reaction:</span>
-                  <span className="font-bold text-white bg-[#11111C] px-2 py-0.5 rounded border border-[#232336] flex items-center gap-1.5">
+                  <span className="text-gray-400 text-[10px]">Market Reaction:</span>
+                  <span className="font-bold text-white bg-[#12121C] px-2 py-0.5 rounded-none border border-white/[0.08] flex items-center gap-1.5 text-[11px]">
                     <span>${activeEvent.priceBefore.toFixed(2)}</span>
                     <ArrowRight className="w-3 h-3 text-gray-500" />
                     <span className="text-emerald-400">${activeEvent.priceAfter.toFixed(2)}</span>
                   </span>
                 </div>
               ) : (
-                <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                <div className="text-[10px] text-gray-400 flex items-center gap-1 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                   Verified RAG Ingestion Pipeline
                 </div>
@@ -483,10 +483,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => sound.playClick()}
-                  className="px-3 py-1.5 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 hover:text-white border border-violet-500/40 text-[11px] font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#161622] text-violet-300 hover:text-white border border-white/[0.08] text-[10px] font-bold font-mono transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <span>View Verified Evidence</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-violet-400" />
+                  <span>View Evidence</span>
+                  <ExternalLink className="w-3 h-3 text-violet-400" />
                 </a>
 
                 <button
@@ -494,10 +494,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                     sound.playClick();
                     sound.speakBriefing(`${activeEvent.title}. ${activeEvent.description}`);
                   }}
-                  title="Hear AI Voice Briefing"
-                  className="px-2.5 py-1.5 rounded-lg bg-[#141422] hover:bg-[#1C1C30] text-gray-300 hover:text-white border border-[#2B2B42] text-[11px] font-bold transition flex items-center gap-1 shadow-sm cursor-pointer"
+                  title="Hear Voice Briefing"
+                  className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#161622] text-gray-300 hover:text-white border border-white/[0.08] text-[10px] font-bold font-mono transition-colors flex items-center gap-1 cursor-pointer"
                 >
-                  <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <Volume2 className="w-3 h-3 text-cyan-400" />
                   <span>Audio Brief</span>
                 </button>
               </div>
@@ -506,20 +506,20 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
         </div>
       )}
 
-      {/* ─── 3. Footer Legend with Category Indicators ───────────────── */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-2 border-t border-[#1F1F2E] bg-[#0A0A10] text-[9px]">
-        <div className="flex items-center gap-4 flex-wrap">
+      {/* ─── 3. Footer Legend ───────────────── */}
+      <div className="flex flex-wrap items-center justify-between px-3.5 py-1.5 border-t border-white/[0.08] bg-[#0E0E17] text-[9px] font-mono">
+        <div className="flex items-center gap-3.5 flex-wrap">
           {Object.entries(CATEGORY_THEMES).map(([cat, theme]) => {
             const Icon = theme.icon;
             return (
-              <div key={cat} className="flex items-center gap-1.5">
+              <div key={cat} className="flex items-center gap-1">
                 <Icon className={`w-3 h-3 ${theme.textColor}`} />
                 <span className={`font-bold ${theme.textColor}`}>{theme.label}</span>
               </div>
             );
           })}
         </div>
-        <span className="text-gray-500 font-mono">1 Event Focused at a Time</span>
+        <span className="text-gray-500">1 Event Focused</span>
       </div>
     </div>
   );
