@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Header } from "./components/Header.js";
 import { MarketTicker } from "./components/MarketTicker.js";
 import { MarketStats } from "./components/MarketStats.js";
@@ -16,7 +16,17 @@ import { WalletProvider, useWallet } from "./context/WalletContext.js";
 import { CryptoIcon } from "./components/CryptoIcon.js";
 import { sound } from "./utils/sound-fx.js";
 import { apiUrl } from "./utils/api.js";
-import { Search } from "lucide-react";
+import {
+  Search,
+  Bot,
+  Sparkles,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpDown,
+  Filter,
+  Layers,
+  Zap,
+} from "lucide-react";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 export interface Market {
@@ -90,6 +100,8 @@ function ForeSightTerminalApp() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "HOT" | "SOMNIA" | "VOL">("ALL");
+  const [marketSort, setMarketSort] = useState<"DEFAULT" | "ODDS" | "VOL">("DEFAULT");
   const [timeRange, setTimeRange] = useState<"15m" | "1H" | "4H" | "1D">("1H");
   const [visualMode, setVisualMode] = useState<CanvasVisualMode>("probability");
   const [positions, setPositions] = useState<PositionRecord[]>([]);
@@ -386,12 +398,44 @@ function ForeSightTerminalApp() {
     }
   };
 
-  // Filtered Markets for Sidebar
-  const filteredMarkets = markets.filter(
-    (m) =>
-      m.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.question.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtered & Sorted Markets for Sidebar
+  const filteredMarkets = useMemo(() => {
+    let list = markets.length > 0 ? markets : FALLBACK_MARKETS;
+
+    // Filter by query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (m) =>
+          m.symbol.toLowerCase().includes(q) ||
+          (m.underlyingAsset && m.underlyingAsset.toLowerCase().includes(q)) ||
+          m.question.toLowerCase().includes(q)
+      );
+    }
+
+    // Filter by category
+    if (categoryFilter === "HOT") {
+      list = list.filter((m) => (m.probability ?? 50) >= 60 || (m.probability ?? 50) <= 40);
+    } else if (categoryFilter === "SOMNIA") {
+      list = list.filter((m) => (m.underlyingAsset || m.symbol).toUpperCase() === "SOMI");
+    } else if (categoryFilter === "VOL") {
+      list = [...list].sort((a, b) => (b.volume24h || 0) - (a.volume24h || 0));
+    }
+
+    // Sort
+    if (marketSort === "ODDS") {
+      list = [...list].sort((a, b) => (b.probability || 0) - (a.probability || 0));
+    } else if (marketSort === "VOL") {
+      list = [...list].sort((a, b) => (b.volume24h || 0) - (a.volume24h || 0));
+    }
+
+    return list;
+  }, [markets, searchQuery, categoryFilter, marketSort]);
+
+  const total24hVol = useMemo(() => {
+    const list = markets.length > 0 ? markets : FALLBACK_MARKETS;
+    return list.reduce((acc, m) => acc + (m.volume24h || 0), 0);
+  }, [markets]);
 
   const activeMarket = selectedMarket || markets[0] || FALLBACK_MARKETS[0];
   const activeSymbol = activeMarket.underlyingAsset || activeMarket.symbol;
@@ -424,10 +468,10 @@ function ForeSightTerminalApp() {
   // ─── Else Render All-in-One Zero-Scroll Single-Screen Cockpit ───────────────
   return (
     <div className="h-screen w-screen bg-[#07070B] text-[#E2E8F0] flex flex-col font-sans selection:bg-violet-600 selection:text-white overflow-hidden">
-      {/* Toast Notification (Sharp Precision Box with Signal LED) */}
+      {/* Toast Notification (Sharp Precision Box with Signal LED - Section 20) */}
       {toastMessage && (
         <div
-          className={`fixed top-14 right-5 z-50 px-4 py-2.5 rounded-none shadow-2xl border font-mono text-xs fade-in flex items-center gap-2.5 backdrop-blur-md ${
+          className={`fixed top-14 right-5 z-50 px-3.5 py-2 rounded-none shadow-2xl border font-mono text-xs fade-in flex items-center gap-2.5 backdrop-blur-md ${
             toastMessage.type === "success"
               ? "bg-[#0E0E17]/95 text-emerald-300 border-emerald-500/50 shadow-emerald-950/40"
               : "bg-[#0E0E17]/95 text-rose-300 border-rose-500/50 shadow-rose-950/40"
@@ -500,29 +544,62 @@ function ForeSightTerminalApp() {
           <div className="flex-1 flex min-h-0 overflow-hidden bg-[#07070B]">
             {/* ── LEFT COLUMN: Market Navigator & Live Radar (Section 10 Spec) ── */}
             <aside className="w-60 xl:w-64 border-r border-white/[0.08] bg-[#0E0E17] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
-              {/* Search Bar */}
-              <div className="p-2.5 border-b border-white/[0.08] bg-[#0A0A12]">
-                <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] focus-within:border-violet-500/60 rounded-none px-2.5 py-1.5 gap-2 transition-colors">
+              {/* Search Bar & Quick Categories */}
+              <div className="p-2 border-b border-white/[0.08] bg-[#0A0A12] space-y-1.5">
+                <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] focus-within:border-violet-500/60 rounded-none px-2 py-1 gap-2 transition-colors">
                   <Search className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                   <input
                     type="text"
                     placeholder="SEARCH EVENT..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-transparent text-xs text-gray-200 placeholder-gray-600 outline-none w-full font-mono uppercase tracking-wider"
+                    className="bg-transparent text-[11px] text-gray-200 placeholder-gray-600 outline-none w-full font-mono uppercase tracking-wider"
                   />
+                </div>
+
+                {/* Quick Category Filter Presets */}
+                <div className="grid grid-cols-4 gap-1">
+                  {(["ALL", "HOT", "SOMNIA", "VOL"] as const).map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        sound.playClick();
+                        setCategoryFilter(cat);
+                      }}
+                      className={`text-[9px] font-mono py-0.5 rounded-none font-bold uppercase transition-colors border ${
+                        categoryFilter === cat
+                          ? "bg-violet-600/30 text-violet-300 border-violet-500/50"
+                          : "bg-[#12121C] text-gray-400 border-white/[0.06] hover:text-gray-200 hover:bg-[#161622]"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Radar Header */}
-              <div className="px-3 py-2 border-b border-white/[0.08] bg-[#0B0B12] flex items-center justify-between">
+              {/* Radar Header with Live Count and Sort */}
+              <div className="px-2.5 py-1.5 border-b border-white/[0.08] bg-[#0B0B12] flex items-center justify-between">
                 <span className="stat-label text-[10px] flex items-center gap-1.5 font-mono">
-                  <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full" />
+                  <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full animate-pulse" />
                   MARKET RADAR
                 </span>
-                <span className="text-[10px] font-mono text-violet-300 bg-violet-950/60 border border-violet-500/30 px-1.5 py-0.5 rounded-none font-bold">
-                  {filteredMarkets.length} LIVE
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      sound.playClick();
+                      setMarketSort((s) => (s === "DEFAULT" ? "ODDS" : s === "ODDS" ? "VOL" : "DEFAULT"));
+                    }}
+                    className="text-[9px] font-mono text-gray-400 hover:text-violet-300 flex items-center gap-0.5 px-1 py-0.5 border border-white/[0.06] rounded-none hover:border-violet-500/30 transition-colors"
+                    title="Toggle Sort Order: Default / Implied Odds / 24h Volume"
+                  >
+                    <ArrowUpDown className="w-2.5 h-2.5" />
+                    <span>{marketSort === "DEFAULT" ? "SORT" : marketSort}</span>
+                  </button>
+                  <span className="text-[10px] font-mono text-violet-300 bg-violet-950/60 border border-violet-500/30 px-1 py-0.2 rounded-none font-bold">
+                    {filteredMarkets.length} LIVE
+                  </span>
+                </div>
               </div>
 
               {/* Market List */}
@@ -539,7 +616,7 @@ function ForeSightTerminalApp() {
                         sound.playClick();
                         setSelectedMarket(m);
                       }}
-                      className={`w-full text-left p-2.5 transition-colors flex flex-col gap-1 rounded-none border-l-2 ${
+                      className={`w-full text-left p-2.5 transition-colors flex flex-col gap-1 rounded-none border-l-2 cursor-pointer ${
                         isSelected
                           ? "bg-violet-950/30 border-violet-500 text-violet-300"
                           : "border-transparent hover:bg-[#12121C] text-gray-300"
@@ -555,8 +632,10 @@ function ForeSightTerminalApp() {
                           <span>{m.symbol}/tUSDC</span>
                         </span>
                         <span
-                          className={`text-xs font-bold font-mono ${
-                            isYes ? "text-emerald-400" : "text-rose-400"
+                          className={`text-[11px] font-bold font-mono px-1.5 py-0.2 border rounded-none ${
+                            isYes
+                              ? "text-emerald-400 bg-emerald-950/40 border-emerald-500/30"
+                              : "text-rose-400 bg-rose-950/40 border-rose-500/30"
                           }`}
                         >
                           {prob.toFixed(1)}%
@@ -569,11 +648,21 @@ function ForeSightTerminalApp() {
 
                       <div className="flex items-center justify-between text-[9px] text-gray-500 font-mono pt-0.5">
                         <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</span>
-                        <span className="text-gray-500">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
+                        <span>Ask: ${m.bestAsk ? m.bestAsk.toFixed(2) : "0.52"}</span>
+                        <span className="text-gray-400 font-bold">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
                       </div>
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Market Navigator Footer Summary */}
+              <div className="p-2 bg-[#0A0A12] border-t border-white/[0.08] flex items-center justify-between text-[9px] font-mono text-gray-500">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  SOMNIA L1
+                </span>
+                <span className="text-gray-400 font-bold">24h Vol: ${(total24hVol / 1000).toFixed(0)}K</span>
               </div>
             </aside>
 
@@ -620,7 +709,7 @@ function ForeSightTerminalApp() {
             </main>
 
             {/* ── RIGHT COLUMN: Somnia CLOB Orderbook & Liquidity Depth ────── */}
-            <aside className="w-72 xl:w-80 border-l border-[#222234] bg-[#0E0E16] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
+            <aside className="w-72 xl:w-80 border-l border-white/[0.08] bg-[#0E0E17] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
               <ContextPanel
                 symbol={activeSymbol}
                 midPrice={activeMarket?.midPrice || 0.50}

@@ -1,24 +1,21 @@
 import React, { useState, useMemo } from "react";
 import {
-  Calculator,
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Sliders,
   Zap,
-  Bot,
   Sparkles,
-  ShieldAlert,
-  CheckCircle2,
   AlertTriangle,
   Compass,
   Gauge,
   Wallet,
   Share2,
+  Layers,
+  ArrowRight,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
 import { apiUrl } from "../utils/api.js";
-import { useWallet, SOMNIA_SHANNON_CHAIN_ID } from "../context/WalletContext.js";
+import { useWallet } from "../context/WalletContext.js";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { calculateBlackScholesBinaryFairValue } from "../../core/quantitative-pricing.js";
 import { AlphaCardModal } from "./AlphaCardModal.js";
@@ -47,7 +44,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   showToast,
 }) => {
   const [outcome, setOutcome] = useState<"YES" | "NO">(prefillOutcome);
-  const [investment, setInvestment] = useState<number>(50); // in USDC
+  const [investment, setInvestment] = useState<number>(50); // in tUSDC
   const wallet = useWallet();
 
   // Implied price default (0.01 - 0.99)
@@ -59,7 +56,6 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     (outcome === "YES" ? Math.min(0.95, defaultEntry + 0.20) : Math.max(0.05, defaultEntry - 0.20));
   const [targetExitPrice, setTargetExitPrice] = useState<number>(defaultTarget);
 
-  const [isDeployingBot, setIsDeployingBot] = useState<boolean>(false);
   const [showAlphaCard, setShowAlphaCard] = useState<boolean>(false);
   const [liveSpotMap, setLiveSpotMap] = useState<Record<string, number>>({});
 
@@ -186,6 +182,11 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     const settlementPnl = settlementValue - investment;
     const settlementRoi = (settlementPnl / investment) * 100;
 
+    // Risk / Reward ratio calculation
+    const potentialGain = Math.max(0.01, safeExit - safeEntry);
+    const potentialLoss = Math.max(0.01, safeEntry);
+    const riskRewardRatio = (potentialGain / potentialLoss).toFixed(1);
+
     const isProfitable = earlyExitPnl >= 0;
 
     return {
@@ -195,43 +196,10 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       settlementPnl: Number(settlementPnl.toFixed(2)),
       settlementRoi: Number(settlementRoi.toFixed(1)),
       breakevenPrice: safeEntry,
+      riskRewardRatio: `1:${riskRewardRatio}`,
       isProfitable,
     };
   }, [investment, entryPrice, targetExitPrice]);
-
-  const handleDeployBot = async () => {
-    sound.playClick();
-    setIsDeployingBot(true);
-    try {
-      const res = await fetch(apiUrl("/api/strategies"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: `Auto-TakeProfit ${assetName} ${outcome}`,
-          strategy_type: "SCENARIO_AUTOMATION",
-          config: {
-            symbol: market?.symbol,
-            outcome,
-            investmentUsdc: investment,
-            entryPrice,
-            takeProfitPrice: targetExitPrice,
-            autoClaim: true,
-          },
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        sound.playSuccessChime();
-        showToast(`Bot deployed! Managing ${outcome} on ${market?.symbol}.`, "success");
-      } else {
-        showToast(data.error || "Could not deploy bot", "error");
-      }
-    } catch (err: any) {
-      showToast(err?.message || "Bot deployment error", "error");
-    } finally {
-      setIsDeployingBot(false);
-    }
-  };
 
   const handleExecuteTrade = async () => {
     if (!market?.symbol) return;
@@ -251,79 +219,85 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   };
 
   return (
-    <div className="panel rounded-xl p-3.5 border border-[#2A2A3D] space-y-3 bg-[#0D0D15]">
-      {/* ─── Header: Decision Stress Test & Outcome Switcher ─────────── */}
-      <div className="flex items-center justify-between border-b border-[#232336] pb-2.5">
+    <div className="terminal-panel p-3 bg-[#0A0A12] border border-white/[0.08] rounded-none space-y-2.5 font-mono">
+      {/* ─── Header: Decision Stress Test & Outcome Switcher (Section 12 Spec) ─── */}
+      <div className="flex flex-wrap items-center justify-between border-b border-white/[0.08] pb-2 gap-2">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-600 text-white shadow-sm">
-            <Compass className="w-4 h-4" />
+          <div className="p-1.5 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+            <Compass className="w-3.5 h-3.5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-white font-mono font-bold text-xs sm:text-sm tracking-wide">
-                Decision Stress Test & 1-Click CLOB
+              <h3 className="text-white font-mono font-bold text-xs tracking-wider uppercase">
+                SCENARIO STRESS TEST & 1-CLICK CLOB
               </h3>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-violet-950/80 text-violet-300 font-mono border border-violet-700/50 flex items-center gap-1 font-semibold">
-                <Sparkles className="w-2.5 h-2.5 text-violet-400" /> Stage 03 & 04
+              <span className="text-[9px] px-1.5 py-0.5 rounded-none bg-violet-950/60 text-violet-300 font-mono border border-violet-500/30 flex items-center gap-1 font-bold">
+                <Sparkles className="w-2.5 h-2.5 text-violet-400" /> STAGE 03 & 04
               </span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Black-Scholes Fair Value Badge */}
+          <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 bg-[#12121C] border border-cyan-500/30 text-[10px] text-cyan-300 rounded-none">
+            <Gauge className="w-3 h-3 text-cyan-400" />
+            <span>BS FAIR: <b>${(quantModel.fairProbabilityPercent / 100).toFixed(3)}</b></span>
+          </div>
+
           {/* Export Alpha Card Button */}
           <button
             onClick={() => {
               sound.playClick();
               setShowAlphaCard(true);
             }}
-            className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-[#171728] hover:bg-violet-950/80 text-violet-300 border border-violet-700/50 flex items-center gap-1.5 transition-all shadow-sm"
+            className="px-2 py-0.5 rounded-none text-[11px] font-mono font-bold bg-[#16161F] hover:bg-[#1C1C28] text-gray-300 hover:text-white border border-white/[0.08] flex items-center gap-1 transition-colors cursor-pointer"
             title="Export High-Resolution Proof-of-Thesis Alpha Card"
           >
             <Share2 className="w-3 h-3 text-violet-400" />
-            <span className="hidden sm:inline">Alpha Card</span>
+            <span className="hidden sm:inline">ALPHA CARD</span>
           </button>
 
-          {/* Outcome Selector */}
-          <div className="flex items-center gap-1 bg-[#141420] p-0.5 rounded-lg border border-[#2A2A3D]">
+          {/* Outcome Selector (YES / NO) */}
+          <div className="flex items-center gap-1 bg-[#0E0E17] p-0.5 rounded-none border border-white/[0.08]">
             <button
               onClick={() => {
                 sound.playClick();
                 setOutcome("YES");
               }}
-              className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1 rounded-none text-xs font-mono font-bold transition-colors flex items-center gap-1.5 cursor-pointer border ${
                 outcome === "YES"
-                  ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-emerald-950/80 border-emerald-500 text-emerald-300"
+                  : "bg-transparent text-gray-400 hover:text-white border-transparent"
               }`}
             >
               <TrendingUp className="w-3 h-3" />
-              <span>YES</span>
+              <span>YES ▲</span>
             </button>
             <button
               onClick={() => {
                 sound.playClick();
                 setOutcome("NO");
               }}
-              className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1 rounded-none text-xs font-mono font-bold transition-colors flex items-center gap-1.5 cursor-pointer border ${
                 outcome === "NO"
-                  ? "bg-rose-600 text-white shadow-[0_0_10px_rgba(244,63,94,0.4)]"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-rose-950/80 border-rose-500 text-rose-300"
+                  : "bg-transparent text-gray-400 hover:text-white border-transparent"
               }`}
             >
               <TrendingDown className="w-3 h-3" />
-              <span>NO</span>
+              <span>NO ▼</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* ─── 2-Column Grid: Feasibility & Invalidation Left | Sliders & Trade Right ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 font-mono text-xs">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 font-mono text-xs">
         {/* Left 5 Cols: Path to Settlement & Invalidation Checks */}
-        <div className="lg:col-span-5 bg-[#11111B] p-3 rounded-xl border border-[#232336] flex flex-col justify-between space-y-2.5">
+        <div className="lg:col-span-5 bg-[#0E0E17] p-2.5 rounded-none border border-white/[0.08] flex flex-col justify-between space-y-2">
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-[10px] text-gray-400 border-b border-[#1F1F2E] pb-1.5">
+            <div className="flex items-center justify-between text-[10px] text-gray-400 border-b border-white/[0.06] pb-1.5">
               <span className="text-gray-300 font-bold uppercase flex items-center gap-1.5">
                 <CryptoIcon symbol={assetName} size={14} />
                 <span>{assetName} Path to Settlement</span>
@@ -334,18 +308,18 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             </div>
 
             {/* Velocity Coverage Visual Meter */}
-            <div className="bg-[#161624] p-2 rounded-lg border border-[#26263B] space-y-1">
+            <div className="bg-[#12121C] p-2 rounded-none border border-white/[0.06] space-y-1">
               <div className="flex items-center justify-between text-[10px]">
                 <span className="text-gray-400">Velocity Coverage:</span>
                 <span className={`font-bold ${trajectory.isCoverageSufficient ? "text-emerald-400" : "text-amber-400"}`}>
                   {trajectory.velocityCoverage}× Req Pace {trajectory.isCoverageSufficient ? "(Sufficient ✓)" : "(Lags ⚠)"}
                 </span>
               </div>
-              <div className="w-full bg-[#1F1F30] h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-[#0A0A12] h-1.5 rounded-none overflow-hidden border border-white/[0.04]">
                 <div
-                  className={`h-full rounded-full transition-all duration-300 ${
+                  className={`h-full rounded-none transition-all duration-300 ${
                     trajectory.isCoverageSufficient
-                      ? "bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]"
+                      ? "bg-emerald-400"
                       : "bg-amber-400"
                   }`}
                   style={{ width: `${Math.min(100, Math.max(10, trajectory.velocityCoverage * 70))}%` }}
@@ -354,18 +328,18 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             </div>
 
             {/* Invalidation Trigger Box */}
-            <div className="p-2 rounded-lg bg-[#181115] border border-rose-900/40 text-[10px] space-y-1">
+            <div className="p-2 rounded-none bg-[#161014] border border-rose-500/30 text-[10px] space-y-1">
               <div className="flex items-center gap-1 text-rose-300 font-bold">
                 <AlertTriangle className="w-3 h-3 text-rose-400" />
                 <span>Invalidation Break Level:</span>
               </div>
-              <p className="text-gray-300">
-                Spot {outcome === "YES" ? "<" : ">"} <b className="text-rose-300">${trajectory.breakPrice.toLocaleString()}</b> or momentum slows with &lt;10m remaining.
+              <p className="text-gray-300 font-sans text-[11px] leading-tight">
+                Spot {outcome === "YES" ? "<" : ">"} <b className="text-rose-300 font-mono">${trajectory.breakPrice.toLocaleString()}</b> or momentum slows with &lt;10m remaining.
               </p>
             </div>
 
             {/* Quantitative Black-Scholes Model Fair Value & Edge */}
-            <div className="p-2 rounded-lg bg-[#0E1322] border border-cyan-800/40 text-[10px] space-y-1">
+            <div className="p-2 rounded-none bg-[#0E1322] border border-cyan-500/30 text-[10px] space-y-1">
               <div className="flex items-center justify-between font-mono">
                 <span className="text-cyan-300 font-bold flex items-center gap-1">
                   <Gauge className="w-3 h-3 text-cyan-400" />
@@ -388,25 +362,46 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-[9px] text-gray-500 pt-1 border-t border-[#1F1F2E]">
+          <div className="flex items-center justify-between text-[9px] text-gray-500 pt-1 border-t border-white/[0.06]">
             <span>Required: +{trajectory.reqMovePct}% in {trajectory.timeRemainingMin}m</span>
             <span className="text-emerald-400 font-bold">Pace: {trajectory.observedMomentum}%/m</span>
           </div>
         </div>
 
         {/* Right 7 Cols: Sliders, Math, and 1-Click Execute Buttons */}
-        <div className="lg:col-span-7 bg-[#11111B] p-3 rounded-xl border border-[#232336] space-y-2.5 flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-[#0E0E17] p-2.5 rounded-none border border-white/[0.08] space-y-2 flex flex-col justify-between">
           <div className="space-y-2">
-            {/* Slider 1: Capital */}
-            <div className="space-y-0.5 text-xs">
+            {/* Capital Control & Quick Presets */}
+            <div className="space-y-1 text-xs">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-gray-400 flex items-center gap-1">
-                  <DollarSign className="w-3 h-3 text-violet-400" /> Capital
+                  <DollarSign className="w-3 h-3 text-violet-400" /> Capital Allocation
                 </span>
-                <span className="font-bold text-white bg-[#1A1A2A] px-2 py-0.2 rounded border border-[#2E2E44]">
-                  ${investment} USDC
+                <span className="font-bold text-white bg-[#12121C] px-2 py-0.5 rounded-none border border-white/[0.08]">
+                  ${investment} tUSDC
                 </span>
               </div>
+
+              {/* Quick Presets */}
+              <div className="flex items-center gap-1.5">
+                {[10, 25, 50, 100, 250].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => {
+                      sound.playClick();
+                      setInvestment(amt);
+                    }}
+                    className={`flex-1 py-0.5 text-[9px] font-mono font-bold rounded-none border transition-colors ${
+                      investment === amt
+                        ? "bg-violet-600/30 text-violet-300 border-violet-500/50"
+                        : "bg-[#12121C] text-gray-400 border-white/[0.06] hover:text-white hover:bg-[#161622]"
+                    }`}
+                  >
+                    ${amt}
+                  </button>
+                ))}
+              </div>
+
               <input
                 type="range"
                 min="5"
@@ -417,16 +412,16 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                   sound.playClick();
                   setInvestment(Number(e.target.value));
                 }}
-                className="w-full h-1 bg-[#1F1F2E] rounded cursor-pointer accent-violet-500"
+                className="w-full h-1.5 bg-[#0A0A12] rounded-none cursor-pointer accent-violet-500"
               />
             </div>
 
             {/* Slider 2 & 3 in 2 Columns */}
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-gray-400">Entry Odds</span>
-                  <span className="font-bold text-violet-300">${entryPrice.toFixed(2)}</span>
+                  <span className="font-bold text-violet-300 font-mono">${entryPrice.toFixed(2)} ({Math.round(entryPrice * 100)}%)</span>
                 </div>
                 <input
                   type="range"
@@ -440,14 +435,14 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                     setEntryPrice(val);
                     if (onEntryPriceChange) onEntryPriceChange(val);
                   }}
-                  className="w-full h-1 bg-[#1F1F2E] rounded cursor-pointer accent-violet-500"
+                  className="w-full h-1.5 bg-[#0A0A12] rounded-none cursor-pointer accent-violet-500"
                 />
               </div>
 
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-gray-400">Target Exit</span>
-                  <span className="font-bold text-emerald-300">${targetExitPrice.toFixed(2)}</span>
+                  <span className="font-bold text-emerald-300 font-mono">${targetExitPrice.toFixed(2)} ({Math.round(targetExitPrice * 100)}%)</span>
                 </div>
                 <input
                   type="range"
@@ -461,56 +456,73 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                     setTargetExitPrice(val);
                     if (onTargetExitPriceChange) onTargetExitPriceChange(val);
                   }}
-                  className="w-full h-1 bg-[#1F1F2E] rounded cursor-pointer accent-emerald-500"
+                  className="w-full h-1.5 bg-[#0A0A12] rounded-none cursor-pointer accent-emerald-500"
                 />
               </div>
             </div>
 
-            {/* Summary PnL Row */}
-            <div className="grid grid-cols-2 gap-2 text-[11px] pt-0.5">
-              <div className="p-1.5 rounded-lg bg-emerald-950/30 border border-emerald-600/30 flex items-center justify-between">
-                <span className="text-gray-400 text-[10px]">Take-Profit:</span>
-                <span className="font-bold text-emerald-300">
-                  {calculation.earlyExitPnl >= 0 ? `+$${calculation.earlyExitPnl}` : `-$${Math.abs(calculation.earlyExitPnl)}`} ({calculation.earlyExitRoi > 0 ? `+${calculation.earlyExitRoi}%` : `${calculation.earlyExitRoi}%`})
+            {/* Summary PnL & Risk/Reward Row */}
+            <div className="grid grid-cols-3 gap-1.5 text-[11px] pt-0.5">
+              <div className="p-1.5 rounded-none bg-emerald-950/30 border border-emerald-500/30 flex flex-col justify-between">
+                <span className="text-gray-400 text-[9px] uppercase">Take-Profit PnL</span>
+                <span className="font-bold text-emerald-300 font-mono text-xs">
+                  {calculation.earlyExitPnl >= 0 ? `+$${calculation.earlyExitPnl}` : `-$${Math.abs(calculation.earlyExitPnl)}`}
+                </span>
+                <span className="text-[9px] text-emerald-400/80 font-mono">
+                  {calculation.earlyExitRoi > 0 ? `+${calculation.earlyExitRoi}%` : `${calculation.earlyExitRoi}%`}
                 </span>
               </div>
-              <div className="p-1.5 rounded-lg bg-[#141422] border border-[#2A2A3E] flex items-center justify-between">
-                <span className="text-gray-400 text-[10px]">Full Expiry:</span>
-                <span className="font-bold text-emerald-400">
-                  +${calculation.settlementPnl} (+{calculation.settlementRoi}%)
+
+              <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] flex flex-col justify-between">
+                <span className="text-gray-400 text-[9px] uppercase">Settlement Payoff</span>
+                <span className="font-bold text-emerald-400 font-mono text-xs">
+                  +${calculation.settlementPnl}
+                </span>
+                <span className="text-[9px] text-emerald-400/80 font-mono">
+                  +{calculation.settlementRoi}%
+                </span>
+              </div>
+
+              <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] flex flex-col justify-between">
+                <span className="text-gray-400 text-[9px] uppercase">Risk / Reward</span>
+                <span className="font-bold text-violet-300 font-mono text-xs">
+                  {calculation.riskRewardRatio}
+                </span>
+                <span className="text-[9px] text-gray-400 font-mono">
+                  {calculation.contractsCount} shares
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Action Execution Button */}
-          <div className="space-y-1.5 pt-1">
+          {/* Action Execution Button (Section 12 Spec) */}
+          <div className="pt-1">
             {!wallet.isConnected ? (
               <button
                 onClick={() => {
                   sound.playClick();
                   wallet.openWalletModal();
                 }}
-                className="w-full py-2.5 rounded-lg font-mono font-bold text-xs uppercase tracking-wide transition-all shadow flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white cursor-pointer shadow-[0_0_15px_rgba(124,58,237,0.4)]"
+                className="w-full h-10 rounded-none font-mono font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white border border-violet-400/40 cursor-pointer"
               >
                 <Wallet className="w-3.5 h-3.5" />
-                <span>Connect Wallet to Trade on Somnia L1</span>
+                <span>CONNECT WALLET TO EXECUTE ON SOMNIA L1</span>
               </button>
             ) : (
               <button
                 onClick={handleExecuteTrade}
                 disabled={isSubmitting}
-                className={`w-full py-2 rounded-lg font-mono font-bold text-xs uppercase tracking-wide transition-all shadow flex items-center justify-center gap-1.5 ${
+                className={`w-full h-10 rounded-none font-mono font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border cursor-pointer ${
                   outcome === "YES"
-                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                    : "bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]"
-                } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/50"
+                    : "bg-rose-600 hover:bg-rose-500 text-white border-rose-400/50"
+                } ${isSubmitting ? "opacity-60 cursor-not-allowed" : ""}`}
               >
                 <Zap className="w-3.5 h-3.5" />
                 <span>
                   {isSubmitting
-                    ? "Submitting to Somnia CLOB..."
-                    : `1-Click Execute ${outcome} with ${wallet.walletName || "MetaMask"} (${calculation.contractsCount} Shares @ $${entryPrice.toFixed(2)})`}
+                    ? "● SUBMITTING TO SOMNIA CLOB..."
+                    : `EXECUTE ${outcome} ORDER (1-CLICK ON SOMNIA L1)`}
                 </span>
               </button>
             )}

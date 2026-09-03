@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock, TrendingUp, ShieldAlert, BarChart3 } from "lucide-react";
+import { TrendingUp, BarChart3, ArrowUpDown, Shield } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 
 interface MarketStatsProps {
@@ -14,45 +14,48 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
   const isYesFavored = prob >= 50;
   const spread =
     market.bestAsk !== undefined && market.bestBid !== undefined
-      ? (market.bestAsk - market.bestBid).toFixed(3)
+      ? (market.bestAsk - market.bestBid).toFixed(4)
       : "—";
 
   return (
-    <div className="bg-[#111118] border-b border-[#2A2A3D] px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+    <div className="bg-[#0A0A12] border-b border-white/[0.08] px-3.5 py-2 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
       {/* Market Name & Question */}
-      <div className="flex items-center gap-3 min-w-[280px]">
-        <CryptoIcon symbol={market.underlyingAsset || market.symbol} size={36} />
+      <div className="flex items-center gap-3 min-w-[260px]">
+        <CryptoIcon symbol={market.underlyingAsset || market.symbol} size={32} />
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-white font-mono font-bold text-sm tracking-wide">
               {market.symbol} / tUSDC
             </h2>
             <span
-              className={`text-[9px] font-mono px-1.5 py-0.5 rounded uppercase font-semibold border ${
+              className={`text-[9px] font-mono px-1.5 py-0.5 rounded-none uppercase font-bold border ${
                 market.status === "TRADING"
-                  ? "bg-emerald-950/50 text-emerald-400 border-emerald-700/40"
-                  : "bg-gray-800/60 text-gray-400 border-gray-700/40"
+                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                  : "bg-gray-900 text-gray-400 border-white/[0.08]"
               }`}
             >
               {market.status || "TRADING"}
             </span>
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-none bg-violet-950/60 text-violet-300 border border-violet-500/30 font-bold hidden sm:inline-block">
+              SOMNIA CLOB
+            </span>
           </div>
-          <p className="text-xs text-gray-400 max-w-xl truncate mt-0.5">
+          <p className="text-[11px] text-gray-400 max-w-xl truncate mt-0.5 font-sans">
             {market.question || "Binary Event Prediction Market"}
           </p>
         </div>
       </div>
 
       {/* Grid of Key Numerical Metrics */}
-      <div className="flex items-center gap-5 flex-wrap divide-x divide-[#2A2A3D]/60 pl-2">
+      <div className="flex items-center gap-4 xl:gap-5 flex-wrap divide-x divide-white/[0.06] pl-2">
         {/* Probability */}
         <div className="flex flex-col">
-          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
             <TrendingUp className="w-3 h-3 text-violet-400" />
-            YES Implied Prob
+            YES Implied Odds
           </span>
           <span
-            className={`text-lg font-mono font-bold ${
+            className={`text-base font-mono font-bold ${
               isYesFavored ? "text-emerald-400" : "text-rose-400"
             }`}
           >
@@ -61,42 +64,43 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
         </div>
 
         {/* Best Bid */}
-        <div className="flex flex-col pl-4">
-          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+        <div className="flex flex-col pl-3 xl:pl-4">
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
             Best Bid
           </span>
-          <span className="text-sm font-mono font-semibold text-gray-200">
+          <span className="text-xs font-mono font-bold text-emerald-400">
             ${market.bestBid !== undefined ? market.bestBid.toFixed(4) : "—"}
           </span>
         </div>
 
         {/* Best Ask */}
-        <div className="flex flex-col pl-4">
-          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+        <div className="flex flex-col pl-3 xl:pl-4">
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
             Best Ask
           </span>
-          <span className="text-sm font-mono font-semibold text-gray-200">
+          <span className="text-xs font-mono font-bold text-rose-400">
             ${market.bestAsk !== undefined ? market.bestAsk.toFixed(4) : "—"}
           </span>
         </div>
 
         {/* Spread */}
-        <div className="flex flex-col pl-4">
-          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+        <div className="flex flex-col pl-3 xl:pl-4">
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
+            <ArrowUpDown className="w-2.5 h-2.5 text-gray-500" />
             Spread
           </span>
-          <span className="text-sm font-mono font-semibold text-violet-400">
+          <span className="text-xs font-mono font-bold text-cyan-400">
             ${spread}
           </span>
         </div>
 
-        {/* 24h Vol / Server */}
-        <div className="flex flex-col pl-4">
-          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
+        {/* 24h Vol */}
+        <div className="flex flex-col pl-3 xl:pl-4">
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
             <BarChart3 className="w-3 h-3 text-gray-500" />
             24h Volume
           </span>
-          <span className="text-sm font-mono font-semibold text-gray-300">
+          <span className="text-xs font-mono font-bold text-slate-200">
             ${market.volume24h ? market.volume24h.toLocaleString() : "142,580"}
           </span>
         </div>

@@ -313,21 +313,21 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl bg-[#0D0D18] border border-violet-600/40 rounded-2xl p-5 shadow-[0_0_50px_rgba(124,58,237,0.25)] flex flex-col space-y-4">
+      <div className="relative w-full max-w-4xl bg-[#111118] border border-white/[0.14] rounded-none p-5 shadow-2xl flex flex-col space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#232338] pb-3">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-violet-600/20 border border-violet-500/40 text-violet-300">
-              <Sparkles className="w-5 h-5 text-violet-400" />
+            <div className="p-1.5 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+              <Sparkles className="w-4 h-4 text-violet-400" />
             </div>
             <div>
-              <h3 className="text-white font-mono font-bold text-base flex items-center gap-2">
+              <h3 className="text-white font-mono font-bold text-sm flex items-center gap-2 uppercase tracking-wide">
                 Proof-of-Thesis Alpha Card Studio
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-600/40 font-mono">
+                <span className="text-[9px] px-1.5 py-0.5 rounded-none bg-emerald-950 text-emerald-300 border border-emerald-500/40 font-mono font-bold">
                   1200×675 HD
                 </span>
               </h3>
-              <p className="text-xs text-gray-400">
+              <p className="text-[11px] text-gray-400 font-sans">
                 Institutional social proof card for Twitter / Telegram / Discord.
               </p>
             </div>
@@ -337,14 +337,14 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
               sound.playClick();
               onClose();
             }}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#1C1C2D] transition-colors"
+            className="p-1 rounded-none text-gray-400 hover:text-white hover:bg-[#1C1C2D] border border-white/[0.08] transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Canvas Display */}
-        <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-[#2A2A42] bg-[#07070D] flex items-center justify-center shadow-inner">
+        <div className="relative w-full aspect-[16/9] rounded-none overflow-hidden border border-white/[0.08] bg-[#07070D] flex items-center justify-center shadow-inner">
           <canvas
             ref={canvasRef}
             className="w-full h-full object-contain"
@@ -358,34 +358,34 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
 
         {/* Actions Toolbar */}
         <div className="flex items-center justify-between pt-1">
-          <div className="text-xs font-mono text-gray-400 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <div className="text-[11px] font-mono text-gray-400 flex items-center gap-2">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>Watermarked with Somnia Shannon Testnet & DreamDEX CLOB</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
-              className="px-3.5 py-2 rounded-lg bg-[#191928] hover:bg-[#232338] text-gray-200 border border-[#2D2D44] text-xs font-mono font-bold flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-1.5 rounded-none bg-[#16161F] hover:bg-[#1C1C28] text-gray-200 border border-white/[0.08] text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-violet-400" />}
-              {copied ? "Copied!" : "Copy Image"}
+              {copied ? "COPIED!" : "COPY IMAGE"}
             </button>
 
             <button
               onClick={handleDownload}
-              className="px-3.5 py-2 rounded-lg bg-[#191928] hover:bg-[#232338] text-gray-200 border border-[#2D2D44] text-xs font-mono font-bold flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-1.5 rounded-none bg-[#16161F] hover:bg-[#1C1C28] text-gray-200 border border-white/[0.08] text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-violet-400" />
-              Download PNG
+              <span>DOWNLOAD PNG</span>
             </button>
 
             <button
               onClick={handleShareX}
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(124,58,237,0.4)] transition-all"
+              className="px-4 py-1.5 rounded-none bg-violet-600 hover:bg-violet-500 text-white font-mono font-bold text-xs flex items-center gap-1.5 border border-violet-400/40 transition-colors cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5" />
-              Share on X
+              <span>SHARE ON X</span>
             </button>
           </div>
         </div>
