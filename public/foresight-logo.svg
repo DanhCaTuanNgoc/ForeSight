@@ -1,5 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512" fill="none">
   <defs>
+    <style>
+      @keyframes foresightSpinClockwise {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes foresightSpinCounter {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+      }
+      @keyframes foresightPulseGlow {
+        0%, 100% { opacity: 0.25; transform: scale(1); }
+        50% { opacity: 0.65; transform: scale(1.15); }
+      }
+      @keyframes foresightCoreBreathe {
+        0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 4px #67E8F9); }
+        50% { opacity: 1; filter: drop-shadow(0 0 12px #A855F7); }
+      }
+      @keyframes foresightLaserScan {
+        0%, 100% { opacity: 0.4; transform: translateY(-3px); }
+        50% { opacity: 0.9; transform: translateY(3px); }
+      }
+      .ambient-glow {
+        transform-origin: 32px 32px;
+        animation: foresightPulseGlow 3.5s ease-in-out infinite;
+      }
+      .radar-ring-1 {
+        transform-origin: 32px 32px;
+        animation: foresightSpinClockwise 12s linear infinite;
+      }
+      .radar-ring-2 {
+        transform-origin: 32px 32px;
+        animation: foresightSpinCounter 8s linear infinite;
+      }
+      .pupil-core {
+        animation: foresightCoreBreathe 2.5s ease-in-out infinite;
+      }
+      .laser-scan {
+        transform-origin: 32px 32px;
+        animation: foresightLaserScan 2s ease-in-out infinite;
+      }
+    </style>
+
+    <!-- Main Neon Violet Gradients -->
     <linearGradient id="foresightEyeUpper" x1="4" y1="32" x2="60" y2="32" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.3" />
       <stop offset="25%" stop-color="#A855F7" />
@@ -7,6 +50,7 @@
       <stop offset="75%" stop-color="#A855F7" />
       <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.3" />
     </linearGradient>
+
     <linearGradient id="foresightEyeLower" x1="4" y1="32" x2="60" y2="32" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#4338CA" stop-opacity="0.3" />
       <stop offset="30%" stop-color="#6366F1" />
@@ -14,6 +58,8 @@
       <stop offset="70%" stop-color="#6366F1" />
       <stop offset="100%" stop-color="#4338CA" stop-opacity="0.3" />
     </linearGradient>
+
+    <!-- Iris Radial Glow -->
     <radialGradient id="foresightIrisGrad" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="#FFFFFF" />
       <stop offset="20%" stop-color="#38BDF8" />
@@ -21,20 +67,24 @@
       <stop offset="85%" stop-color="#4C1D95" />
       <stop offset="100%" stop-color="#0B0B14" />
     </radialGradient>
+
+    <!-- Core Pupil Glow -->
     <radialGradient id="foresightPupilGrad" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="#FFFFFF" />
       <stop offset="40%" stop-color="#67E8F9" />
       <stop offset="80%" stop-color="#7C3AED" />
       <stop offset="100%" stop-color="#4C1D95" />
     </radialGradient>
+
+    <!-- Glow Filters -->
     <filter id="foresightNeonGlow" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="2.5" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
 
-  <!-- Ambient Glow -->
-  <circle cx="32" cy="32" r="20" fill="#7C3AED" opacity="0.25" filter="url(#foresightNeonGlow)" />
+  <!-- Ambient Pulsing Glow -->
+  <circle cx="32" cy="32" r="22" fill="#7C3AED" class="ambient-glow" filter="url(#foresightNeonGlow)" />
 
   <!-- Outer Cybernetic Eyelid Contour -->
   <path d="M 6 32 C 16 13, 48 13, 58 32" stroke="url(#foresightEyeUpper)" stroke-width="2.8" stroke-linecap="round" filter="url(#foresightNeonGlow)" />
@@ -47,15 +97,17 @@
   <!-- Brow Dash Accent -->
   <path d="M 18 19 L 26 14 L 38 14 L 46 19" stroke="#C084FC" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="4 3" opacity="0.75" />
 
-  <!-- Iris Circle -->
+  <!-- Iris Base Circle -->
   <circle cx="32" cy="32" r="14.5" fill="url(#foresightIrisGrad)" stroke="#A855F7" stroke-width="1.5" opacity="0.9" />
 
-  <!-- Radar Tech Grid -->
-  <circle cx="32" cy="32" r="11" fill="none" stroke="#38BDF8" stroke-width="1" stroke-dasharray="2 3" opacity="0.7" />
-  <circle cx="32" cy="32" r="7.5" fill="none" stroke="#C084FC" stroke-width="1" opacity="0.8" />
+  <!-- Rotating Radar Tech Rings -->
+  <circle cx="32" cy="32" r="11" fill="none" stroke="#38BDF8" stroke-width="1" stroke-dasharray="3 4" opacity="0.8" class="radar-ring-1" />
+  <circle cx="32" cy="32" r="8" fill="none" stroke="#C084FC" stroke-width="1" stroke-dasharray="2 3" opacity="0.85" class="radar-ring-2" />
 
   <!-- Vision Nexus Core Pupil -->
-  <circle cx="32" cy="32" r="5" fill="url(#foresightPupilGrad)" filter="url(#foresightNeonGlow)" />
+  <circle cx="32" cy="32" r="5" fill="url(#foresightPupilGrad)" class="pupil-core" filter="url(#foresightNeonGlow)" />
   <circle cx="30" cy="30" r="1.5" fill="#FFFFFF" opacity="0.9" />
-  <line x1="18" y1="32" x2="46" y2="32" stroke="#67E8F9" stroke-width="1" stroke-linecap="round" opacity="0.65" />
+
+  <!-- Scanning Cyber Laser -->
+  <line x1="18" y1="32" x2="46" y2="32" stroke="#67E8F9" stroke-width="1.2" stroke-linecap="round" class="laser-scan" filter="url(#foresightNeonGlow)" />
 </svg>
