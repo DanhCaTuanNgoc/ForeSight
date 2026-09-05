@@ -51,10 +51,9 @@
 8. [Developer Diagnostics & Test Verification (120/120 Tests)](#-8-developer-diagnostics--test-verification-120120-tests)
 9. [Somnia & DreamDEX Developer Feedback Report](#-9-somnia--dreamdex-developer-feedback-report)
 10. [Hackathon Judging Criteria Alignment](#-10-hackathon-judging-criteria-alignment)
-11. [2.5-Minute Demo Video Walkthrough & Script](#-11-25-minute-demo-video-walkthrough--script)
-12. [Local Installation & Development Guide](#-12-local-installation--development-guide)
-13. [Future Roadmap Beyond Hackathon](#-13-future-roadmap-beyond-hackathon)
-14. [License & Acknowledgements](#-14-license--acknowledgements)
+11. [Local Installation & Development Guide](#-11-local-installation--development-guide)
+12. [Future Roadmap Beyond Hackathon](#-12-future-roadmap-beyond-hackathon)
+13. [License & Acknowledgements](#-13-license--acknowledgements)
 
 ---
 
@@ -244,6 +243,11 @@ Given user collateral $C$ and entry price $P_{\text{entry}} \in (0.01, 0.99)$:
 ## 📸 5. Proof-of-Thesis Alpha Card Studio
 
 To support viral social prediction sharing across the Somnia ecosystem, ForeSight provides an in-terminal **Alpha Card Studio**:
+
+<p align="center">
+  <img src="./src/assets/ForeSight-BTC-Thesis.png" width="800" alt="ForeSight BTC Alpha Card" />
+</p>
+
 * **1200×675 HD Canvas Export:** Generates high-resolution cybernetic trading cards formatted for X / Twitter (16:9) and Telegram.
 * **Dual Evidence Stamps:** Displays quantitative metrics (VC momentum ratio, Model Edge in bps) alongside Dual AI consensus excerpts.
 * **Network Verification Seal:** Certified watermark referencing Somnia Shannon Testnet (`Chain ID: 50312`) and DreamDEX CLOB.
@@ -348,37 +352,45 @@ Below is our structured technical feedback for the Somnia Core Devs:
 
 ## 🎯 10. Hackathon Judging Criteria Alignment
 
-| Hackathon Criterion | Weight | How ForeSight Delivers Maximum Impact |
-| :--- | :---: | :--- |
-| **1. Innovation & Originality** | **20%** | Replaces black-box guessing with **Adversarial Dual AI debate (Bull vs Bear)** grounded in live RAG news citations and deterministic trajectory physics ($VC$). |
-| **2. Technical Implementation** | **25%** | Deep integration with `@somnia-chain/markets-sdk`, automated 10s anomaly indexer, 4 autonomous bot runners, and **120/120 passing Vitest tests (100%)**. |
-| **3. User Experience & Design** | **20%** | Institutional cyberpunk bento cockpit, zero-latency client-side math, 1200×675 HD social Alpha Cards, and interactive onboarding guide. |
-| **4. Business & Ecosystem Impact**| **20%** | Bridges retail traders and quants to DreamDEX CLOB, solves stranded capital via Settlement Sweeper, and drives continuous on-chain transactions on Somnia. |
-| **5. Presentation & Demo** | **15%** | Comprehensive documentation, live working production terminal on Vercel, and a concise 2.5-minute video pitch walkthrough. |
+Below is the structured breakdown of how **ForeSight** directly fulfills each of the official Somnia × DreamDEX Hackathon judging criteria:
+
+### 1. Innovation & Originality — 20%
+* **Hackathon Criteria:** *How novel is the idea? Does the project use Event Contracts creatively to solve a real-world problem?*
+* **How ForeSight Delivers:**
+  * **From Black-Box Guessing to Adversarial Debate:** Replaces generic chatbot hallucinations with an **Adversarial Dual AI Arena (Alpha Bull vs Macro Bear)** that ingests live crypto RSS news context and grounds every argument in verifiable sources.
+  * **Physical Momentum Mathematics ($VC$):** Introduces the **Velocity Coverage ($VC$)** metric, comparing real-time spot price velocity against the required trajectory to physically reach strike before round expiry.
+
+### 2. Technical Implementation — 25%
+* **Hackathon Criteria:** *How effectively does the project use DreamDEX Event Contracts and available APIs/SDKs? How strong and functional is the technical implementation?*
+* **How ForeSight Delivers:**
+  * **End-to-End SDK Integration:** Full integration with `@somnia-chain/markets-sdk` and Viem for on-chain limit orders, book depth retrieval, and balance queries on Somnia Shannon (`50312`).
+  * **Automated Background Telemetry:** Autonomous `MarketSnapshotWorker` polling indexers every 10s to detect $\ge 10\%$ probability surges in real time.
+  * **Automated Strategy Bots:** 4 distinct bot runners (`starter-bot`, `market-maker`, `oracle-follower`, `ai-copilot`).
+  * **Production-Grade Rigor:** **120/120 passing Vitest tests (100% pass rate)** covering financial math invariants, RAG grounding, and order engines.
+
+### 3. User Experience & Design — 20%
+* **Hackathon Criteria:** *How intuitive, accessible, and usable is the product? Does it provide a compelling overall user experience?*
+* **How ForeSight Delivers:**
+  * **Institutional Cyberpunk Bento Terminal:** Single-screen cockpit layout with zero page reloads, dark surfaces, and high-legibility monospace metrics.
+  * **Zero-Latency Client-Side Simulation:** Interactive parameter sliders compute PnL, ROI, and break conditions instantly with 0ms network lag.
+  * **Simulation Sandbox Fallback:** Users can explore the entire terminal with virtual funds without requiring wallet connection or faucet setup.
+
+### 4. Business & Ecosystem Impact — 20%
+* **Hackathon Criteria:** *Does the project have the potential to: Attract new users, Generate trading activity, Increase Event Contracts adoption, Expand the DreamDEX ecosystem, Create a sustainable product or use case?*
+* **How ForeSight Delivers:**
+  * **Solving the Stranded Capital Problem:** The **Settlement Sweeper** batch-redeems matured winning shares across 500+ pools, returning liquidity to active circulation.
+  * **Bridging Retail & Quantitative Quants:** Empowers retail traders with cognitive context while giving algorithmic quants automated bot templates.
+  * **Viral Social Loop:** 1200×675 HD **Alpha Card Studio** encourages traders to share verified on-chain theses across X/Twitter and Telegram.
+
+### 5. Presentation & Demo — 15%
+* **Hackathon Criteria:** *How clearly does the team communicate: The problem, The solution, The product, The demonstration, The future vision?*
+* **How ForeSight Delivers:**
+  * **Live Production Terminal:** Instantly accessible on Vercel at [foresightdex.vercel.app](https://foresightdex.vercel.app/).
+  * **Transparent Technical Documentation:** Comprehensive mathematical formulations, architecture diagrams, and a dedicated Developer Feedback Report for Somnia core engineers.
 
 ---
 
-## 🎬 11. 2.5-Minute Demo Video Walkthrough & Script
-
-Our official demonstration follows a tight 2.5-minute narrative designed for judges:
-
-```
-┌─────────────────┬─────────────────┬─────────────────┬─────────────────┬─────────────────┐
-│   0:00 - 0:25   │   0:25 - 0:55   │   0:55 - 1:35   │   1:35 - 2:10   │   2:10 - 2:30   │
-│   The Problem   │   1. DETECT     │   2. DEBATE     │   3. SIMULATE   │   4. EXECUTE    │
-│ (Chaos & 500+)  │ (Area & Spikes) │ (Bull vs Bear)  │(VC & Trajectory)│ (& Auto-Sweep)  │
-└─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
-```
-
-* **Scene 1: The Problem (0:00 – 0:25):** The chaos of 500+ rapid binary contracts on Somnia and the danger of contextless 30% flash spikes. Introducing ForeSight's core philosophy: *"Understand the market before you trade it"*.
-* **Scene 2: DETECT (0:25 – 0:55):** Live probability curve plotting and the 10-second anomaly scanner tagging sudden surges with interactive pulsing markers.
-* **Scene 3: DEBATE (0:55 – 1:35):** Dual AI Arena modal opening with Alpha Bull AI and Macro Bear AI presenting grounded arguments with clickable `[View Evidence]` news sources.
-* **Scene 4: SIMULATE (1:35 – 2:10):** Physical trajectory validation using Velocity Coverage ($VC = 1.28\times$), Thesis Break Conditions, and instant zero-latency PnL sliders.
-* **Scene 5: EXECUTE & Auto-Sweep (2:10 – 2:30):** 1-Click order submission directly to DreamDEX CLOB, followed by 1-click batch claim with the Settlement Sweeper.
-
----
-
-## ⚡ 12. Local Installation & Development Guide
+## ⚡ 11. Local Installation & Development Guide
 
 ### Prerequisites
 * Node.js $\ge 20.0.0$
@@ -421,7 +433,7 @@ npm run agent:copilot   # Launch Autonomous AI Copilot Bot
 
 ---
 
-## 🗺️ 13. Future Roadmap Beyond Hackathon
+## 🗺️ 12. Future Roadmap Beyond Hackathon
 
 * **Phase 1 (Current):** Testnet MVP on Somnia Shannon (`50312`), Dual AI Arena, 4 Strategy Bots, Alpha Card Studio.
 * **Phase 2 (Somnia Mainnet):** Mainnet Deployment, Somnia Native Reactive Agent VM integration, Institutional REST API SDK, Mobile PWA Terminal.
@@ -429,8 +441,9 @@ npm run agent:copilot   # Launch Autonomous AI Copilot Bot
 
 ---
 
-## 📄 14. License & Acknowledgements
+## 📄 13. License & Acknowledgements
 
 MIT License — see the [LICENSE](LICENSE) file for details. Built with ❤️ for the **Somnia × DreamDEX Event Contracts Hackathon**.  
 Special thanks to the **Somnia Network** & **DreamDEX** engineering teams for developer tools, GraphQL indexers, and documentation support.
+
 
