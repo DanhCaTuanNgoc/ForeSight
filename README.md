@@ -35,7 +35,9 @@
 ## 📑 Table of Contents
 
 1. [Executive Summary & Product Vision](#-1-executive-summary--product-vision)
+   - [Judge's Fast-Track Briefing](#-judges-fast-track-briefing)
 2. [The Core Problem & Market Opportunity on Somnia L1](#-2-the-core-problem--market-opportunity-on-somnia-l1)
+   - [ForeSight vs. Traditional Prediction Interfaces](#-foresight-vs-traditional-prediction-interfaces)
 3. [The 4-Stage Decision Architecture & Execution Pipeline](#-3-the-4-stage-decision-architecture--execution-pipeline)
    - [The 4-Stage Architecture Matrix](#the-4-stage-architecture-matrix)
    - [Dual AI Adversarial Debate Pipeline](#dual-ai-adversarial-debate-pipeline)
@@ -69,10 +71,20 @@ However, speed without intelligence breeds reckless speculation. **ForeSight** b
 * **Separation of Reasoning from Math:** Subjective reasoning is handled by an adversarial Dual AI debate with live news citations (RAG), while capital allocation and trajectory feasibilities are computed through deterministic financial physics.
 * **Capital Efficiency:** Automatic detection and 1-click batch sweeping of matured contracts eliminates the stranded capital problem common in fast-cadence binary markets.
 
-```
+```text
        RAW DREAMDEX CLOB DATA ──► [ DETECT ] ──► [ CHALLENGE ] ──► [ SIMULATE ] ──► [ EXECUTE ]
        (500+ Active Markets)       Spike Radar    Adversarial AI    Velocity Math    1-Click / Sweeper
 ```
+
+### ⚡ Judge's Fast-Track Briefing
+
+| Evaluation Dimension | ForeSight Implementation & Architecture | Verification Link / Code Anchor |
+| :--- | :--- | :--- |
+| **What is ForeSight?** | Institutional-grade Decision Support & Execution Terminal built for DreamDEX Event Contracts on Somnia L1. | [Live App](https://foresightdex.vercel.app/) &nbsp;•&nbsp; [Executive Summary](#-1-executive-summary--product-vision) |
+| **The Core Problem** | Eliminates contextless odds spikes, black-box ungrounded AI predictions, and stranded capital across 500+ expired pools. | [Problem Analysis](#-2-the-core-problem--market-opportunity-on-somnia-l1) |
+| **Technical Core** | Deep `@somnia-chain/markets-sdk` integration, Chebyshev Black-Scholes $\Phi(d2)$ math, and Dual Bull/Bear RAG debate. | [Decision Architecture](#-3-the-4-stage-decision-architecture--execution-pipeline) &nbsp;•&nbsp; [Math](#-4-mathematical-formulations--quantitative-foundation) |
+| **Ecosystem Impact** | **Settlement Sweeper** batch-claims matured pools in 1 click, recirculating 100% of stranded capital back into Somnia L1. | [Settlement Sweeper](#-8-full-system-architecture--multi-tier-data-flow) &nbsp;•&nbsp; [Criteria](#-5-hackathon-judging-criteria-alignment) |
+| **Quality & Reliability** | **10 test suites with 120/120 passing tests (100% pass rate)**, React 19, TypeScript 5.7, sub-second block execution. | [Test Verification](#-9-developer-diagnostics--test-verification-120120-tests) |
 
 ---
 
@@ -80,7 +92,7 @@ However, speed without intelligence breeds reckless speculation. **ForeSight** b
 
 Across **500+ active event contracts** on DreamDEX (1m, 5m, 15m, 1h BTC/ETH/SOL contracts), traders face three fundamental bottlenecks:
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                              THE 3 CRITICAL TRADING BOTTLENECKS                                │
 ├──────────────────────────────┬──────────────────────────────┬──────────────────────────────────┤
@@ -93,6 +105,17 @@ Across **500+ active event contracts** on DreamDEX (1m, 5m, 15m, 1h BTC/ETH/SOL 
 │ orderbook imbalances.        │ disciplined risk management. │ stranded in dozens of pools.     │
 └──────────────────────────────┴──────────────────────────────┴──────────────────────────────────┘
 ```
+
+### 🥊 ForeSight vs. Traditional Prediction Interfaces
+
+| Feature Dimension | Traditional Prediction / Basic DEX UI | ForeSight Institutional Terminal |
+| :--- | :--- | :--- |
+| **Market Intelligence** | Raw odds chart with 0 contextual explanation | **Automated $\Delta P \ge 10\%$ Spike Radar** + historical timeseries database |
+| **AI Decision Support** | Black-box "prediction" bot with ungrounded outputs | **Adversarial Dual Bull/Bear Debate** with verified clickable `[View Evidence]` URLs |
+| **Quantitative Risk** | Guesswork and basic payout display | **Closed-form Black-Scholes $\Phi(d2)$**, Half-Kelly sizing, and Velocity Coverage ($VC$) |
+| **Capital Efficiency** | Manual 1-by-1 claim; winnings get stranded in pools | **Settlement Sweeper**: 1-click batch redemption across all expired rounds |
+| **Algorithmic Trading** | Manual user clicking only | **4 Modular Swarm Bots** (Titan, Oracle, Volt, Sweeper) via `@somnia-chain/markets-sdk` |
+| **Social Virality** | Plain text links and screenshots | **1200×675 HD Alpha Card Studio** with certified testnet watermark stamps |
 
 ### Why a "Decision Terminal" Instead of Another DEX?
 DreamDEX already provides an exceptional CLOB orderbook and liquidity infrastructure. Building another basic trading UI adds little value. **ForeSight acts as the "Bloomberg Terminal + Quant Simulator" layer for Somnia Event Contracts**, elevating prediction markets from blind casinos into structured, professional trading environments.
