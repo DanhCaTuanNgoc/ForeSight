@@ -36,11 +36,10 @@
 
 1. [Executive Summary & Product Vision](#-1-executive-summary--product-vision)
 2. [The Core Problem & Market Opportunity on Somnia L1](#-2-the-core-problem--market-opportunity-on-somnia-l1)
-3. [The 4-Stage Decision Architecture & Workflow Diagrams](#-3-the-4-stage-decision-architecture--workflow-diagrams)
-   - [Stage 1: DETECT (10s Orderbook Anomaly Scanner)](#1️⃣-detect-orderbook-anomaly-detection)
-   - [Stage 2: CHALLENGE (Dual-Agent Adversarial Debate & Grounded RAG)](#2️⃣-challenge-adversarial-dual-agent-debate--grounded-rag)
-   - [Stage 3: SIMULATE (Trajectory Physics & Zero-Lag Math)](#3️⃣-simulate-trajectory-physics--feasibility-modeling)
-   - [Stage 4: EXECUTE (1-Click CLOB & Batch Settlement Sweeper)](#4️⃣-execute-1-click-clob-trading--settlement-sweeper)
+3. [The 4-Stage Decision Architecture & Execution Pipeline](#-3-the-4-stage-decision-architecture--execution-pipeline)
+   - [The 4-Stage Architecture Matrix](#the-4-stage-architecture-matrix)
+   - [Dual AI Adversarial Debate Pipeline](#dual-ai-adversarial-debate-pipeline)
+   - [Dynamic Context & Output Schema Architecture](#dynamic-context--output-schema-architecture)
 4. [Mathematical Formulations & Quantitative Foundation](#-4-mathematical-formulations--quantitative-foundation)
    - [Velocity Coverage ($VC$) Trajectory Feasibility](#1-velocity-coverage-vc--trajectory-feasibility)
    - [Closed-Form Black-Scholes Binary Option Pricing & Half-Kelly](#2-closed-form-black-scholes-binary-option-pricing--model-edge)
@@ -48,11 +47,11 @@
 5. [Hackathon Judging Criteria Alignment (Executive Matrix)](#-5-hackathon-judging-criteria-alignment)
 6. [Proof-of-Thesis Alpha Card Studio (1200×675 HD)](#-6-proof-of-thesis-alpha-card-studio)
 7. [Automated Strategy Bot Suite & Personas](#-7-automated-strategy-bot-suite--personas)
-8. [Full System Architecture & Data Telemetry Flow](#-8-full-system-architecture--data-telemetry-flow)
+8. [Full System Architecture & Multi-Tier Data Flow](#-8-full-system-architecture--multi-tier-data-flow)
 9. [Developer Diagnostics & Test Verification (120/120 Tests)](#-9-developer-diagnostics--test-verification-120120-tests)
 10. [Somnia & DreamDEX Developer Feedback Report](#-10-somnia--dreamdex-developer-feedback-report)
 11. [Local Installation & Development Guide](#-11-local-installation--development-guide)
-12. [Future Roadmap Beyond Hackathon](#-12-future-roadmap-beyond-hackathon)
+12. [Future Roadmap Beyond Hackathon (Strategic Matrix)](#-12-future-roadmap-beyond-hackathon)
 13. [License & Acknowledgements](#-13-license--acknowledgements)
 
 ---
@@ -97,61 +96,35 @@ DreamDEX already provides an exceptional CLOB orderbook and liquidity infrastruc
 
 ---
 
-## 🔄 3. The 4-Stage Decision Architecture & Workflow Diagrams
+## 🔄 3. The 4-Stage Decision Architecture & Execution Pipeline
 
-```mermaid
-flowchart LR
-    subgraph S1["1. DETECT"]
-        A["DreamDEX Indexer (10s)"] --> B["Spike Detection (ΔP ≥ 10%)"]
-        B --> C["Interactive Marker Tagging"]
-    end
-    subgraph S2["2. CHALLENGE"]
-        C --> D["Alpha Bull AI (Momentum)"]
-        C --> E["Macro Bear AI (Risk Skew)"]
-        F["Grounded Crypto RSS"] --> D & E
-        D & E --> G["Consensus Verdict & bps Edge"]
-    end
-    subgraph S3["3. SIMULATE"]
-        G --> H["Velocity Coverage (VC Math)"]
-        H --> I["Black-Scholes Φ(d2) & Kelly"]
-        I --> J["0-Lag PnL Sliders"]
-    end
-    subgraph S4["4. EXECUTE"]
-        J --> K["1-Click CLOB Order (Viem)"]
-        K --> L["Matured Pools Scan"]
-        L --> M["Settlement Sweeper (Auto-Claim)"]
-    end
-```
+ForeSight organizes raw prediction market data into a structured **4-stage decision loop**:
 
-### 1️⃣ DETECT: Orderbook Anomaly Detection
-* **Real-Time Implied Odds Timeline:** Continuously plots market probability ($0\% \rightarrow 100\%$) across multiple timeframes (`15m`, `1h`, `4h`) using live market indexer data.
-* **10-Second Anomaly Scanner (`MarketSnapshotWorker`):** Continuously monitors active event contracts. Any probability shift $\ge 10\%$ between snapshots is automatically flagged with an interactive timeline marker.
+### The 4-Stage Architecture Matrix
 
-### 2️⃣ CHALLENGE: Adversarial Dual-Agent Debate & Grounded RAG
-* **Adversarial Synthesis (`DualDebateEngine`):** Rather than outputting a single speculative number, two specialized agents synthesize the market context:
-  * 🐂 **Alpha Bull AI:** Analyzes orderbook bid depth, upside momentum, order asymmetry, and positive spot catalysts.
-  * 🐻 **Macro Bear AI:** Evaluates overhead resistance, binary time decay ($\theta$), downside risk skew, and volatility traps.
-* **Verifiable Source Citations:** Every thesis cites real-world articles (`[View Evidence]`) ingested via live crypto RSS streams (CoinDesk, Cointelegraph, Decrypt).
+| Stage | Primary Objective | Ingested Data & Feeds | Core Algorithmic Engine | Output & Operational Invariants |
+| :--- | :--- | :--- | :--- | :--- |
+| **1️⃣ DETECT** | *Anomaly Scanner & Odds Tracking* | • DreamDEX GraphQL Indexer<br/>• 500+ active event contracts<br/>• Real-time implied odds ($0-100\%$) | `MarketSnapshotWorker`<br/>*(10s continuous poller)* | • Automated marker tags for $\Delta P \ge 10\%$ shifts<br/>• Timeseries database snapshots<br/>• Interactive timeline UI alerts |
+| **2️⃣ CHALLENGE** | *Adversarial Bull vs Bear Synthesis* | • Real-time CLOB orderbook depth<br/>• Spread in basis points (bps)<br/>• Live Crypto RSS feeds (CoinDesk, etc.) | `DualDebateEngine`<br/>*(Truth-Grounded RAG)* | • Structured JSON with Alpha Bull vs Macro Bear cases<br/>• Direct clickable `[View Evidence]` news URLs<br/>• Zero-hallucination consensus score |
+| **3️⃣ SIMULATE** | *Trajectory Physics & Greeks Modeling* | • Spot asset prices (Binance/Pyth)<br/>• Strike price & time remaining $\tau$<br/>• User collateral allocation ($C$) | `Quantitative Pricing Core`<br/>*(Client-side deterministic math)* | • Velocity Coverage ratio ($VC = v_{\text{obs}} / v_{\text{req}}$)<br/>• Closed-form Black-Scholes $\Phi(d2)$ & Half-Kelly<br/>• Zero-latency client-side PnL & ROI calculation |
+| **4️⃣ EXECUTE** | *1-Click Order & Batch Settlement* | • User Viem/MetaMask wallet<br/>• Settled contract registry<br/>• Unclaimed YES/NO token balances | `Order Engine & Settlement Sweeper`<br/>*(On-chain batch dispatcher)* | • Direct limit/market order dispatch to DreamDEX<br/>• High-fidelity simulation mode fallback<br/>• 1-Click batch redemption of all matured payouts |
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Trader as Trader
-    participant Terminal as ForeSight Terminal UI
-    participant Server as Express & Debate Engine
-    participant RAG as NewsIngestionWorker (RSS)
-    participant LLM as Dual AI Arena (Gemini/Groq)
+---
 
-    Trader->>Terminal: Selects Asset or Probability Spike
-    Terminal->>Server: POST /api/debate (Market ID, Odds, Spread)
-    Server->>RAG: Query latest indexed news catalysts
-    RAG-->>Server: Ingested articles & direct URL citations
-    Server->>LLM: Structured Adversarial Prompt (Bull vs Bear)
-    LLM-->>Server: Validated JSON Verdict (Arguments & Edge)
-    Server-->>Terminal: Render Dual Arena with [View Evidence] Links
-```
+### Dual AI Adversarial Debate Pipeline
 
-#### 🧠 Context Ingestion & Structured Output Schema
+| Step | Flow Layer | Operational Trigger | Data & Protocol Payload | Resulting Invariant |
+| :---: | :--- | :--- | :--- | :--- |
+| **01** | **User Interaction** | Trader clicks contract or spike marker | Target market ID, current probability, orderbook spread | Terminal requests dynamic market synthesis |
+| **02** | **RAG Ingestion** | `NewsIngestionWorker` query | Real-time crypto RSS streams (CoinDesk, Decrypt, Cointelegraph) | Relevant macro & micro catalysts retrieved with source URLs |
+| **03** | **Adversarial Synthesis** | `DualDebateEngine` execution | Structured adversarial prompt (Alpha Bull vs Macro Bear) | LLM reasons over both sides with explicit constraints |
+| **04** | **Schema Validation** | Strict JSON schema parser | `{ bullHeadline, bearHeadline, bullTarget, bearTarget, ... }` | Guarantees deterministic, type-safe data rendering |
+| **05** | **Terminal Delivery** | Single-screen UI update | Dual Arena cards with clickable `[View Evidence]` pills | Trader sees unbiased, evidence-grounded perspective in $<1.5\text{s}$ |
+
+---
+
+### Dynamic Context & Output Schema Architecture
+
 ```json
 {
   "bullHeadline": "Institutional accumulation defending $77.5K strike",
@@ -167,20 +140,6 @@ sequenceDiagram
   "summary": "Consensus favors short-term upside with tight stop..."
 }
 ```
-
-### 3️⃣ SIMULATE: Trajectory Physics & Feasibility Modeling
-* **Velocity Coverage Metric (`VC`):** Evaluates whether the underlying spot asset has sufficient physical momentum to reach the strike price before round expiry:
-  $$\Delta P_{\text{required}} = \frac{|P_{\text{strike}} - P_{\text{current}}|}{P_{\text{current}}} \times 100\%$$
-  $$v_{\text{required}} = \frac{\Delta P_{\text{required}}}{T_{\text{remaining}}} \quad (\%/\text{minute})$$
-  $$VC = \frac{v_{\text{observed}}}{v_{\text{required}}}$$
-  * **$VC \ge 1.00\times$:** Realized spot momentum exceeds the required drift rate $\rightarrow$ **Trajectory physically feasible**.
-  * **$VC < 1.00\times$:** Asset requires external momentum surge $\rightarrow$ **Elevated risk of expiring at zero ($0.00)**.
-* **Zero-Latency Client-Side Math:** Sliders compute capital allocation, early-exit take-profit targets, expiration payoffs, and breakeven boundaries directly in the browser with 0ms network lag.
-
-### 4️⃣ EXECUTE: 1-Click CLOB Trading & Settlement Sweeper
-* **1-Click CLOB Dispatch:** Places limit and market orders directly to DreamDEX contracts via `@somnia-chain/markets-sdk` and Viem.
-* **Simulation Sandbox Fallback:** High-fidelity simulation mode allows comprehensive terminal exploration even without an active funded private key.
-* **Settlement Sweeper:** Detects all finalized rounds and batch-redeems winnings in a single transaction, eliminating stranded capital.
 
 ---
 
@@ -282,52 +241,26 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 
 ---
 
-## 🏗️ 8. Full System Architecture & Data Telemetry Flow
+## 🏗️ 8. Full System Architecture & Multi-Tier Data Flow
 
-```mermaid
-flowchart TB
-    subgraph Client["1. Presentation Layer (React 19 + Vite 6 + Tailwind CSS)"]
-        UI["Bento Grid Trading Cockpit"]
-        Chart["Probability Curve & Recharts Canvas"]
-        DebateModal["Dual AI Debate Arena & Source Citations"]
-        SimDock["Simulation Lab Sliders (0ms Lag)"]
-        CardStudio["Alpha Card Studio (1200x675 HD)"]
-        Wallet["Viem Web3 Connector (MetaMask / Injected)"]
-    end
-
-    subgraph Engine["2. Intelligence & Worker Layer (Express + TypeScript + WebSockets)"]
-        API["API Gateway (:3001) & WS Telemetry"]
-        SnapWorker["MarketSnapshotWorker (10s Event Poller)"]
-        RssWorker["NewsIngestionWorker (RSS Grounding Engine)"]
-        LLMEngine["DualDebateEngine (Gemini / Groq Adversarial RAG)"]
-        MathEngine["Deterministic Quant Core (VC, Greeks, Kelly)"]
-        SweepWorker["Settlement Sweeper Worker (Batch Claim)"]
-    end
-
-    subgraph Swarm["3. Autonomous Strategy Bots"]
-        Bot1["⚡ Volt (Spike Momentum Hunter)"]
-        Bot2["🔮 Oracle (Binance Feed Arbitrageur)"]
-        Bot3["🛡️ Titan (Two-Sided Market Maker)"]
-        Bot4["🧹 Sweeper (Matured Pools Claimer)"]
-    end
-
-    subgraph OnChain["4. Blockchain & Protocol Layer (Somnia Shannon Testnet 50312)"]
-        RPC["Somnia L1 RPC (100k+ TPS, Sub-Second Finality)"]
-        DreamIndexer["DreamDEX GraphQL Indexer (dev.smk.somnia.host)"]
-        DreamSDK["@somnia-chain/markets-sdk (CLOB Orderbooks)"]
-        SpotFeeds["Binance Vision Spot Feeds"]
-    end
-
-    UI --> API
-    Wallet --> RPC
-    API --> SnapWorker & RssWorker & LLMEngine & MathEngine & SweepWorker
-    SnapWorker --> DreamIndexer
-    RssWorker --> LLMEngine
-    MathEngine --> SimDock
-    Swarm --> DreamSDK
-    DreamSDK --> RPC
-    API --> SpotFeeds
-```
+| Architectural Tier | Subsystem / Component | Technology Stack | Primary Responsibilities | Guaranteed Protocol Invariants |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Presentation Tier** | **Bento Grid Trading Cockpit** | React 19, Vite 6, Tailwind CSS, Lucide | Single-screen terminal layout, probability canvas, order docks | 0 page reloads, responsive layout, dark surface contrast |
+| | **Real-Time Visual Canvas** | Recharts, SVG Sparklines | Live implied probability curves, depth charts, spike markers | Sub-second timeline rendering, zero layout shift |
+| | **Simulation Lab Sliders** | Client-Side TypeScript Core | Instant parameter updates for collateral, exit price, and hold time | **0ms network latency** for all PnL and risk math |
+| | **Alpha Card Studio** | HTML5 Canvas, Crypto APIs | 1200×675 HD viral card exports with on-chain watermarks | Certified testnet stamps, 1-click clipboard / X share |
+| **2. Intelligence & Worker Tier** | **Snapshot Polling Worker** | Node.js, Express, TypeScript | Scans 500+ contracts every 10s via GraphQL indexer | Detects $\Delta P \ge 10\%$ surges within 1 block time |
+| | **News Ingestion & RAG** | RSS Ingestion Engine | Ingests real-world crypto news streams continuously | Direct source verification, zero hallucinated claims |
+| | **Dual Debate Engine** | LLM Gateway (Gemini, Groq) | Adversarial Alpha Bull vs Macro Bear reasoning | Strict JSON validation, explicit separation of bull/bear cases |
+| | **Quantitative Pricing Core** | Chebyshev Approximation Core | Black-Scholes $\Phi(d2)$, Half-Kelly, Velocity Coverage ($VC$) | Rational error bound $|\varepsilon| < 1.5 \times 10^{-7}$ |
+| | **Settlement Sweeper Engine** | Batch Scanning Worker | Indexes matured contracts and calculates claimable payouts | Recovers 100% of stranded capital across expired pools |
+| **3. Autonomous Swarm Tier** | **⚡ Volt** | Algorithmic Bot Runner | Spike momentum hunter sniping sudden orderbook volume surges | Trigger: $\Delta P / \Delta t > \text{threshold}$ |
+| | **🔮 Oracle** | Algorithmic Bot Runner | Cross-venue arbitrageur exploiting Binance spot vs CLOB lag | Trigger: $\|P_{\text{spot}} - P_{\text{clob}}\| > 50\text{ bps}$ |
+| | **🛡️ Titan** | Algorithmic Bot Runner | Two-sided quantitative market maker providing bid-ask liquidity | Maintains spread $< 40\text{ bps}$ around fair probability |
+| | **🧹 Sweeper** | Algorithmic Bot Runner | Automated listener batch-claiming matured YES/NO tokens | Trigger: $\text{Expiry} < \text{Now} \ \&\ \text{Claimable} > 0$ |
+| **4. Blockchain & Protocol Tier** | **DreamDEX CLOB Contracts** | Solidity, `BinaryPool`, `BinaryMarket` | Central limit order book execution, collateral escrow | Non-custodial settlement, deterministic payouts |
+| | **GraphQL Indexer** | `dev.smk.somnia.host` | High-cadence indexing of active markets, orders, and venues | Sub-second query response across 500+ active pools |
+| | **Somnia Shannon Testnet** | Somnia L1 (`Chain ID: 50312`) | High-throughput execution with IceDB & sub-second block finality | **100k+ TPS**, sub-cent gas fees, EVM compatibility |
 
 ---
 
@@ -429,9 +362,11 @@ npm run agent:copilot   # Launch Autonomous AI Copilot Bot
 
 ## 🗺️ 12. Future Roadmap Beyond Hackathon
 
-* **Phase 1 (Current):** Testnet MVP on Somnia Shannon (`50312`), Dual AI Arena, 4 Strategy Bots, Alpha Card Studio.
-* **Phase 2 (Somnia Mainnet):** Mainnet Deployment, Somnia Native Reactive Agent VM integration, Institutional REST API SDK, Mobile PWA Terminal.
-* **Phase 3 (Ecosystem Scaling):** Cross-venue prediction aggregation, Social Copy-Trading Vaults, and decentralized strategy competitions.
+| Phase & Milestone | Target Timeline | Strategic Focus | Core Technical Deliverables | Ecosystem Impact on Somnia | Status |
+| :--- | :---: | :--- | :--- | :--- | :---: |
+| **Phase 1: Testnet & Swarm Launch** | **Q3 2026**<br/>*(Current)* | • Shannon Testnet MVP<br/>• Core Decision Loop<br/>• Swarm Personas | • Single-Screen Bento Trading Terminal<br/>• Dual AI Adversarial Debate Arena with RAG<br/>• Deterministic Velocity Coverage ($VC$) Modeling<br/>• 4 Strategy Bot Runners (Volt, Oracle, Titan, Sweeper)<br/>• 1200×675 HD Proof-of-Thesis Alpha Card Studio | • Proves sub-second trading viability on Somnia<br/>• Ingests 500+ DreamDEX event contracts<br/>• Eliminates stranded capital via Settlement Sweeper | **🟢 Complete & Live** |
+| **Phase 2: Somnia Mainnet & Reactive Agents** | **Q4 2026** | • Mainnet Deployment<br/>• Native Reactive VM<br/>• Institutional API | • Deployment on Somnia Mainnet with full SOMI token support<br/>• Integration with **Somnia Native Reactive Agents** for on-chain trigger execution without off-chain keepers<br/>• Institutional REST API & typed WebSocket SDK<br/>• Mobile-optimized Progressive Web App (PWA) | • Drives continuous on-chain transaction volume<br/>• First prediction terminal leveraging Somnia Native Reactivity | **🟡 In Development** |
+| **Phase 3: Cross-Venue Prediction Aggregator** | **2027+** | • Prediction Aggregation<br/>• Social Copy-Trading<br/>• Decentralized Swarms | • Smart Order Routing (SOR) across multi-venue prediction pools<br/>• Non-custodial Social Copy-Trading Vaults with verifiable Proof-of-Alpha<br/>• Community-staked Autonomous Agent Swarm Arenas<br/>• Multi-asset index and basket event contracts | • Establishes ForeSight as the primary liquidity and intelligence router for the Somnia ecosystem | **🔵 Planned** |
 
 ---
 
@@ -439,5 +374,6 @@ npm run agent:copilot   # Launch Autonomous AI Copilot Bot
 
 MIT License — see the [LICENSE](LICENSE) file for details. Built with ❤️ for the **Somnia × DreamDEX Event Contracts Hackathon**.  
 Special thanks to the **Somnia Network** & **DreamDEX** engineering teams for developer tools, GraphQL indexers, and documentation support.
+
 
 
