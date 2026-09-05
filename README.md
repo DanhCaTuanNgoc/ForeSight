@@ -358,24 +358,51 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 
 ### 8.3 Multi-Tier System Breakdown & Performance SLAs
 
-| Architectural Tier | Subsystem / Component | Technology Stack | Primary Responsibilities | Performance SLA & Invariant |
-| :--- | :--- | :--- | :--- | :--- |
-| **1. Presentation Tier** | **Bento Grid Trading Cockpit** | React 19, Vite 6, Tailwind CSS, Lucide | Single-screen terminal layout, probability canvas, order docks | **0 page reloads**, responsive layout, dark surface contrast |
-| | **Real-Time Visual Canvas** | Recharts, SVG Sparklines | Live implied probability curves, depth charts, spike markers | **Sub-second timeline rendering**, zero layout shift |
-| | **Simulation Lab Sliders** | Client-Side TypeScript Core | Instant parameter updates for collateral, exit price, and hold time | **0ms network latency** for all PnL and risk math |
-| | **Alpha Card Studio** | HTML5 Canvas, Crypto APIs | 1200×675 HD viral card exports with on-chain watermarks | **Certified testnet stamps**, 1-click clipboard / X share |
-| **2. Intelligence & Worker Tier** | **Snapshot Polling Worker** | Node.js, Express, TypeScript | Scans 500+ contracts every 10s via GraphQL indexer | Detects $\Delta P \ge 10\%$ surges within 1 block time |
-| | **News Ingestion & RAG** | RSS Ingestion Engine | Ingests real-world crypto news streams continuously | Direct source verification, zero hallucinated claims |
-| | **Dual Debate Engine** | LLM Gateway (Gemini, Groq) | Adversarial Alpha Bull vs Macro Bear reasoning | Strict JSON validation, explicit separation of bull/bear cases |
-| | **Quantitative Pricing Core** | Chebyshev Approximation Core | Black-Scholes $\Phi(d2)$, Half-Kelly, Velocity Coverage ($VC$) | Rational error bound $|\varepsilon| < 1.5 \times 10^{-7}$ |
-| | **Settlement Sweeper Engine** | Batch Scanning Worker | Indexes matured contracts and calculates claimable payouts | **Recovers 100% of stranded capital** across expired pools |
-| **3. Autonomous Swarm Tier** | **⚡ Volt** | Algorithmic Bot Runner | Spike momentum hunter sniping sudden orderbook volume surges | Trigger: $\Delta P / \Delta t > \text{threshold}$ |
-| | **🔮 Oracle** | Algorithmic Bot Runner | Cross-venue arbitrageur exploiting Binance spot vs CLOB lag | Trigger: $\|P_{\text{spot}} - P_{\text{clob}}\| > 50\text{ bps}$ |
-| | **🛡️ Titan** | Algorithmic Bot Runner | Two-sided quantitative market maker providing bid-ask liquidity | Maintains spread $< 40\text{ bps}$ around fair probability |
-| | **🧹 Sweeper** | Algorithmic Bot Runner | Automated listener batch-claiming matured YES/NO tokens | Trigger: $\text{Expiry} < \text{Now} \ \&\ \text{Claimable} > 0$ |
-| **4. Blockchain & Protocol Tier** | **DreamDEX CLOB Contracts** | Solidity, `BinaryPool`, `BinaryMarket` | Central limit order book execution, collateral escrow | Non-custodial settlement, deterministic payouts |
-| | **GraphQL Indexer** | `dev.smk.somnia.host` | High-cadence indexing of active markets, orders, and venues | **Sub-second query response** across 500+ active pools |
-| | **Somnia Shannon Testnet** | Somnia L1 (`Chain ID: 50312`) | High-throughput execution with IceDB & sub-second block finality | **100k+ TPS**, sub-cent gas fees, EVM compatibility |
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🖥️ TIER 1: PRESENTATION & CLIENT-SIDE COCKPIT                                                     │
+├────────────────────────────────┬───────────────────────────────┬────────────────────────────────┤
+│ Subsystem / Component          │ Technology Stack              │ Guaranteed SLA & Invariants    │
+├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
+│ • Bento Trading Cockpit        │ React 19, Vite 6, Tailwind    │ 0 page reloads, dark contrast  │
+│ • Real-Time Probability Canvas │ Recharts, SVG Sparklines      │ Sub-second timeline rendering  │
+│ • Simulation Lab Sliders       │ Client TypeScript Math Core   │ 0ms network latency on PnL     │
+│ • Alpha Card Studio            │ HTML5 Canvas, Web Share APIs  │ 1200×675 HD on-chain export    │
+└────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🧠 TIER 2: INTELLIGENCE & WORKER PROCESSING LAYER                                                │
+├────────────────────────────────┬───────────────────────────────┬────────────────────────────────┤
+│ Subsystem / Component          │ Technology Stack              │ Guaranteed SLA & Invariants    │
+├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
+│ • Snapshot Polling Worker      │ Node.js, Express, TypeScript  │ 10s cadence across 500+ pools  │
+│ • News Ingestion & RAG         │ RSS Ingestion Stream          │ 100% verified source citations │
+│ • Dual Debate Engine           │ Gemini / Groq LLM Gateways    │ Strict Zod schema, <1.5s delay │
+│ • Quantitative Pricing Core    │ Chebyshev Rational Approx     │ Rational error |ε| < 1.5×10⁻⁷  │
+│ • Settlement Sweeper Engine    │ Batch Scanning Worker         │ Recovers 100% stranded capital │
+└────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🤖 TIER 3: AUTONOMOUS SWARM AGENT RUNNERS                                                        │
+├────────────────────────────────┬───────────────────────────────┬────────────────────────────────┤
+│ Agent Persona                  │ Operational Trigger           │ Execution & Strategy Invariant │
+├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
+│ • ⚡ Volt (Spike Hunter)       │ ΔP / Δt > threshold (1 block) │ Immediate momentum snipe       │
+│ • 🔮 Oracle (Arbitrageur)      │ |P_spot - P_clob| > 50 bps    │ Exploits Binance vs CLOB drift │
+│ • 🛡️ Titan (Market Maker)      │ Continuous quoting loop       │ Maintains spread < 40 bps      │
+│ • 🧹 Sweeper (Claim Bot)       │ Expiry < Now & Claimable > 0  │ Automated batch payout sweeps  │
+└────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ⛓️ TIER 4: BLOCKCHAIN & SOMNIA L1 PROTOCOL LAYER                                                  │
+├────────────────────────────────┬───────────────────────────────┬────────────────────────────────┤
+│ Protocol Component             │ Network & Contract Layer      │ Guaranteed SLA & Invariants    │
+├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
+│ • DreamDEX CLOB Contracts      │ Solidity, BinaryPool, Viem    │ Non-custodial escrow & orders  │
+│ • GraphQL Indexer              │ dev.smk.somnia.host           │ Sub-second indexer query speed │
+│ • Somnia Shannon Testnet       │ Somnia L1 (Chain ID: 50312)   │ 100k+ TPS, <1s block finality  │
+└────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
+```
 
 ---
 
