@@ -199,6 +199,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
   const cockpitRef = useRef<HTMLDivElement>(null);
   const [cockpitRotate, setCockpitRotate] = useState({ x: 0, y: 0 });
   const [cockpitGlare, setCockpitGlare] = useState({ x: 50, y: 50, opacity: 0 });
+  const [isCockpitHovered, setIsCockpitHovered] = useState(false);
 
   const handleCockpitMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!cockpitRef.current) return;
@@ -206,17 +207,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     setCockpitRotate({
-      x: -y * 8, // 8 deg max tilt on X
-      y: x * 10, // 10 deg max tilt on Y
+      x: -y * 18, // 18 deg max tilt on X (increased from 8)
+      y: x * 22,  // 22 deg max tilt on Y (increased from 10)
     });
     setCockpitGlare({
       x: ((e.clientX - rect.left) / rect.width) * 100,
       y: ((e.clientY - rect.top) / rect.height) * 100,
-      opacity: 0.18,
+      opacity: 0.28,
     });
   }, []);
 
+  const handleCockpitMouseEnter = useCallback(() => {
+    setIsCockpitHovered(true);
+  }, []);
+
   const handleCockpitMouseLeave = useCallback(() => {
+    setIsCockpitHovered(false);
     setCockpitRotate({ x: 0, y: 0 });
     setCockpitGlare((prev) => ({ ...prev, opacity: 0 }));
   }, []);
@@ -225,6 +231,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
   const snippetRef = useRef<HTMLDivElement>(null);
   const [snippetRotate, setSnippetRotate] = useState({ x: 0, y: 0 });
   const [snippetGlare, setSnippetGlare] = useState({ x: 50, y: 50, opacity: 0 });
+  const [isSnippetHovered, setIsSnippetHovered] = useState(false);
 
   const handleSnippetMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!snippetRef.current) return;
@@ -232,17 +239,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     setSnippetRotate({
-      x: -y * 8,
-      y: x * 10,
+      x: -y * 18, // 18 deg max tilt on X
+      y: x * 22,  // 22 deg max tilt on Y
     });
     setSnippetGlare({
       x: ((e.clientX - rect.left) / rect.width) * 100,
       y: ((e.clientY - rect.top) / rect.height) * 100,
-      opacity: 0.18,
+      opacity: 0.28,
     });
   }, []);
 
+  const handleSnippetMouseEnter = useCallback(() => {
+    setIsSnippetHovered(true);
+  }, []);
+
   const handleSnippetMouseLeave = useCallback(() => {
+    setIsSnippetHovered(false);
     setSnippetRotate({ x: 0, y: 0 });
     setSnippetGlare((prev) => ({ ...prev, opacity: 0 }));
   }, []);
@@ -425,26 +437,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
           <div
             ref={cockpitRef}
             onMouseMove={handleCockpitMouseMove}
+            onMouseEnter={handleCockpitMouseEnter}
             onMouseLeave={handleCockpitMouseLeave}
-            className="lg:col-span-6 w-full perspective-1000 select-none relative z-10"
+            className="lg:col-span-6 w-full perspective-[750px] select-none relative z-10"
           >
             <div
               style={{
-                transform: `perspective(1000px) rotateX(${cockpitRotate.x}deg) rotateY(${cockpitRotate.y}deg)`,
-                transition: "transform 0.15s ease-out",
+                transform: `perspective(750px) rotateX(${cockpitRotate.x}deg) rotateY(${cockpitRotate.y}deg)`,
+                transformStyle: "preserve-3d",
+                transition: "transform 0.12s ease-out, box-shadow 0.2s ease-out",
+                boxShadow: isCockpitHovered
+                  ? `${-cockpitRotate.y * 2.2}px ${cockpitRotate.x * 2.2 + 28}px 65px rgba(0,0,0,0.85), ${-cockpitRotate.y * 0.8}px ${cockpitRotate.x * 0.8}px 35px rgba(124,58,237,0.35)`
+                  : "0 15px 50px rgba(0,0,0,0.6)",
               }}
-              className="terminal-panel rounded-none overflow-hidden border border-white/[0.12] bg-[#0A0A12]/95 backdrop-blur-2xl shadow-[0_15px_50px_rgba(0,0,0,0.6)] transform-3d relative"
+              className="terminal-panel rounded-none overflow-hidden border border-white/[0.16] bg-[#0A0A12]/95 backdrop-blur-2xl transform-3d relative"
             >
               {/* Dynamic Specular Glare Reflection */}
               <div
                 className="pointer-events-none absolute inset-0 z-30 transition-opacity duration-300 rounded-none"
                 style={{
-                  background: `radial-gradient(circle 400px at ${cockpitGlare.x}% ${cockpitGlare.y}%, rgba(255,255,255,${cockpitGlare.opacity}), transparent 80%)`,
+                  background: `radial-gradient(circle 420px at ${cockpitGlare.x}% ${cockpitGlare.y}%, rgba(255,255,255,${cockpitGlare.opacity}), rgba(139,92,246,${cockpitGlare.opacity * 0.5}) 40%, transparent 80%)`,
                 }}
               />
               
-              {/* Terminal Window Header */}
-              <div className="h-10 bg-[#07070C] border-b border-white/[0.08] px-4 flex items-center justify-between text-xs font-mono text-zinc-400">
+              {/* Terminal Window Header (3D Elevated Layer) */}
+              <div
+                style={{ transform: "translateZ(18px)" }}
+                className="h-10 bg-[#07070C] border-b border-white/[0.08] px-4 flex items-center justify-between text-xs font-mono text-zinc-400"
+              >
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-rose-500/90 shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
                   <div className="w-2.5 h-2.5 rounded-full bg-amber-500/90 shadow-[0_0_6px_rgba(245,158,11,0.6)]" />
@@ -459,8 +479,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 </div>
               </div>
 
-              {/* Sub-Header & Navigation Tabs */}
-              <div className="p-3.5 border-b border-white/[0.08] bg-[#0C0C14] flex flex-wrap items-center justify-between gap-3">
+              {/* Sub-Header & Navigation Tabs (3D Elevated Layer) */}
+              <div
+                style={{ transform: "translateZ(28px)" }}
+                className="p-3.5 border-b border-white/[0.08] bg-[#0C0C14] flex flex-wrap items-center justify-between gap-3"
+              >
                 <div className="flex items-center gap-2.5 font-mono">
                   <CryptoIcon symbol={heroMarket?.underlyingAsset || "BTC"} size={22} />
                   <div>
@@ -479,12 +502,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 </div>
 
                 {/* Switcher Tabs with Sharp Rectangular Borders */}
-                <div className="flex items-center bg-[#07070B] p-0.5 border border-white/[0.08] text-[11px] font-mono rounded-none">
+                <div
+                  style={{ transform: "translateZ(34px)" }}
+                  className="flex items-center bg-[#07070B] p-0.5 border border-white/[0.08] text-[11px] font-mono rounded-none shadow-sm"
+                >
                   <button
                     onClick={() => setActiveCockpitTab("curve")}
                     className={`px-3 py-1 rounded-none transition-all ${
                       activeCockpitTab === "curve"
-                        ? "bg-violet-600/30 text-violet-200 border border-violet-500/50 font-semibold"
+                        ? "bg-violet-600/30 text-violet-200 border border-violet-500/50 font-semibold shadow-[0_0_10px_rgba(124,58,237,0.3)]"
                         : "text-zinc-400 hover:text-zinc-200"
                     }`}
                   >
@@ -494,7 +520,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                     onClick={() => setActiveCockpitTab("debate")}
                     className={`px-3 py-1 rounded-none transition-all ${
                       activeCockpitTab === "debate"
-                        ? "bg-violet-600/30 text-violet-200 border border-violet-500/50 font-semibold"
+                        ? "bg-violet-600/30 text-violet-200 border border-violet-500/50 font-semibold shadow-[0_0_10px_rgba(124,58,237,0.3)]"
                         : "text-zinc-400 hover:text-zinc-200"
                     }`}
                   >
@@ -504,7 +530,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                     onClick={() => setActiveCockpitTab("scenario")}
                     className={`px-3 py-1 rounded-none transition-all ${
                       activeCockpitTab === "scenario"
-                        ? "bg-violet-600/30 text-violet-200 border border-violet-500/50 font-semibold"
+                        ? "bg-violet-600/30 text-violet-200 border border-violet-500/50 font-semibold shadow-[0_0_10px_rgba(124,58,237,0.3)]"
                         : "text-zinc-400 hover:text-zinc-200"
                     }`}
                   >
@@ -518,10 +544,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 {/* Tab 1: Probability Curve */}
                 {activeCockpitTab === "curve" && (
                   <div className="flex flex-col justify-between h-full space-y-2">
-                    <div className="flex items-start justify-between">
+                    <div
+                      style={{ transform: "translateZ(42px)" }}
+                      className="flex items-start justify-between"
+                    >
                       <div>
                         <div className="text-[11px] font-mono text-zinc-400">Current Implied Odds</div>
-                        <div className="text-3xl font-bold font-mono text-white tabular-nums">
+                        <div className="text-3xl font-bold font-mono text-white tabular-nums tracking-tight drop-shadow-[0_0_12px_rgba(255,255,255,0.25)]">
                           {heroMarket?.midPrice ? `${(heroMarket.midPrice * 100).toFixed(1)}%` : "62.4%"}
                         </div>
                       </div>
@@ -537,7 +566,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                     </div>
 
                     {/* SVG Curve */}
-                    <div className="h-32 w-full relative flex items-end">
+                    <div
+                      style={{ transform: "translateZ(26px)" }}
+                      className="h-32 w-full relative flex items-end"
+                    >
                       <svg className="w-full h-full overflow-visible" viewBox="0 0 500 120">
                         <defs>
                           <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
@@ -558,14 +590,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                         <circle cx="390" cy="28" r="4" fill="#10B981" stroke="#FFFFFF" strokeWidth="1.5" />
                       </svg>
 
-                      <div className="absolute top-2 right-12 bg-[#141420] border border-violet-500/50 px-2 py-0.5 text-[10px] font-mono text-violet-200 flex items-center gap-1.5 shadow-sm rounded-none">
+                      <div
+                        style={{ transform: "translateZ(48px)" }}
+                        className="absolute top-2 right-12 bg-[#141420] border border-violet-500/70 px-2.5 py-0.5 text-[10px] font-mono text-violet-200 flex items-center gap-1.5 shadow-[0_4px_15px_rgba(0,0,0,0.5)] rounded-none"
+                      >
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                        <span className="font-medium">SPIKE POINT (+12.8%)</span>
+                        <span className="font-semibold">SPIKE POINT (+12.8%)</span>
                       </div>
                     </div>
 
                     {/* Timeline labels */}
-                    <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 border-t border-white/[0.06] pt-2">
+                    <div
+                      style={{ transform: "translateZ(20px)" }}
+                      className="flex items-center justify-between text-[10px] font-mono text-zinc-500 border-t border-white/[0.06] pt-2"
+                    >
                       <span>-3h</span>
                       <span>-2h</span>
                       <span>-1h</span>
@@ -577,7 +615,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
                 {/* Tab 2: Dual AI Debate */}
                 {activeCockpitTab === "debate" && (
-                  <div className="flex flex-col justify-between h-full space-y-3">
+                  <div
+                    style={{ transform: "translateZ(30px)" }}
+                    className="flex flex-col justify-between h-full space-y-3"
+                  >
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2 text-xs font-mono">
                       <div className="flex items-center gap-2">
                         <button
@@ -604,7 +645,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                       <span className="text-[10px] text-zinc-500 font-mono">SAMPLE PREVIEW</span>
                     </div>
 
-                    <div className="p-3 bg-[#0E0E17] border border-white/[0.08] text-xs leading-relaxed flex-1 flex flex-col justify-between rounded-none">
+                    <div className="p-3 bg-[#0E0E17] border border-white/[0.08] text-xs leading-relaxed flex-1 flex flex-col justify-between rounded-none shadow-inner">
                       {activeDebateSide === "bull" ? (
                         <p className="text-zinc-300 font-sans text-xs">
                           <strong className="text-emerald-400 font-mono font-medium">Bull Case:</strong> Aggressive spot bid absorbing CLOB liquidity walls after positive ETF flow reports. Implied volatility premium suggests momentum continuation toward strike level.
@@ -626,7 +667,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
                 {/* Tab 3: Interactive Scenario Simulator */}
                 {activeCockpitTab === "scenario" && (
-                  <div className="flex flex-col justify-between h-full space-y-3 font-mono text-xs">
+                  <div
+                    style={{ transform: "translateZ(32px)" }}
+                    className="flex flex-col justify-between h-full space-y-3 font-mono text-xs"
+                  >
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
                       <div className="bg-[#0E0E17] p-2.5 border border-white/[0.08] flex items-center justify-between rounded-none">
                         <span className="text-zinc-400">Velocity Coverage:</span>
@@ -654,7 +698,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                       />
                     </div>
 
-                    <div className="flex items-center justify-between bg-[#0E0E17] p-2.5 border border-white/[0.08] rounded-none">
+                    <div className="flex items-center justify-between bg-[#0E0E17] p-2.5 border border-white/[0.08] rounded-none shadow-inner">
                       <span className="text-zinc-400 text-xs">Scenario PnL:</span>
                       <span className="font-bold text-emerald-400 text-sm tabular-nums">
                         +${pnl.toFixed(2)} ({roiNum > 0 ? `+${roi}%` : `${roi}%`} ROI)
@@ -665,10 +709,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
               </div>
 
               {/* Widget Footer CTA */}
-              <div className="p-3 bg-[#07070C] border-t border-white/[0.08]">
+              <div
+                style={{ transform: "translateZ(24px)" }}
+                className="p-3 bg-[#07070C] border-t border-white/[0.08]"
+              >
                 <button
                   onClick={onLaunchTerminal}
-                  className="rounded-none w-full py-2.5 bg-violet-600/20 hover:bg-violet-600/30 text-violet-200 border border-violet-500/40 text-xs font-mono font-medium transition-all flex items-center justify-center gap-2"
+                  className="rounded-none w-full py-2.5 bg-violet-600/25 hover:bg-violet-600/40 text-violet-200 border border-violet-500/50 text-xs font-mono font-medium transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(124,58,237,0.25)] active:scale-[0.99]"
                 >
                   <span>Open Full Cockpit in Terminal</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -936,25 +983,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
             <div
               ref={snippetRef}
               onMouseMove={handleSnippetMouseMove}
+              onMouseEnter={handleSnippetMouseEnter}
               onMouseLeave={handleSnippetMouseLeave}
-              className="lg:col-span-7 w-full perspective-1000 select-none relative z-10"
+              className="lg:col-span-7 w-full perspective-[750px] select-none relative z-10"
             >
               <div
                 style={{
-                  transform: `perspective(1000px) rotateX(${snippetRotate.x}deg) rotateY(${snippetRotate.y}deg)`,
-                  transition: "transform 0.15s ease-out",
+                  transform: `perspective(750px) rotateX(${snippetRotate.x}deg) rotateY(${snippetRotate.y}deg)`,
+                  transformStyle: "preserve-3d",
+                  transition: "transform 0.12s ease-out, box-shadow 0.2s ease-out",
+                  boxShadow: isSnippetHovered
+                    ? `${-snippetRotate.y * 2.2}px ${snippetRotate.x * 2.2 + 28}px 65px rgba(0,0,0,0.85), ${-snippetRotate.y * 0.8}px ${snippetRotate.x * 0.8}px 35px rgba(124,58,237,0.35)`
+                    : "0 15px 50px rgba(0,0,0,0.6)",
                 }}
-                className="terminal-panel rounded-none border border-white/[0.12] bg-[#07070F]/95 p-4 sm:p-5 font-mono text-[11px] text-zinc-300 overflow-hidden text-left shadow-[0_15px_50px_rgba(0,0,0,0.6)] transform-3d relative"
+                className="terminal-panel rounded-none border border-white/[0.16] bg-[#07070F]/95 p-4 sm:p-5 font-mono text-[11px] text-zinc-300 overflow-hidden text-left transform-3d relative"
               >
                 {/* Dynamic Specular Glare Reflection */}
                 <div
                   className="pointer-events-none absolute inset-0 z-30 transition-opacity duration-300 rounded-none"
                   style={{
-                    background: `radial-gradient(circle 350px at ${snippetGlare.x}% ${snippetGlare.y}%, rgba(255,255,255,${snippetGlare.opacity}), transparent 80%)`,
+                    background: `radial-gradient(circle 420px at ${snippetGlare.x}% ${snippetGlare.y}%, rgba(255,255,255,${snippetGlare.opacity}), rgba(139,92,246,${snippetGlare.opacity * 0.5}) 40%, transparent 80%)`,
                   }}
                 />
 
-                <div className="flex items-center justify-between text-zinc-400 border-b border-white/[0.08] pb-3 mb-3.5">
+                {/* Snippet Header (3D Elevated Layer) */}
+                <div
+                  style={{ transform: "translateZ(22px)" }}
+                  className="flex items-center justify-between text-zinc-400 border-b border-white/[0.08] pb-3 mb-3.5"
+                >
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-rose-500/90 shadow-[0_0_6px_rgba(244,63,94,0.6)]" />
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-500/90 shadow-[0_0_6px_rgba(245,158,11,0.6)]" />
@@ -963,13 +1019,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                       somnia-execution-snippet.ts
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono px-2 py-0.5 bg-violet-950/80 text-violet-300 border border-violet-500/40 font-medium rounded-none">
+                  <div
+                    style={{ transform: "translateZ(34px)" }}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="text-[10px] font-mono px-2 py-0.5 bg-violet-950/80 text-violet-300 border border-violet-500/40 font-medium rounded-none shadow-sm">
                       TypeScript
                     </span>
                     <button
                       onClick={handleCopySnippet}
-                      className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] text-[10px] transition-all cursor-pointer rounded-none"
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] text-[10px] transition-all cursor-pointer rounded-none active:scale-[0.97]"
                       title="Copy full code"
                     >
                       {copiedSnippet ? (
@@ -987,7 +1046,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   </div>
                 </div>
 
-                <pre className="leading-relaxed text-zinc-300 font-mono text-[11px] overflow-hidden">
+                {/* Snippet Code Pre Block (3D Elevated Layer) */}
+                <pre
+                  style={{ transform: "translateZ(32px)" }}
+                  className="leading-relaxed text-zinc-300 font-mono text-[11px] overflow-hidden drop-shadow-sm"
+                >
                   <span className="text-purple-400">import</span> {"{ SomniaMarkets }"} <span className="text-purple-400">from</span> <span className="text-emerald-400">"@somnia-chain/markets-sdk"</span>;{"\n\n"}
                   <span className="text-zinc-500">// 1. Initialize ForeSight client on Somnia Shannon L1</span>{"\n"}
                   <span className="text-purple-400">const</span> exchange = <span className="text-purple-400">new</span> <span className="text-yellow-300">SomniaMarkets</span>({"{\n"}
@@ -1004,7 +1067,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   {"}"});
                 </pre>
 
-                <div className="mt-3 pt-2.5 border-t border-white/[0.04] flex items-center justify-between text-[10px] text-zinc-500 font-mono">
+                {/* Snippet Footer (3D Elevated Layer) */}
+                <div
+                  style={{ transform: "translateZ(20px)" }}
+                  className="mt-3 pt-2.5 border-t border-white/[0.04] flex items-center justify-between text-[10px] text-zinc-500 font-mono"
+                >
                   <span>// Click 'Copy' above to grab the full production snippet</span>
                   <span className="text-violet-400">@somnia-chain/markets-sdk</span>
                 </div>
