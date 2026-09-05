@@ -113,7 +113,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  // Connect Handler
+  // Connect Handler (triggers native MetaMask account selection & permission popup)
   const connectWallet = useCallback(async (type: "metamask" | "injected" = "metamask"): Promise<boolean> => {
     const ethereum = (window as any).ethereum;
     if (!ethereum) {
@@ -123,9 +123,34 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setIsConnecting(true);
     try {
-      const accounts = await ethereum.request({
-        method: "eth_requestAccounts",
-      });
+      let accounts: string[] = [];
+
+      // Force MetaMask / Web3 provider to pop up the native account connection window
+      try {
+        const permissions = await ethereum.request({
+          method: "wallet_requestPermissions",
+          params: [{ eth_accounts: {} }],
+        });
+        const accountsPermission = Array.isArray(permissions)
+          ? permissions.find((p: any) => p.parentCapability === "eth_accounts")
+          : null;
+        if (accountsPermission && accountsPermission.caveats?.[0]?.value) {
+          accounts = accountsPermission.caveats[0].value;
+        }
+      } catch (permErr: any) {
+        // Code 4001 means user rejected / closed the MetaMask popup
+        if (permErr?.code === 4001) {
+          setIsConnecting(false);
+          return false;
+        }
+      }
+
+      // If permissions API didn't return accounts or wasn't supported, fallback to standard eth_requestAccounts
+      if (!accounts || accounts.length === 0) {
+        accounts = await ethereum.request({
+          method: "eth_requestAccounts",
+        });
+      }
 
       if (accounts && accounts.length > 0) {
         const userAddress = accounts[0];

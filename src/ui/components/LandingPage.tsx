@@ -3,6 +3,7 @@ import { CyberBackground } from "./CyberBackground.js";
 import { ForeSightLogo } from "./ForeSightLogo.js";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { TechIcon } from "./TechIcon.js";
+import { MarketTicker } from "./MarketTicker.js";
 import { apiUrl } from "../utils/api.js";
 import {
   Zap,
@@ -35,14 +36,6 @@ interface LandingPageProps {
   onLaunchTerminal: () => void;
 }
 
-interface TickerItem {
-  pair: string;
-  prob: string;
-  change: string;
-  isUp: boolean;
-  spike: boolean;
-}
-
 interface MarketItem {
   symbol: string;
   question?: string;
@@ -51,15 +44,6 @@ interface MarketItem {
   priceChange?: number;
   strikePrice?: number;
 }
-
-const DEFAULT_TICKERS: TickerItem[] = [
-  { pair: "BTC > $78.5K (16:00 UTC)", prob: "62.4%", change: "+14.2%", isUp: true, spike: true },
-  { pair: "ETH > $2,480 Strike", prob: "48.0%", change: "-3.5%", isUp: false, spike: false },
-  { pair: "SOMI / USDso", prob: "$0.1090", change: "+4.1%", isUp: true, spike: false },
-  { pair: "FED Rate Cut Nov", prob: "78.5%", change: "+19.0%", isUp: true, spike: true },
-  { pair: "SOL > $185 Strike", prob: "54.2%", change: "+6.8%", isUp: true, spike: false },
-  { pair: "TRUMP Polymarket Arb", prob: "51.8%", change: "-1.2%", isUp: false, spike: false },
-];
 
 const TECH_STACK_ROW_1 = [
   {
@@ -264,7 +248,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
   }, []);
 
   // ─── State Management ──────────────────────────────────────────────
-  const [liveTickers, setLiveTickers] = useState<TickerItem[]>(DEFAULT_TICKERS);
   const [heroMarket, setHeroMarket] = useState<MarketItem | null>(null);
   const [activeCockpitTab, setActiveCockpitTab] = useState<"curve" | "debate" | "scenario">("curve");
   const [activeDebateSide, setActiveDebateSide] = useState<"bull" | "bear">("bull");
@@ -278,25 +261,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
     let isMounted = true;
     const fetchLiveLandingData = async () => {
       try {
-        const [tickerRes, marketRes] = await Promise.all([
-          fetch(apiUrl("/api/tickers")),
-          fetch(apiUrl("/api/markets?limit=10")),
-        ]);
-
-        if (tickerRes.ok) {
-          const tData = await tickerRes.json();
-          if (tData.tickers && tData.tickers.length > 0 && isMounted) {
-            setLiveTickers(
-              tData.tickers.map((t: any) => ({
-                pair: t.symbol,
-                prob: `${(t.probability ?? 50).toFixed(1)}%`,
-                change: `${t.change >= 0 ? "+" : ""}${(t.change ?? 0).toFixed(1)}%`,
-                isUp: (t.change ?? 0) >= 0,
-                spike: Math.abs(t.change ?? 0) >= 8,
-              }))
-            );
-          }
-        }
+        const marketRes = await fetch(apiUrl("/api/markets?limit=10"));
 
         if (marketRes.ok) {
           const mData = await marketRes.json();
@@ -337,10 +302,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
   const pnl = exitValue - simCapital;
   const roiNum = (pnl / simCapital) * 100;
   const roi = roiNum.toFixed(1);
-
-  // ─── Ticker Tape Continuous Loop Timing ─────────────────────────────
-  const repeatedTickers = Array(3).fill(liveTickers).flat();
-  const tickerDurationSec = Math.max(50, Math.round((repeatedTickers.length * 200) / 25));
 
   const handleCopySnippet = useCallback(() => {
     navigator.clipboard.writeText(CODE_SNIPPET_TEXT);
@@ -385,44 +346,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
         </div>
       </header>
 
-      {/* ─── Live Market Tape ────────────────────────────────────────── */}
-      <div className="w-full bg-[#09090F]/95 backdrop-blur-md border-b border-white/[0.08] overflow-hidden py-1.5 z-40 text-[11px] font-mono select-none mt-14 relative">
-        <div className="relative flex items-center">
-          <div
-            className="ticker-track flex items-center gap-0"
-            style={{
-              animation: `ticker ${tickerDurationSec}s linear infinite`,
-              willChange: "transform",
-            }}
-          >
-            {[0, 1].map((stripIdx) => (
-              <div key={stripIdx} className="flex items-center gap-3 pr-3 whitespace-nowrap flex-shrink-0">
-                {repeatedTickers.map((item, idx) => (
-                  <div
-                    key={`${stripIdx}-${idx}`}
-                    className="inline-flex items-center gap-2 px-3 py-1 bg-[#0D0D15] border border-white/[0.08] hover:border-violet-500/50 cursor-pointer transition-all text-xs rounded-none"
-                    onClick={onLaunchTerminal}
-                  >
-                    <span className="text-zinc-400 font-normal">{item.pair}</span>
-                    <span className="text-white font-medium tabular-nums">{item.prob}</span>
-                    <span
-                      className={`inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums ${
-                        item.isUp ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {item.isUp ? "▲" : "▼"} {item.change}
-                    </span>
-                    {item.spike && (
-                      <span className="text-[9px] px-1.5 py-0.2 bg-violet-950/80 text-violet-300 border border-violet-500/50 font-medium rounded-none">
-                        SPIKE
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* ─── Live Market Tape (Unified Somnia L1 Tape) ─────────────── */}
+      <div className="mt-14 z-40 relative">
+        <MarketTicker />
       </div>
 
       {/* ─── Hero Section: Asymmetric Terminal Cockpit ───────────────── */}

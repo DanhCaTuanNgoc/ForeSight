@@ -14,66 +14,17 @@ import {
 } from "lucide-react";
 import { useWallet, SOMNIA_SHANNON_CHAIN_ID } from "../context/WalletContext.js";
 
-// Official MetaMask SVG Fox Icon
+// Official MetaMask Logo Image
 const MetaMaskIcon = () => (
-  <svg className="w-7 h-7" viewBox="0 0 318.6 318.6" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M274.1 35.5l-99.5 73.9L194 62.3l80.1-26.8z"
-      fill="#E2761B"
-      stroke="#E2761B"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M44.5 35.5l98.8 74.5-18.7-47.8-80.1-26.7zM245.4 234.3l-26.6 39.5 56.4 15.6 16.3-54.6-46.1-.5zM27.2 234.8l16.2 54.6 56.4-15.6-26.5-39.5-46.1.5z"
-      fill="#E4761B"
-      stroke="#E4761B"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M87.3 125.8l-15.8 23.9 56.3 2.5-2-40.3-38.5 13.9zM231.3 125.8l-38.8-14-1.7 40.5 56.3-2.5-15.8-24zM99.9 289.4l34.4-16.8-29.6-23-4.8 39.8zM184.3 272.6l34.4 16.8-4.8-39.8-29.6 23z"
-      fill="#E4761B"
-      stroke="#E4761B"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M218.7 289.4l-34.4-16.8 2.3 19.3.2 8.3 31.9-10.8zM99.9 289.4l31.9 10.8.3-8.3 2.2-19.3-34.4 16.8z"
-      fill="#D7C1B3"
-      stroke="#D7C1B3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M133.6 220.7l-28.7-8.4 20.3-9.3 8.4 17.7zM185 220.7l8.4-17.7 20.4 9.3-28.8 8.4z"
-      fill="#233447"
-      stroke="#233447"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M104.9 212.3l28.7 8.4-2.8 22.7-25.9-31.1zM185 220.7l28.8-8.4-26 31.1-2.8-22.7z"
-      fill="#CD6116"
-      stroke="#CD6116"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M130.8 243.4l2.8-22.7-8.4-17.7-37.9 11.8 26.5 39.5-2.2 19.3 19.2-30.2zM187.8 220.7l2.8 22.7 19.2 30.2-2.2-19.3 26.5-39.5-37.9-11.8-8.4 17.7z"
-      fill="#E4751F"
-      stroke="#E4751F"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M190.6 243.4l-2.8-22.7H130.8l-2.8 22.7-19.2 30.2 24.8 13.9 25.7 18 25.7-18 24.8-13.9-19.2-30.2z"
-      fill="#F6851B"
-      stroke="#F6851B"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
+  <img
+    src="/metamask.png"
+    alt="MetaMask"
+    className="w-7 h-7 object-contain flex-shrink-0"
+    onError={(e) => {
+      // Fallback if image asset fails to load
+      (e.target as HTMLElement).style.display = "none";
+    }}
+  />
 );
 
 export const WalletModal: React.FC = () => {
@@ -122,12 +73,12 @@ export const WalletModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px] animate-fadeIn">
       {/* Click backdrop to close */}
-      <div className="absolute inset-0" onClick={closeWalletModal} />
+      <div className="absolute inset-0 cursor-pointer" onClick={closeWalletModal} />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-md bg-[#08080E] border border-white/[0.08] rounded-none p-6 shadow-2xl z-10 space-y-5 text-gray-200 font-mono">
+      <div className="relative w-full max-w-md bg-[#08080E]/95 border border-white/[0.12] rounded-none p-6 shadow-[0_20px_60px_rgba(0,0,0,0.8)] z-10 space-y-5 text-gray-200 font-mono backdrop-blur-xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.07] pb-4">
           <div className="flex items-center gap-3">

@@ -1,13 +1,14 @@
 import React from "react";
-import { TrendingUp, BarChart3, ArrowUpDown, Shield } from "lucide-react";
+import { TrendingUp, BarChart3, ArrowUpDown, Shield, Sparkles } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 
 interface MarketStatsProps {
   market: any;
   serverMode?: string;
+  onOpenDebate?: () => void;
 }
 
-export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) => {
+export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode, onOpenDebate }) => {
   if (!market) return null;
 
   const prob = market.probability ?? 50;
@@ -92,6 +93,20 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
             ${market.volume24h ? `${(market.volume24h / 1000).toFixed(0)}K` : "$100K"}
           </span>
         </div>
+
+        {/* Dual AI Debate Button */}
+        {onOpenDebate && (
+          <div className="flex items-center pl-3 xl:pl-4">
+            <button
+              onClick={onOpenDebate}
+              className="px-2.5 py-1.5 bg-violet-600/20 hover:bg-violet-600/30 text-violet-200 border border-violet-500/40 hover:border-violet-400 font-mono text-[10px] font-bold flex items-center gap-1.5 transition-all cursor-pointer rounded-none shadow-sm active:scale-95"
+              title="Open Dual AI Debate (Alpha Bull vs Macro Bear)"
+            >
+              <Sparkles className="w-3 h-3 text-violet-400 animate-pulse" />
+              <span>AI DEBATE</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

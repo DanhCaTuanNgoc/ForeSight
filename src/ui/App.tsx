@@ -659,7 +659,11 @@ function ForeSightTerminalApp() {
             {/* ── CENTER COLUMN: Visual Intelligence Canvas & Order Simulator ── */}
             <main className="flex-1 flex flex-col min-w-0 bg-[#07070A] overflow-hidden">
               {/* Header Stats Bar */}
-              <MarketStats market={activeMarket} serverMode={health?.mode} />
+              <MarketStats
+                market={activeMarket}
+                serverMode={health?.mode}
+                onOpenDebate={() => setIsDebateModalOpen(true)}
+              />
 
               {/* Unified Visual Board (Zero-Scroll Bento Split) */}
               <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
@@ -709,6 +713,7 @@ function ForeSightTerminalApp() {
                   showToast(`Selected $${price.toFixed(3)} from Orderbook as Entry Odds!`, "success");
                 }}
                 onViewInsights={() => setActiveTab("insights")}
+                onViewDebate={() => setIsDebateModalOpen(true)}
               />
             </aside>
           </div>
