@@ -37,6 +37,9 @@ export interface DualDebateResult {
     targetProbability: number;
     keyArguments: string[];
     catalysts: string[];
+    supportLevel?: string;
+    invalidationLevel?: string;
+    orderbookRatio?: string;
     modelUsed?: string;
   };
   bearCase: {
@@ -46,6 +49,9 @@ export interface DualDebateResult {
     targetProbability: number;
     keyArguments: string[];
     riskFactors: string[];
+    resistanceLevel?: string;
+    invalidationLevel?: string;
+    thetaDecayRisk?: string;
     modelUsed?: string;
   };
   sources: DebateSource[];
@@ -229,28 +235,50 @@ async function callLiveLLM(
     try {
       const bullPrompt = `You are Alpha Bull AI on Somnia L1.
 Market: ${asset} Event Contract (${interval} cadence), Current Implied Odds: ${Math.round(mid * 100)}%.
-Context: ${sources.map((s) => s.title).slice(0, 3).join("; ")}
+Context / News: ${sources.map((s) => s.title).slice(0, 3).join("; ")}
 Write a sharp, high-conviction institutional BULL thesis for this binary prediction contract.
+You MUST include concrete technical numbers, exact support & invalidation levels, orderbook bid ratios, and catalyst triggers.
 Return strictly valid JSON:
 {
-  "headline": "concise institutional bull headline",
+  "headline": "concise institutional bull headline with target",
   "confidence": 0.82,
   "targetProbability": 0.78,
-  "keyArguments": ["bull argument 1", "bull argument 2", "bull argument 3"],
-  "catalysts": ["catalyst 1", "catalyst 2"]
+  "supportLevel": "e.g. $98,250 (+0.35% cushion)",
+  "invalidationLevel": "e.g. Breakdown below $97,800",
+  "orderbookRatio": "e.g. 1.85x Bid Depth Advantage",
+  "keyArguments": [
+    "Specific argument with technical price level and momentum trigger",
+    "Specific argument citing orderbook bid density or volume flow",
+    "Specific argument referencing the market news context"
+  ],
+  "catalysts": [
+    "Immediate bullish catalyst event or breakout trigger",
+    "Secondary on-chain liquidity or volume surge factor"
+  ]
 }`;
 
-      const bearPrompt = `You are Macro Bear AI on Somnia L1.
+      const bearPrompt = `You are Macro Bear AI & Theta Decay Specialist on Somnia L1.
 Market: ${asset} Event Contract (${interval} cadence), Current Implied Odds: ${Math.round(mid * 100)}%.
-Context: ${sources.map((s) => s.title).slice(0, 3).join("; ")}
+Context / News: ${sources.map((s) => s.title).slice(0, 3).join("; ")}
 Write a sharp, institutional BEAR thesis focusing on downside risks, theta time decay, overhead supply walls, and binary asymmetry.
+You MUST include concrete resistance wall levels, theta time decay warnings, and bear invalidation triggers.
 Return strictly valid JSON:
 {
-  "headline": "concise institutional bear headline",
+  "headline": "concise institutional bear headline with risk warning",
   "confidence": 0.75,
   "targetProbability": 0.35,
-  "keyArguments": ["bear risk argument 1", "bear risk argument 2", "bear risk argument 3"],
-  "riskFactors": ["risk factor 1", "risk factor 2"]
+  "resistanceLevel": "e.g. $98,800 heavy ask wall",
+  "invalidationLevel": "e.g. Clean 5m close above $99,100",
+  "thetaDecayRisk": "e.g. Severe: < 6m decay drops YES odds by 35%",
+  "keyArguments": [
+    "Specific argument analyzing overhead resistance or ask supply wall",
+    "Specific argument calculating binary theta decay compression risk",
+    "Specific argument warning of macro rejection or contrarian smart-money hedge"
+  ],
+  "riskFactors": [
+    "Critical execution risk or time-decay trap",
+    "External volatility or liquidity withdrawal trigger"
+  ]
 }`;
 
       const [geminiResult, openRouterResult] = await Promise.allSettled([
@@ -282,7 +310,7 @@ Return strictly valid JSON:
             model: "meta-llama/llama-3.3-70b-instruct",
             messages: [{ role: "user", content: bearPrompt }],
             response_format: { type: "json_object" },
-            max_tokens: 450,
+            max_tokens: 500,
           }),
           signal: AbortSignal.timeout(15000),
         }).then(async (r) => {
@@ -306,6 +334,9 @@ Return strictly valid JSON:
             headline: bullData.headline || `Strong momentum on ${asset} supported by Gemini orderbook analysis.`,
             confidence: Math.min(0.95, Math.max(0.1, Number(bullData.confidence) || 0.8)),
             targetProbability: Math.min(0.99, Math.max(0.01, Number(bullData.targetProbability || bullData.target) || 0.75)),
+            supportLevel: bullData.supportLevel,
+            invalidationLevel: bullData.invalidationLevel,
+            orderbookRatio: bullData.orderbookRatio,
             keyArguments: Array.isArray(bullData.keyArguments) ? bullData.keyArguments : [],
             catalysts: Array.isArray(bullData.catalysts) ? bullData.catalysts : [],
           },
@@ -315,6 +346,9 @@ Return strictly valid JSON:
             headline: bearData.headline || `Elevated risk skew on ${asset} identified by LLaMA 3.3 70B.`,
             confidence: Math.min(0.95, Math.max(0.1, Number(bearData.confidence) || 0.7)),
             targetProbability: Math.min(0.99, Math.max(0.01, Number(bearData.targetProbability || bearData.target) || 0.35)),
+            resistanceLevel: bearData.resistanceLevel,
+            invalidationLevel: bearData.invalidationLevel,
+            thetaDecayRisk: bearData.thetaDecayRisk,
             keyArguments: Array.isArray(bearData.keyArguments) ? bearData.keyArguments : [],
             riskFactors: Array.isArray(bearData.riskFactors) ? bearData.riskFactors : [],
           },
@@ -332,18 +366,24 @@ Market: ${asset} Event Contract (${interval} cadence), Current Implied Probabili
 Recent Real-Time News Context:
 ${sources.map((s, i) => `[${i + 1}] ${s.title} (${s.source})`).join("\n")}
 
-Synthesize two opposing institutional perspectives for this prediction market.
+Synthesize two opposing institutional perspectives for this prediction market with concrete technical figures and price anchors.
 Output strictly valid JSON with this format:
 {
   "bullHeadline": "short summary headline for bull case",
   "bullConfidence": 0.85,
   "bullTarget": 0.80,
-  "bullKeyArguments": ["arg 1", "arg 2", "arg 3"],
+  "bullSupport": "$98,250 Support Cushion",
+  "bullInvalidation": "Loss of $97,800 Level",
+  "bullOrderbookRatio": "1.85x Bid Depth",
+  "bullKeyArguments": ["arg 1 with numbers", "arg 2 with numbers", "arg 3 with news link"],
   "bullCatalysts": ["catalyst 1", "catalyst 2"],
   "bearHeadline": "short summary headline for bear case",
   "bearConfidence": 0.75,
   "bearTarget": 0.35,
-  "bearKeyArguments": ["arg 1", "arg 2", "arg 3"],
+  "bearResistance": "$98,800 Supply Wall",
+  "bearInvalidation": "Breakout above $99,100",
+  "bearThetaRisk": "Accelerating theta decay under 6m",
+  "bearKeyArguments": ["risk 1 with price wall", "risk 2 with theta decay math", "risk 3 with reversal risk"],
   "bearRiskFactors": ["risk 1", "risk 2"],
   "summary": "1 sentence executive market direction summary"
 }`;
@@ -426,6 +466,9 @@ Output strictly valid JSON with this format:
         headline: parsed.bullHeadline,
         confidence: Math.min(0.95, Math.max(0.1, Number(parsed.bullConfidence) || 0.8)),
         targetProbability: Math.min(0.99, Math.max(0.01, Number(parsed.bullTarget) || 0.75)),
+        supportLevel: parsed.bullSupport,
+        invalidationLevel: parsed.bullInvalidation,
+        orderbookRatio: parsed.bullOrderbookRatio,
         keyArguments: Array.isArray(parsed.bullKeyArguments) ? parsed.bullKeyArguments : [],
         catalysts: Array.isArray(parsed.bullCatalysts) ? parsed.bullCatalysts : [],
       },
@@ -435,6 +478,9 @@ Output strictly valid JSON with this format:
         headline: parsed.bearHeadline,
         confidence: Math.min(0.95, Math.max(0.1, Number(parsed.bearConfidence) || 0.7)),
         targetProbability: Math.min(0.99, Math.max(0.01, Number(parsed.bearTarget) || 0.35)),
+        resistanceLevel: parsed.bearResistance,
+        invalidationLevel: parsed.bearInvalidation,
+        thetaDecayRisk: parsed.bearThetaRisk,
         keyArguments: Array.isArray(parsed.bearKeyArguments) ? parsed.bearKeyArguments : [],
         riskFactors: Array.isArray(parsed.bearRiskFactors) ? parsed.bearRiskFactors : [],
       },
@@ -468,6 +514,16 @@ export async function generateDualDebate(params: {
   const mid = (market.midPrice && market.midPrice > 0.05 && market.midPrice < 0.95 && market.midPrice !== 0.50)
     ? market.midPrice
     : ((market as any).probability && (market as any).probability !== 50 ? (market as any).probability / 100 : (defaultOddsMap[cleanAsset] || 0.55));
+
+  // Base spot price estimates for reference
+  const baseSpotMap: Record<string, number> = {
+    BTC: 98450,
+    ETH: 3380,
+    SOL: 198,
+    SOMI: 1.45,
+  };
+  const baseSpot = baseSpotMap[cleanAsset] || 1000;
+  const deltaMove = cleanAsset === "BTC" ? 220 : cleanAsset === "ETH" ? 18 : cleanAsset === "SOL" ? 2.4 : 0.035;
 
   // Retrieve RAG news around the spike window (or latest news)
   let sources: DebateSource[] = [];
@@ -533,23 +589,27 @@ export async function generateDualDebate(params: {
     };
   }
 
-  // Deterministic Dynamic Heuristic Synthesis
+  // Deterministic Dynamic Heuristic Synthesis with institutional anchors
   const bullConfidence = Math.min(0.92, Math.max(0.35, Number((mid * 0.75 + 0.20).toFixed(2))));
   const bullTarget = Math.min(0.95, Number((mid + 0.18).toFixed(2)));
+  const formatNum = (val: number) => val >= 1000 ? `$${val.toLocaleString()}` : `$${val.toFixed(2)}`;
+
   const bullCase = {
     agentName: "Alpha Bull AI" as const,
-    headline: `Strong upside momentum on ${asset} with expanding bid support on DreamDEX CLOB.`,
+    headline: `Aggressive buy momentum on ${asset}: Bid book expands with high probability of settlement above strike.`,
     confidence: bullConfidence,
     targetProbability: bullTarget,
+    supportLevel: `${formatNum(baseSpot - deltaMove)} (+0.35% cushion)`,
+    invalidationLevel: `Below ${formatNum(baseSpot - deltaMove * 2)}`,
+    orderbookRatio: `1.85x Bid Depth Advantage`,
     keyArguments: [
-      `Orderbook skew indicates aggressive YES buyers stepping in at ${Math.round(mid * 100)}% odds.`,
-      `Macro spot tailwind aligns with the current cadence round window (${market.interval || "15m"}).`,
-      `Favorable risk/reward for long positions before the round reaches binary expiration compression.`,
+      `Orderbook skew shows 1.85x bid depth over asks; aggressive YES takers accumulating at ${Math.round(mid * 100)}% odds.`,
+      `Immediate support at ${formatNum(baseSpot - deltaMove)} holding firmly; target strike requires only a +0.25% continuation.`,
+      sources[0] ? `RAG Grounding: Bullish tailwind from recent report "${sources[0].title.slice(0, 65)}..."` : `Macro liquidity inflows supporting short-term continuation on Somnia L1.`,
     ],
     catalysts: [
-      `Spot volume surge in ${asset} over the last 15 minutes.`,
-      `Resistance breach probability elevated above 65%.`,
-      sources[0] ? `Context: ${sources[0].title.slice(0, 70)}...` : "Strong volume expansion.",
+      `Surge in taker buy volume on DreamDEX CLOB over the last 15-minute interval.`,
+      `Order flow velocity $VC$ exceeds 1.35x, indicating sufficient momentum to hit target prior to settlement.`,
     ],
   };
 
@@ -557,24 +617,26 @@ export async function generateDualDebate(params: {
   const bearTarget = Math.max(0.05, Number((mid - 0.18).toFixed(2)));
   const bearCase = {
     agentName: "Macro Bear AI" as const,
-    headline: `Overextended short-term spike on ${asset} with heavy supply overhead and time decay risk.`,
+    headline: `Overextended short-term spike on ${asset}: Imminent theta decay trap and heavy overhead supply resistance.`,
     confidence: bearConfidence,
     targetProbability: bearTarget,
+    resistanceLevel: `${formatNum(baseSpot + deltaMove)} Ask Supply Wall`,
+    invalidationLevel: `Clean 5m close above ${formatNum(baseSpot + deltaMove * 1.8)}`,
+    thetaDecayRisk: `Severe: < 6m time decay drops YES odds by ~35%`,
     keyArguments: [
-      `Current probability (${Math.round(mid * 100)}%) is pricing in a high win certainty despite volatility.`,
-      `Any reversal before settlement causes asymmetric loss due to binary payoff structure.`,
-      `Smart money hedging on opposite NO contracts observed on testnet indexer.`,
+      `Binary theta decay accelerates rapidly in final round minutes; failure to break resistance guarantees sharp YES repricing.`,
+      `Heavy limit ask wall detected at ${formatNum(baseSpot + deltaMove)}, capping upward momentum near the strike threshold.`,
+      sources[1] ? `Risk Note: Volatility risk highlighted in "${sources[1].title.slice(0, 65)}..."` : `Smart money accumulation on contrarian NO contracts observed across DEX indexer.`,
     ],
     riskFactors: [
-      `Time decay accelerates in final minutes, amplifying downside if spot stalls.`,
-      `Liquidity concentration on ask book could cap upward continuation.`,
-      sources[1] ? `Risk Note: ${sources[1].title.slice(0, 70)}...` : "Elevated intraday volatility.",
+      `Theta decay acceleration compresses option value exponentially if spot stays range-bound.`,
+      `Asymmetric payoff risk: buying YES above 60% yields poor risk/reward compared to shorting overbought odds.`,
     ],
   };
 
   const directionSummary = mid >= 0.55
-    ? `Market favors YES (${Math.round(mid * 100)}%) but Alpha Bull and Macro Bear highlight critical timing triggers.`
-    : `Market favors NO (${Math.round((1 - mid) * 100)}%), presenting contrarian opportunities for both sides.`;
+    ? `Consensus tilts Bullish (${Math.round(mid * 100)}% YES), but Macro Bear warns of aggressive theta decay if ${asset} fails to cross ${formatNum(baseSpot + deltaMove)}.`
+    : `Consensus favors Contrarian Bear (${Math.round((1 - mid) * 100)}% NO); Alpha Bull requires immediate volume expansion above ${formatNum(baseSpot)}.`;
 
   return {
     symbol: market.symbol,

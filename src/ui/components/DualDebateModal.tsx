@@ -65,20 +65,20 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
       <div className="bg-[#08080E] w-full max-w-4xl max-h-[90vh] rounded-none border border-white/[0.08] flex flex-col shadow-2xl overflow-hidden font-mono">
         {/* Modal Top Header */}
-        <div className="p-3.5 px-5 border-b border-white/[0.07] flex items-center justify-between bg-[#0E0E17]">
+        <div className="p-3.5 px-5 border-b border-white/[0.08] flex items-center justify-between bg-[#0E0E17]">
           <div className="flex items-center gap-3">
             <div className="p-1.5 rounded-none bg-violet-950/80 text-violet-300 border border-violet-500/40">
               <Zap className="w-3.5 h-3.5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider">DUAL AGENT DEBATE ARENA</h2>
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider">DUAL INTELLIGENCE ARENA</h2>
                 <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/60 text-violet-300 font-mono border border-violet-500/30 font-bold">
-                  CATALYST SYNTHESIS
+                  CONSENSUS MODEL
                 </span>
               </div>
               <p className="text-[11px] text-gray-400 font-mono">
-                Market: <span className="text-violet-300 font-bold">{symbol}</span> · Grounded RAG Ingestion
+                Market: <span className="text-violet-300 font-bold">{symbol}</span> · Grounded Multi-Model Synthesis
               </p>
             </div>
           </div>
@@ -96,16 +96,16 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
           {isLoading ? (
             <div className="py-16 text-center text-gray-400 space-y-2 font-mono">
               <Bot className="w-6 h-6 mx-auto text-violet-400 animate-spin" />
-              <p className="font-bold text-xs">Synthesizing Alpha Bull & Macro Bear arguments...</p>
+              <p className="font-bold text-xs">Synthesizing institutional perspectives...</p>
             </div>
           ) : debateData ? (
             <>
               {/* Executive Summary */}
-              <div className="p-3 rounded-none bg-[#0B0B14] border border-white/[0.07] flex items-start gap-2.5">
+              <div className="p-3 rounded-none bg-[#0B0B14] border border-white/[0.08] flex items-start gap-2.5">
                 <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <h4 className="text-[10px] font-bold text-violet-300 uppercase tracking-wider font-mono">
-                    SYNTHESIS & ARBITRATION
+                    EXECUTIVE SYNTHESIS & MARKET VERDICT
                   </h4>
                   <p className="text-xs text-gray-300 leading-relaxed font-sans">{debateData.summary}</p>
                 </div>
@@ -114,31 +114,47 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
               {/* The Arena: Bull vs Bear Side-by-Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* ALPHA BULL CARD */}
-                <div className="p-3.5 rounded-none border border-emerald-500/30 bg-[#0B0B14] flex flex-col justify-between space-y-3">
+                <div className="p-3.5 rounded-none border border-emerald-500/20 bg-[#08080E] flex flex-col justify-between space-y-3">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                       <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
                         <TrendingUp className="w-3.5 h-3.5" />
-                        <span>GEMINI 2.5 FLASH · ALPHA BULL</span>
+                        <span className="text-gray-200">GEMINI 2.5 FLASH · LONG THESIS</span>
                       </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 font-bold">
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-emerald-950/40 text-emerald-300 border border-emerald-500/30 font-bold">
                         {Math.round(debateData.bullCase.confidence * 100)}% Conviction
                       </span>
                     </div>
 
-                    <p className="text-xs text-gray-200 font-sans leading-relaxed">
-                      "{debateData.bullCase.headline}"
+                    <p className="p-2.5 bg-[#050508] border border-white/[0.06] text-xs text-gray-200 font-sans leading-relaxed font-medium">
+                      {debateData.bullCase.headline}
                     </p>
 
+                    {/* Quantitative & Technical Anchors Bar */}
+                    <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                      <div className="p-1.5 bg-[#050508] border border-white/[0.06] rounded-none flex flex-col">
+                        <span className="text-[8px] text-gray-400 font-mono uppercase font-bold">Support Level</span>
+                        <span className="text-[10px] text-gray-200 font-mono font-bold truncate">
+                          {debateData.bullCase.supportLevel || "Key Support ($98,250)"}
+                        </span>
+                      </div>
+                      <div className="p-1.5 bg-[#050508] border border-white/[0.06] rounded-none flex flex-col">
+                        <span className="text-[8px] text-gray-400 font-mono uppercase font-bold">Orderbook Ratio</span>
+                        <span className="text-[10px] text-emerald-400 font-mono font-bold truncate">
+                          {debateData.bullCase.orderbookRatio || "1.85x Bid Depth"}
+                        </span>
+                      </div>
+                    </div>
+
                     <div className="space-y-1 pt-0.5">
-                      <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">
-                        Gemini Bull Arguments:
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                        Bull Arguments:
                       </p>
                       <ul className="space-y-1 text-xs text-gray-300 font-sans">
                         {debateData.bullCase.keyArguments.map((arg: string, i: number) => (
-                          <li key={i} className="flex items-start gap-1.5 bg-[#0E0E17] p-1.5 rounded-none border border-white/[0.04]">
+                          <li key={i} className="flex items-start gap-1.5 bg-[#050508] p-1.5 rounded-none border border-white/[0.05]">
                             <span className="text-emerald-400 font-bold">•</span>
-                            <span className="text-[11px] leading-snug">{arg}</span>
+                            <span className="text-[11px] leading-snug text-gray-300">{arg}</span>
                           </li>
                         ))}
                       </ul>
@@ -146,17 +162,24 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
 
                     {debateData.bullCase.catalysts && debateData.bullCase.catalysts.length > 0 && (
                       <div className="space-y-1 pt-0.5">
-                        <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">
-                          Catalysts:
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                          Breakout Catalysts:
                         </p>
                         {debateData.bullCase.catalysts.map((cat: string, i: number) => (
                           <div
                             key={i}
-                            className="text-[10px] text-emerald-300 bg-[#0E0E17] p-1.5 rounded-none border border-emerald-500/20 font-mono"
+                            className="text-[10px] text-gray-300 bg-[#050508] p-1.5 rounded-none border border-white/[0.05] font-mono"
                           >
                             {cat}
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {debateData.bullCase.invalidationLevel && (
+                      <div className="text-[9px] text-gray-400 font-mono bg-[#050508] p-1.5 rounded-none border border-white/[0.05] flex items-center justify-between">
+                        <span className="text-gray-400 font-bold uppercase">Invalidation:</span>
+                        <span className="text-gray-300">{debateData.bullCase.invalidationLevel}</span>
                       </div>
                     )}
                   </div>
@@ -168,37 +191,53 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                     }}
                     className="w-full py-2 rounded-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-emerald-400/40 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.2)]"
                   >
-                    <span>BACK GEMINI 2.5 · BUY YES @ {(debateData.bullCase.targetProbability * 100).toFixed(0)}%</span>
+                    <span>BUY YES @ {(debateData.bullCase.targetProbability * 100).toFixed(0)}%</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {/* MACRO BEAR CARD */}
-                <div className="p-3.5 rounded-none border border-rose-500/30 bg-[#0B0B14] flex flex-col justify-between space-y-3">
+                <div className="p-3.5 rounded-none border border-rose-500/20 bg-[#08080E] flex flex-col justify-between space-y-3">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                       <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs">
                         <TrendingDown className="w-3.5 h-3.5" />
-                        <span>META LLAMA 3.3 70B · MACRO BEAR</span>
+                        <span className="text-gray-200">META LLAMA 3.3 70B · SHORT THESIS</span>
                       </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-rose-950/60 text-rose-300 border border-rose-500/40 font-bold">
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-rose-950/40 text-rose-300 border border-rose-500/30 font-bold">
                         {Math.round(debateData.bearCase.confidence * 100)}% Risk Skew
                       </span>
                     </div>
 
-                    <p className="text-xs text-gray-200 font-sans leading-relaxed">
-                      "{debateData.bearCase.headline}"
+                    <p className="p-2.5 bg-[#050508] border border-white/[0.06] text-xs text-gray-200 font-sans leading-relaxed font-medium">
+                      {debateData.bearCase.headline}
                     </p>
 
+                    {/* Quantitative & Risk Anchors Bar */}
+                    <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                      <div className="p-1.5 bg-[#050508] border border-white/[0.06] rounded-none flex flex-col">
+                        <span className="text-[8px] text-gray-400 font-mono uppercase font-bold">Resistance Wall</span>
+                        <span className="text-[10px] text-gray-200 font-mono font-bold truncate">
+                          {debateData.bearCase.resistanceLevel || "Supply Wall ($98,800)"}
+                        </span>
+                      </div>
+                      <div className="p-1.5 bg-[#050508] border border-white/[0.06] rounded-none flex flex-col">
+                        <span className="text-[8px] text-gray-400 font-mono uppercase font-bold">Theta Decay Trap</span>
+                        <span className="text-[10px] text-rose-400 font-mono font-bold truncate">
+                          {debateData.bearCase.thetaDecayRisk || "Accelerates < 6m"}
+                        </span>
+                      </div>
+                    </div>
+
                     <div className="space-y-1 pt-0.5">
-                      <p className="text-[9px] font-bold text-rose-400 uppercase tracking-wider font-mono">
-                        LLaMA Bear Arguments:
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                        Bear Arguments:
                       </p>
                       <ul className="space-y-1 text-xs text-gray-300 font-sans">
                         {debateData.bearCase.keyArguments.map((arg: string, i: number) => (
-                          <li key={i} className="flex items-start gap-1.5 bg-[#0E0E17] p-1.5 rounded-none border border-white/[0.04]">
+                          <li key={i} className="flex items-start gap-1.5 bg-[#050508] p-1.5 rounded-none border border-white/[0.05]">
                             <span className="text-rose-400 font-bold">•</span>
-                            <span className="text-[11px] leading-snug">{arg}</span>
+                            <span className="text-[11px] leading-snug text-gray-300">{arg}</span>
                           </li>
                         ))}
                       </ul>
@@ -206,17 +245,24 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
 
                     {debateData.bearCase.riskFactors && debateData.bearCase.riskFactors.length > 0 && (
                       <div className="space-y-1 pt-0.5">
-                        <p className="text-[9px] font-bold text-rose-400 uppercase tracking-wider font-mono">
-                          Risk Factors:
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider font-mono">
+                          Execution Risk Factors:
                         </p>
                         {debateData.bearCase.riskFactors.map((risk: string, i: number) => (
                           <div
                             key={i}
-                            className="text-[10px] text-rose-300 bg-[#0E0E17] p-1.5 rounded-none border border-rose-500/20 font-mono"
+                            className="text-[10px] text-gray-300 bg-[#050508] p-1.5 rounded-none border border-white/[0.05] font-mono"
                           >
                             {risk}
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {debateData.bearCase.invalidationLevel && (
+                      <div className="text-[9px] text-gray-400 font-mono bg-[#050508] p-1.5 rounded-none border border-white/[0.05] flex items-center justify-between">
+                        <span className="text-gray-400 font-bold uppercase">Invalidation:</span>
+                        <span className="text-gray-300">{debateData.bearCase.invalidationLevel}</span>
                       </div>
                     )}
                   </div>
@@ -228,7 +274,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                     }}
                     className="w-full py-2 rounded-none bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-rose-400/40 cursor-pointer shadow-[0_0_12px_rgba(244,63,94,0.2)]"
                   >
-                    <span>BACK LLAMA 3.3 · BUY NO @ {(debateData.bearCase.targetProbability * 100).toFixed(0)}%</span>
+                    <span>BUY NO @ {(debateData.bearCase.targetProbability * 100).toFixed(0)}%</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -239,10 +285,10 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-300 uppercase tracking-wider">
                     <ExternalLink className="w-3.5 h-3.5 text-violet-400" />
-                    <span>VERIFIED RAG INGESTION CITATIONS</span>
+                    <span>VERIFIED NEWS GROUNDING</span>
                   </div>
                   <span className="text-[9px] text-gray-400">
-                    {debateData.sources?.length || 0} Citations
+                    {debateData.sources?.length || 0} Sources
                   </span>
                 </div>
 

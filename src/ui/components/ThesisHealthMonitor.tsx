@@ -130,19 +130,6 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
             </span>
           )}
 
-          <button
-            onClick={handleClaim}
-            disabled={isClaiming}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-none font-mono font-bold text-[11px] transition-colors border ${
-              settledPositions.length > 0
-                ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/40"
-                : "bg-[#12121C] hover:bg-[#181826] text-gray-300 border-white/[0.07]"
-            } disabled:opacity-50 cursor-pointer`}
-            title="Claim Settled Payouts on Somnia"
-          >
-            <Coins className="w-3 h-3 text-violet-400" />
-            <span>{isClaiming ? "CLAIMING..." : "CLAIM PAYOUTS"}</span>
-          </button>
 
           <button
             onClick={() => {
