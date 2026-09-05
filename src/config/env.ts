@@ -10,8 +10,15 @@ const EnvSchema = z.object({
   RPC_URL: z.string().optional(),
   WS_RPC_URL: z.string().optional(),
   INDEXER_URL: z.string().optional(),
-  VENUE_ID: z.string().optional(),
-  PRIVATE_KEY: z.string().optional().transform((v) => v && v.length > 0 ? v : undefined).pipe(z.string().regex(/^0x[a-fA-F0-9]{64}$/, "Must be a 64-char hex string starting with 0x").optional()),
+  PRIVATE_KEY: z
+    .string()
+    .optional()
+    .transform((v) => {
+      if (!v || v.trim().length === 0) return undefined;
+      let clean = v.trim().replace(/^["']|["']$/g, "");
+      return clean.startsWith("0x") ? clean : `0x${clean}`;
+    })
+    .pipe(z.string().regex(/^0x[a-fA-F0-9]{64}$/, "Must be a 64-char hex string starting with 0x").optional()),
   
   // Supabase (Cloud PostgreSQL)
   SUPABASE_URL: z.string().optional(),

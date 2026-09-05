@@ -581,8 +581,8 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
     ctx.stroke();
     ctx.restore();
 
-    // Corner Tactical Precision Crosshairs
-    ctx.strokeStyle = primaryColor;
+    // Corner Tactical Precision Crosshairs (Cyberpunk Purple)
+    ctx.strokeStyle = "#A855F7";
     ctx.lineWidth = 3.5;
     const cornerSize = 34;
     // Top-Left
@@ -802,20 +802,25 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
       drawRoundedRect(ctx, b3x, boxY, boxW, boxH, 10);
       ctx.fillStyle = "rgba(15, 17, 28, 0.88)";
       ctx.fill();
-      ctx.strokeStyle = "rgba(139, 92, 246, 0.35)";
+      ctx.strokeStyle = "rgba(168, 85, 247, 0.45)";
+      ctx.lineWidth = 1.2;
       ctx.stroke();
 
       ctx.font = "600 11px 'JetBrains Mono', 'SF Mono', monospace";
-      ctx.fillStyle = "#A78BFA";
+      ctx.fillStyle = "#C084FC";
       ctx.fillText("// 03 CRYPTOGRAPHIC AUDIT", b3x + 22, boxY + 28);
 
-      ctx.font = "700 17px 'JetBrains Mono', monospace";
+      ctx.font = "700 16px 'JetBrains Mono', monospace";
       ctx.fillStyle = "#38BDF8";
-      ctx.fillText(shortTx, b3x + 22, boxY + 68);
+      ctx.fillText(shortTx, b3x + 22, boxY + 66);
 
       ctx.font = "700 11px 'JetBrains Mono', 'SF Mono', monospace";
       ctx.fillStyle = "#10B981";
-      ctx.fillText("✓ VERIFIED ON SHANNON L1", b3x + 22, boxY + 102);
+      ctx.fillText("✓ VERIFIED ON SHANNON L1", b3x + 22, boxY + 98);
+
+      ctx.font = "500 10px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "#64748B";
+      ctx.fillText("DreamDEX CLOB Match Hash", b3x + 22, boxY + 118);
     } else {
       // ══════════════════════════════════════════════════════════════════════
       // MODE: THESIS / PRE-TRADE SIMULATOR ALPHA CARD (LUXURY QUANT HUD)
@@ -913,18 +918,18 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
       ctx.fillStyle = "#C4B5FD";
       ctx.fillText("⚖️ DUAL AI DEBATE CONSENSUS & GROUNDED RAG", 88, debateY + 32);
 
-      ctx.font = "500 14px 'Inter', system-ui, sans-serif";
+      ctx.font = "500 13px 'Inter', system-ui, sans-serif";
       ctx.fillStyle = "#E2E8F0";
       const spotVal = currentSpot ? currentSpot.toLocaleString() : "92,400";
       const strikeVal = strikePrice ? strikePrice.toLocaleString() : "92,600";
       const debateSnippet = isYes
-        ? `Alpha Bull AI: Positive spot drift past $${spotVal} with orderbook bid skew. Strike target $${strikeVal} is within momentum cone.`
+        ? `Alpha Bull AI: Positive spot drift past $${spotVal} with orderbook bid skew. Strike target $${strikeVal} is in range.`
         : `Macro Bear AI: Overhead resistance wall and rapid theta time-decay. Downward spot deviation provides contrarian edge on DreamDEX CLOB.`;
       ctx.fillText(debateSnippet, 88, debateY + 66);
 
       ctx.font = "600 11px 'JetBrains Mono', monospace";
       ctx.fillStyle = "#94A3B8";
-      ctx.fillText("Sources Verified: CoinDesk • Cointelegraph • Decrypt • Live Somnia CLOB Depth", 88, debateY + 98);
+      ctx.fillText("Sources: CoinDesk • Cointelegraph • Decrypt • Live Somnia CLOB Depth", 88, debateY + 98);
     }
 
     // ─── 8. FOOTER: VERIFICATION & PROTOCOL WATERMARK ───────────────────────
@@ -934,7 +939,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
 
     ctx.font = "700 13px 'JetBrains Mono', 'SF Mono', monospace";
     ctx.fillStyle = "#06B6D4";
-    ctx.fillText("foresightdex.vercel.app", width - 260, 595);
+    ctx.fillText("shannon-explorer.somnia.network", width - 330, 595);
 
     setIsGenerating(false);
   };
@@ -998,7 +1003,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
         `Side: ${effectiveOutcome} (Entry: $${effectiveEntry.toFixed(3)})\n` +
         `Payout: $${totalGrossPayout.toFixed(2)} USDC (${netPnl >= 0 ? "+" : ""}$${netPnl.toFixed(2)} PnL)\n` +
         `Tx Audit: ${shortTx}\n\n` +
-        `Trade cognitive prediction markets with 100k+ TPS: https://foresightdex.vercel.app/`
+        `Explorer: https://shannon-explorer.somnia.network/tx/${txHash}`
       );
     } else {
       text = encodeURIComponent(
@@ -1006,7 +1011,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
         `Market: ${effectiveSymbol}\n` +
         `Prediction: ${effectiveOutcome} (Entry: $${effectiveEntry.toFixed(2)})\n` +
         `Trajectory VC: ${(propVelocityCoverage || 1.25).toFixed(2)}x | Model Edge: +${edgeBps || 620} bps\n\n` +
-        `Explore with Cognitive AI: https://foresightdex.vercel.app/`
+        `Explore with Cognitive AI: https://shannon-explorer.somnia.network/`
       );
     }
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
@@ -1039,7 +1044,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
               </h3>
               <p className="text-[11px] text-gray-400 font-sans">
                 {isSettledMode
-                  ? "Verifiable on-chain receipt card for Twitter, Telegram, and Discord brag rights."
+                  ? "Verifiable on-chain receipt card with Somnia Explorer audit link."
                   : "Institutional social proof thesis card for Twitter / Telegram / Discord."}
               </p>
             </div>
@@ -1072,7 +1077,15 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <div className="text-[11px] font-mono text-gray-400 flex items-center gap-2">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Watermarked with Somnia Shannon Testnet & DreamDEX CLOB</span>
+            <span>Tx Hash:</span>
+            <a
+              href={`https://shannon-explorer.somnia.network/tx/${txHash}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-cyan-400 hover:underline hover:text-cyan-300 font-mono"
+            >
+              {shortTx}
+            </a>
           </div>
 
           <div className="flex items-center gap-2">
