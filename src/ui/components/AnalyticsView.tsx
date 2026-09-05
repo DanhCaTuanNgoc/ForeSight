@@ -349,13 +349,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#07070B] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 font-mono">
+    <div className="flex-1 flex flex-col min-h-0 bg-[#07070A] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 font-mono">
 
       {/* ─── 1. ASSET CONTROL & REAL-TIME QUOTE BAR ─────────── */}
-      <div className="w-full flex-shrink-0 p-3 sm:p-3.5 bg-[#0A0A12] border border-white/[0.08] rounded-none flex flex-wrap lg:flex-nowrap items-center justify-between gap-3">
+      <div className="w-full flex-shrink-0 p-3 sm:p-3.5 bg-[#08080E] border border-white/[0.07] rounded-none flex flex-wrap lg:flex-nowrap items-center justify-between gap-3">
         {/* Left: Token Identity & Active Contract Context */}
         <div className="flex items-center gap-3">
-          <div className="p-1.5 bg-[#12121C] border border-white/[0.08] rounded-none flex-shrink-0">
+          <div className="p-1.5 bg-[#0E0E17] border border-white/[0.07] rounded-none flex-shrink-0">
             <CryptoIcon symbol={activeSymbol} size={32} />
           </div>
           <div className="space-y-0.5">
@@ -365,11 +365,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               </h2>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.2 bg-[#12121C] border border-white/[0.08] text-gray-300 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.2 bg-[#0E0E17] border border-white/[0.07] text-gray-300 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
                 Somnia L1
               </span>
-              <span className="text-[9px] px-1.5 py-0.2 bg-[#12121C] text-cyan-300 border border-cyan-500/30 font-mono font-bold">
+              <span className="text-[9px] px-1.5 py-0.2 bg-violet-950/40 text-violet-300 border border-violet-500/30 font-mono font-bold">
                 Round: {roundId}
               </span>
             </div>
@@ -377,34 +377,34 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
 
         {/* Center: Real-time Quantitative Quote Matrix */}
-        <div className="flex items-center gap-3 sm:gap-4 bg-[#0E0E17] border border-white/[0.08] px-3.5 py-1.5 rounded-none flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-3 sm:gap-4 bg-[#0E0E17] border border-white/[0.07] px-3.5 py-1.5 rounded-none flex-wrap sm:flex-nowrap">
           <div>
             <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Implied Odds</span>
             <span className={`text-sm font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
               {prob.toFixed(1)}% YES
             </span>
           </div>
-          <div className="w-px h-5 bg-white/[0.08]" />
+          <div className="w-px h-5 bg-white/[0.07]" />
           <div>
             <span className="text-[9px] text-gray-400 block uppercase tracking-wider flex items-center gap-1">
               Spot (Oracle)
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Live Oracle Feed" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Live Oracle Feed" />
             </span>
-            <span className="text-sm font-bold font-mono text-cyan-300">
+            <span className="text-sm font-bold font-mono text-white">
               ${spotPrice > 10 ? spotPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : spotPrice.toFixed(4)}
             </span>
           </div>
-          <div className="w-px h-5 bg-white/[0.08]" />
+          <div className="w-px h-5 bg-white/[0.07]" />
           <div>
             <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Strike Target</span>
-            <span className="text-sm font-bold font-mono text-white">
+            <span className="text-sm font-bold font-mono text-violet-300">
               ${strikePrice > 10 ? strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : strikePrice.toFixed(4)}
             </span>
           </div>
-          <div className="w-px h-5 bg-white/[0.08]" />
+          <div className="w-px h-5 bg-white/[0.07]" />
           <div>
             <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Model Edge (Φ)</span>
-            <span className={`text-sm font-bold font-mono ${quantEdgeBps > 0 ? "text-emerald-400" : quantEdgeBps < 0 ? "text-rose-400" : "text-amber-300"}`}>
+            <span className={`text-sm font-bold font-mono ${quantEdgeBps > 0 ? "text-emerald-400" : quantEdgeBps < 0 ? "text-rose-400" : "text-gray-400"}`}>
               {quantEdgeBps > 0 ? `+${quantEdgeBps}` : quantEdgeBps} bps
             </span>
           </div>
@@ -412,15 +412,15 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
         {/* Right: Token Switcher, Refresh */}
         <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
-          <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] p-0.5 gap-1 rounded-none">
+          <div className="flex items-center bg-[#0E0E17] border border-white/[0.07] p-0.5 gap-1 rounded-none">
             {["BTC", "ETH", "SOL", "SOMI"].map((sym) => (
               <button
                 key={sym}
                 onClick={() => handleSelectSymbol(sym)}
                 className={`px-2.5 py-1 text-xs font-mono font-bold rounded-none transition-colors cursor-pointer border ${
                   sym === activeSymbol
-                    ? "bg-violet-600/30 text-violet-300 border-violet-500/50"
-                    : "bg-[#12121C] text-gray-400 border-white/[0.06] hover:text-white hover:bg-[#161622]"
+                    ? "bg-violet-600 text-white border-violet-400/60 shadow-[0_0_8px_rgba(124,58,237,0.25)]"
+                    : "bg-[#0B0B14] text-gray-400 border-white/[0.05] hover:text-white hover:bg-[#141422]"
                 }`}
               >
                 {sym}
@@ -432,7 +432,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             onClick={handleManualRefresh}
             disabled={isLoading}
             title="Refresh live streams"
-            className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.08] text-gray-400 hover:text-white hover:border-violet-500/40 transition-colors cursor-pointer disabled:opacity-50"
+            className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-gray-400 hover:text-white hover:border-violet-500/40 transition-colors cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-violet-400" : ""}`} />
           </button>
@@ -441,44 +441,44 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
       {/* ─── 2. TOP MACRO HEALTH RIBBON ─────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 flex-shrink-0">
-        <div className="p-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-center justify-between">
+        <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.07] flex items-center justify-between">
           <div>
             <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">24H Volume</span>
             <span className="text-sm font-bold font-mono text-white">${(totalVolume / 1000).toFixed(1)}K USDC</span>
           </div>
-          <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] text-violet-400">
+          <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-violet-400">
             <BarChart3 className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="p-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-center justify-between">
+        <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.07] flex items-center justify-between">
           <div>
             <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">Active Contracts</span>
             <span className="text-sm font-bold font-mono text-emerald-400">{Math.max(4, allMarkets.length)} Live Pairs</span>
           </div>
-          <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] text-emerald-400">
+          <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-emerald-400">
             <Zap className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="p-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-center justify-between">
+        <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.07] flex items-center justify-between">
           <div>
             <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">Order Flow Bias</span>
             <span className={`text-sm font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
               {isUp ? "1.82× Bid Depth" : "1.45× Ask Depth"}
             </span>
           </div>
-          <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] text-gray-300">
+          <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-gray-300">
             {isUp ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-400" />}
           </div>
         </div>
 
-        <div className="p-2.5 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-center justify-between">
+        <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.07] flex items-center justify-between">
           <div>
             <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">CLOB Latency</span>
-            <span className="text-sm font-bold font-mono text-cyan-400">~15ms Sub-Second</span>
+            <span className="text-sm font-bold font-mono text-violet-300">~15ms Sub-Second</span>
           </div>
-          <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.08] text-cyan-400">
+          <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-violet-400">
             <Radio className="w-3.5 h-3.5" />
           </div>
         </div>
@@ -488,8 +488,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-shrink-0">
 
         {/* ── Card A: Order Flow & Liquidity Depth ─────────── */}
-        <div className="lg:col-span-6 rounded-none border border-white/[0.08] bg-[#0A0A12] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.08] bg-[#0E0E17]">
+        <div className="lg:col-span-6 rounded-none border border-white/[0.07] bg-[#08080E] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.07] bg-[#0E0E17]">
             <div className="flex items-center gap-2">
               <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
                 <BookOpen className="w-3 h-3" />
@@ -511,7 +511,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   NO Conviction ({(100 - prob).toFixed(1)}%)
                 </span>
               </div>
-              <div className="h-2 w-full bg-[#12121C] rounded-none overflow-hidden flex border border-white/[0.06]">
+              <div className="h-2 w-full bg-[#0E0E17] rounded-none overflow-hidden flex border border-white/[0.06]">
                 <div
                   className="h-full bg-emerald-500 transition-all duration-500"
                   style={{ width: `${prob}%` }}
@@ -528,7 +528,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
 
             {/* Live Depth Snapshot */}
-            <div className="rounded-none bg-[#0E0E17] border border-white/[0.06] p-1.5 space-y-0.5">
+            <div className="rounded-none bg-[#0B0B14] border border-white/[0.06] p-1.5 space-y-0.5">
               <div className="flex items-center justify-between text-[9px] text-gray-400 uppercase px-2 font-bold font-mono">
                 <span>Contract Price (YES)</span>
                 <span>Depth Volume</span>
@@ -538,7 +538,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <OrderbookRow key={`ask-${i}`} price={price} size={size} side="ask" maxSize={maxAskSize} />
               ))}
               {/* Mid Price Divider */}
-              <div className="flex items-center justify-center gap-2 py-0.5 my-0.5 bg-[#12121C] rounded-none border border-white/[0.06] text-mono">
+              <div className="flex items-center justify-center gap-2 py-0.5 my-0.5 bg-[#0E0E17] rounded-none border border-white/[0.06] text-mono">
                 <span className="text-[10px] text-gray-400 font-mono">Mid Equilibrium:</span>
                 <span className="text-xs font-bold text-white font-mono">${(activeMarket?.midPrice || 0.50).toFixed(3)}</span>
                 <span className={`text-[9px] font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
@@ -553,45 +553,45 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
             {/* Microstructure Metrics Bar */}
             <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
-              <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
+              <div className="p-1.5 rounded-none bg-[#0B0B14] border border-white/[0.06]">
                 <span className="text-[9px] text-gray-400 block uppercase">BEST BID</span>
                 <span className="text-xs font-bold text-emerald-400">${bestBid.toFixed(3)}</span>
               </div>
-              <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
+              <div className="p-1.5 rounded-none bg-[#0B0B14] border border-white/[0.06]">
                 <span className="text-[9px] text-gray-400 block uppercase">BEST ASK</span>
                 <span className="text-xs font-bold text-rose-400">${bestAsk.toFixed(3)}</span>
               </div>
-              <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
+              <div className="p-1.5 rounded-none bg-[#0B0B14] border border-white/[0.06]">
                 <span className="text-[9px] text-gray-400 block uppercase">EST. SLIPPAGE</span>
-                <span className="text-xs font-bold text-amber-300">~0.12% ($100)</span>
+                <span className="text-xs font-bold text-violet-300">~0.12% ($100)</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Card B: Quantitative Valuation & Settlement Trajectory ─────── */}
-        <div className="lg:col-span-6 rounded-none border border-white/[0.08] bg-[#0A0A12] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.08] bg-[#0E0E17]">
+        <div className="lg:col-span-6 rounded-none border border-white/[0.07] bg-[#08080E] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.07] bg-[#0E0E17]">
             <div className="flex items-center gap-2">
-              <div className="p-1 rounded-none bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
+              <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
                 <Scale className="w-3 h-3" />
               </div>
               <span className="text-xs font-bold text-white uppercase tracking-wider">QUANTITATIVE PRICING & TRAJECTORY</span>
             </div>
-            <span className="text-[9px] text-cyan-300 font-bold font-mono">Round: {roundId}</span>
+            <span className="text-[9px] text-violet-300 font-bold font-mono">Round: {roundId}</span>
           </div>
 
           <div className="p-3 space-y-3">
 
             {/* Final 60-Second Pin-Risk Settlement Notice */}
             {isSettlingPhase && (
-              <div className="px-2.5 py-1.5 rounded-none bg-amber-950/80 border border-amber-500/50 text-amber-200 text-xs flex items-center gap-2 font-mono">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <div className="px-2.5 py-1.5 rounded-none bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2 font-mono">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
                 <div>
-                  <span className="font-bold text-amber-300 block text-[11px]">
+                  <span className="font-bold text-rose-300 block text-[11px]">
                     SETTLEMENT EXPIRY (&lt;60s)
                   </span>
-                  <span className="text-[10px] text-amber-200/80">
+                  <span className="text-[10px] text-rose-200/80">
                     High pin-risk compression: Time decay forces probability toward binary outcome.
                   </span>
                 </div>
@@ -599,14 +599,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             )}
 
             {/* 1. Market vs Quant Valuation Comparison Table with Verdict Banner */}
-            <div className="rounded-none bg-[#0E0E17] border border-white/[0.06] p-2.5 space-y-2">
+            <div className="rounded-none bg-[#0B0B14] border border-white/[0.06] p-2.5 space-y-2">
               {/* Plain-Language Verdict Banner */}
               <div className={`px-2.5 py-1.5 rounded-none text-xs flex items-center justify-between font-mono border ${
                 isFavorable
                   ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
                   : quantEdgeBps < -50
                   ? "bg-rose-950/60 border-rose-500/40 text-rose-300"
-                  : "bg-[#12121C] border-white/[0.06] text-gray-300"
+                  : "bg-[#0E0E17] border-white/[0.06] text-gray-300"
               }`}>
                 <span className="font-bold text-[11px] flex items-center gap-1.5">
                   {isFavorable ? "VALUATION: YES contract traded at a discount to theoretical fair value" : quantEdgeBps < -50 ? "VALUATION: YES contract trading at a premium" : "VALUATION: Market odds in equilibrium with model"}
@@ -618,17 +618,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
               {/* 3-Column Valuation Matrix */}
               <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
-                <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.06]">
+                <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
                   <span className="text-[9px] text-gray-400 block uppercase">Orderbook Odds</span>
                   <span className="text-xs font-bold text-white">{prob.toFixed(1)}% YES</span>
                   <span className="text-[9px] text-gray-500 block">(${(prob / 100).toFixed(2)})</span>
                 </div>
-                <div className="p-1.5 rounded-none bg-[#12121C] border border-cyan-500/30">
-                  <span className="text-[9px] text-cyan-400 block uppercase">Model Fair Value</span>
-                  <span className="text-xs font-bold text-cyan-300">{fairProb.toFixed(1)}% YES</span>
+                <div className="p-1.5 rounded-none bg-[#0E0E17] border border-violet-500/30">
+                  <span className="text-[9px] text-violet-300 block uppercase font-bold">Model Fair Value</span>
+                  <span className="text-xs font-bold text-violet-200">{fairProb.toFixed(1)}% YES</span>
                   <span className="text-[9px] text-gray-500 block">(Black-Scholes Φ)</span>
                 </div>
-                <div className="p-1.5 rounded-none bg-[#12121C] border border-white/[0.06]">
+                <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
                   <span className="text-[9px] text-gray-400 block uppercase">Model Discrepancy</span>
                   <span className={`text-xs font-bold ${quantEdgeBps > 0 ? "text-emerald-400" : "text-rose-400"}`}>
                     {quantEdgeBps > 0 ? `+${(quantEdgeBps / 100).toFixed(1)}%` : `${(quantEdgeBps / 100).toFixed(1)}%`}
@@ -642,23 +642,23 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs flex-wrap gap-1 font-mono">
                 <span className="text-gray-300 font-bold flex items-center gap-1.5">
-                  <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+                  <Gauge className="w-3.5 h-3.5 text-violet-400" />
                   Velocity Coverage
                 </span>
                 <span className={`text-[10px] px-2 py-0.2 rounded-none font-bold border ${
                   isVcSufficient
                     ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
-                    : "text-amber-300 bg-amber-950/60 border-amber-500/40"
+                    : "text-rose-300 bg-rose-950/60 border-rose-500/40"
                 }`}>
                   {isVcSufficient ? `SUFFICIENT PACE (VC: ${velocityCoverage}×)` : `LAGGING PACE (VC: ${velocityCoverage}×)`}
                 </span>
               </div>
 
               {/* Progress Bar */}
-              <div className="h-1.5 w-full bg-[#12121C] rounded-none overflow-hidden border border-white/[0.06]">
+              <div className="h-1.5 w-full bg-[#0E0E17] rounded-none overflow-hidden border border-white/[0.06]">
                 <div
                   className={`h-full rounded-none transition-all duration-500 ${
-                    isVcSufficient ? "bg-emerald-400" : "bg-amber-400"
+                    isVcSufficient ? "bg-emerald-500" : "bg-rose-500"
                   }`}
                   style={{ width: `${Math.min(100, Math.max(10, velocityCoverage * 60))}%` }}
                 />
@@ -667,23 +667,23 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono">
                 <span>Distance to Strike: <b className="text-white">${distDollar > 10 ? distDollar.toFixed(1) : distDollar.toFixed(4)} ({distPercent.toFixed(2)}%)</b></span>
                 <span className="flex items-center gap-1">
-                  Time Remaining: <b className="text-cyan-300 font-mono">{formatCountdown(countdownSec)}</b>
+                  Time Remaining: <b className="text-violet-300 font-mono">{formatCountdown(countdownSec)}</b>
                 </span>
               </div>
             </div>
 
             {/* 3. Actionable Risk Management & Capital Allocation */}
             <div className="grid grid-cols-2 gap-2 font-mono">
-              <div className="p-2 rounded-none bg-[#0E0E17] border border-white/[0.06] space-y-0.5">
+              <div className="p-2 rounded-none bg-[#0B0B14] border border-white/[0.06] space-y-0.5">
                 <span className="text-[9px] text-gray-400 uppercase font-bold block flex items-center gap-1">
                   Optimal Sizing (Half-Kelly)
                   <HelpCircle className="w-2.5 h-2.5 text-gray-500" />
                 </span>
-                <span className="text-sm font-bold text-amber-300">Max {kellyPercent}% Bankroll</span>
+                <span className="text-sm font-bold text-violet-300">Max {kellyPercent}% Bankroll</span>
                 <span className="text-[9px] text-gray-500 block">Statistical capital cap</span>
               </div>
 
-              <div className="p-2 rounded-none bg-[#0E0E17] border border-white/[0.06] space-y-0.5">
+              <div className="p-2 rounded-none bg-[#0B0B14] border border-white/[0.06] space-y-0.5">
                 <span className="text-[9px] text-gray-400 uppercase font-bold block">
                   Invalidation Stop Level
                 </span>
@@ -695,7 +695,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
 
             {/* Invalidation Trigger Context */}
-            <div className="p-2 rounded-none bg-[#161014] border border-rose-500/30 text-[10px] text-gray-300 leading-tight flex items-start gap-1.5 font-sans">
+            <div className="p-2 rounded-none bg-[#140C10] border border-rose-500/25 text-[10px] text-gray-300 leading-tight flex items-start gap-1.5 font-sans">
               <AlertTriangle className="w-3 h-3 text-rose-400 flex-shrink-0 mt-0.5" />
               <span>
                 <b>Early Exit Protocol:</b> If spot crosses <b className="text-rose-300 font-mono">${invalidationPrice > 10 ? invalidationPrice.toLocaleString() : invalidationPrice.toFixed(4)}</b> before expiry, momentum velocity is broken. Recommend early exit.
@@ -705,11 +705,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {/* Time Expiry & Oracle Status Footer */}
             <div className="flex items-center justify-between text-[9px] text-gray-400 pt-0.5 font-mono">
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3 text-cyan-400" />
+                <Clock className="w-3 h-3 text-violet-400" />
                 <span>Expiry Window: <b className="text-white font-mono">{formatCountdown(countdownSec)}</b></span>
               </span>
               <span className="flex items-center gap-1 text-emerald-400 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 Live 3s Polling
               </span>
             </div>

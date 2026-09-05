@@ -54,51 +54,51 @@ const CATEGORY_THEMES: Record<string, CategoryTheme> = {
     icon: Zap,
     dotBg: 'bg-violet-500',
     dotBorder: 'border-violet-400',
-    glow: 'shadow-[0_0_12px_rgba(168,85,247,0.8)]',
-    badgeBg: 'bg-violet-950/90',
+    glow: 'shadow-[0_0_8px_rgba(139,92,246,0.5)]',
+    badgeBg: 'bg-violet-950/60',
     badgeText: 'text-violet-300',
-    badgeBorder: 'border-violet-500/60',
-    cardBorder: 'border-violet-500/60',
-    cardBg: 'bg-gradient-to-b from-[#171126] to-[#0E0E18]',
+    badgeBorder: 'border-violet-500/30',
+    cardBorder: 'border-violet-500/30',
+    cardBg: 'bg-[#0E0E17]',
     textColor: 'text-violet-400',
   },
   news: {
     label: 'GROUNDED NEWS (RAG)',
     icon: Newspaper,
-    dotBg: 'bg-cyan-500',
-    dotBorder: 'border-cyan-400',
-    glow: 'shadow-[0_0_12px_rgba(6,182,212,0.8)]',
-    badgeBg: 'bg-cyan-950/90',
-    badgeText: 'text-cyan-300',
-    badgeBorder: 'border-cyan-500/60',
-    cardBorder: 'border-cyan-500/60',
-    cardBg: 'bg-gradient-to-b from-[#0E1B28] to-[#0A101A]',
-    textColor: 'text-cyan-400',
+    dotBg: 'bg-violet-400',
+    dotBorder: 'border-violet-300',
+    glow: 'shadow-[0_0_8px_rgba(167,139,250,0.4)]',
+    badgeBg: 'bg-white/[0.04]',
+    badgeText: 'text-violet-200',
+    badgeBorder: 'border-white/[0.08]',
+    cardBorder: 'border-white/[0.08]',
+    cardBg: 'bg-[#0E0E17]',
+    textColor: 'text-violet-300',
   },
   volume: {
     label: 'VOLUME SURGE',
     icon: BarChart2,
-    dotBg: 'bg-amber-500',
-    dotBorder: 'border-amber-400',
-    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.8)]',
-    badgeBg: 'bg-amber-950/90',
-    badgeText: 'text-amber-300',
-    badgeBorder: 'border-amber-500/60',
-    cardBorder: 'border-amber-500/60',
-    cardBg: 'bg-gradient-to-b from-[#1F190E] to-[#120F08]',
-    textColor: 'text-amber-400',
+    dotBg: 'bg-purple-600',
+    dotBorder: 'border-purple-400',
+    glow: 'shadow-[0_0_8px_rgba(147,51,234,0.4)]',
+    badgeBg: 'bg-purple-950/50',
+    badgeText: 'text-purple-300',
+    badgeBorder: 'border-purple-500/30',
+    cardBorder: 'border-purple-500/30',
+    cardBg: 'bg-[#0E0E17]',
+    textColor: 'text-purple-300',
   },
   settle: {
     label: 'SETTLEMENT',
     icon: CheckCircle2,
     dotBg: 'bg-emerald-500',
     dotBorder: 'border-emerald-400',
-    glow: 'shadow-[0_0_12px_rgba(16,185,129,0.8)]',
-    badgeBg: 'bg-emerald-950/90',
+    glow: 'shadow-[0_0_8px_rgba(16,185,129,0.4)]',
+    badgeBg: 'bg-emerald-950/50',
     badgeText: 'text-emerald-300',
-    badgeBorder: 'border-emerald-500/60',
-    cardBorder: 'border-emerald-500/60',
-    cardBg: 'bg-gradient-to-b from-[#0E201B] to-[#081410]',
+    badgeBorder: 'border-emerald-500/30',
+    cardBorder: 'border-emerald-500/30',
+    cardBg: 'bg-[#0E0E17]',
     textColor: 'text-emerald-400',
   },
 };
@@ -340,16 +340,16 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
   };
 
   return (
-    <div className="rounded-none border border-white/[0.08] bg-[#0A0A12] overflow-hidden flex flex-col font-mono">
+    <div className="rounded-none border border-white/[0.07] bg-[#08080E] overflow-hidden flex flex-col font-mono">
       {/* Header with Title and Nav Controls */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.08] bg-[#0E0E17]">
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.07] bg-[#0E0E17]">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+          <div className="p-1 rounded-none bg-violet-950/60 border border-violet-500/30 text-violet-300">
             <Sparkles className="w-3 h-3" />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-white uppercase tracking-wider">EVENT & CATALYST TIMELINE</span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300 font-bold font-mono">
+            <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/60 border border-violet-500/30 text-violet-300 font-bold font-mono">
               {cleanAsset}
             </span>
           </div>
@@ -360,7 +360,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
           <span className="text-[10px] text-gray-400 font-bold">
             Event {activeIndex + 1} of {events.length}
           </span>
-          <div className="flex items-center bg-[#12121C] rounded-none border border-white/[0.08] p-0.5">
+          <div className="flex items-center bg-[#12121C] rounded-none border border-white/[0.07] p-0.5">
             <button
               onClick={handlePrev}
               disabled={activeIndex <= 0}
@@ -382,10 +382,10 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
       </div>
 
       {/* ─── 1. Continuous Timeline Track ──────── */}
-      <div className="px-6 pt-4 pb-2.5 bg-[#07070B] border-b border-white/[0.06]">
+      <div className="px-6 pt-4 pb-2.5 bg-[#07070A] border-b border-white/[0.07]">
         <div className="relative">
           {/* Horizontal Line connecting events */}
-          <div className="absolute top-[6px] left-3 right-3 h-[1px] bg-white/[0.12]" />
+          <div className="absolute top-[6px] left-3 right-3 h-[1px] bg-white/[0.08]" />
 
           {/* Category Colored Dots */}
           <div className="relative flex justify-between items-center">
@@ -404,7 +404,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   <div
                     className={`w-3 h-3 rounded-full border transition-transform duration-200 ${theme.dotBorder} ${theme.dotBg} ${
                       isSelected
-                        ? 'scale-125 ring-2 ring-white/60'
+                        ? 'scale-125 ring-2 ring-violet-400/60'
                         : 'opacity-85 group-hover:scale-110 group-hover:opacity-100'
                     }`}
                   />
@@ -425,12 +425,12 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
 
       {/* ─── 2. Single Active Event Spotlight ─── */}
       {activeEvent && (
-        <div className="p-3.5 bg-[#0A0A12]">
+        <div className="p-3.5 bg-[#08080E]">
           <div
             className={`p-3.5 rounded-none border transition-colors ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
           >
             {/* Top Bar: Badge, Time, Status */}
-            <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/[0.08]">
+            <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/[0.07]">
               <div className="flex items-center gap-2">
                 <span
                   className={`flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-none font-bold border ${activeTheme.badgeBg} ${activeTheme.badgeText} ${activeTheme.badgeBorder}`}
@@ -444,7 +444,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                 </span>
               </div>
 
-              <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-[#12121C] border border-white/[0.08] text-gray-400 font-mono">
+              <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-[#12121C] border border-white/[0.07] text-gray-400 font-mono">
                 Focused Event
               </span>
             </div>
@@ -460,11 +460,11 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
             </p>
 
             {/* Bottom Row: Price Movement & Action Link */}
-            <div className="pt-2 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-2">
+            <div className="pt-2 border-t border-white/[0.07] flex flex-wrap items-center justify-between gap-2">
               {activeEvent.priceBefore !== undefined && activeEvent.priceAfter !== undefined ? (
                 <div className="flex items-center gap-2 text-xs font-mono">
                   <span className="text-gray-400 text-[10px]">Market Reaction:</span>
-                  <span className="font-bold text-white bg-[#12121C] px-2 py-0.5 rounded-none border border-white/[0.08] flex items-center gap-1.5 text-[11px]">
+                  <span className="font-bold text-white bg-[#12121C] px-2 py-0.5 rounded-none border border-white/[0.07] flex items-center gap-1.5 text-[11px]">
                     <span>${activeEvent.priceBefore.toFixed(2)}</span>
                     <ArrowRight className="w-3 h-3 text-gray-500" />
                     <span className="text-emerald-400">${activeEvent.priceAfter.toFixed(2)}</span>
@@ -472,7 +472,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                 </div>
               ) : (
                 <div className="text-[10px] text-gray-400 flex items-center gap-1 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
                   Verified RAG Ingestion Pipeline
                 </div>
               )}
@@ -483,7 +483,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => sound.playClick()}
-                  className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#161622] text-violet-300 hover:text-white border border-white/[0.08] text-[10px] font-bold font-mono transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#161622] text-violet-300 hover:text-white border border-white/[0.07] text-[10px] font-bold font-mono transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <span>View Evidence</span>
                   <ExternalLink className="w-3 h-3 text-violet-400" />
@@ -495,9 +495,9 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
                     sound.speakBriefing(`${activeEvent.title}. ${activeEvent.description}`);
                   }}
                   title="Hear Voice Briefing"
-                  className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#161622] text-gray-300 hover:text-white border border-white/[0.08] text-[10px] font-bold font-mono transition-colors flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#161622] text-gray-300 hover:text-white border border-white/[0.07] text-[10px] font-bold font-mono transition-colors flex items-center gap-1 cursor-pointer"
                 >
-                  <Volume2 className="w-3 h-3 text-cyan-400" />
+                  <Volume2 className="w-3 h-3 text-violet-400" />
                   <span>Audio Brief</span>
                 </button>
               </div>
@@ -507,7 +507,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
       )}
 
       {/* ─── 3. Footer Legend ───────────────── */}
-      <div className="flex flex-wrap items-center justify-between px-3.5 py-1.5 border-t border-white/[0.08] bg-[#0E0E17] text-[9px] font-mono">
+      <div className="flex flex-wrap items-center justify-between px-3.5 py-1.5 border-t border-white/[0.07] bg-[#0E0E17] text-[9px] font-mono">
         <div className="flex items-center gap-3.5 flex-wrap">
           {Object.entries(CATEGORY_THEMES).map(([cat, theme]) => {
             const Icon = theme.icon;

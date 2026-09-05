@@ -21,11 +21,11 @@ interface AICopilotFeedProps {
 
 export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectMarket }) => {
   return (
-    <div className="bg-[#0A0A12] border border-white/[0.08] rounded-none p-3.5 h-full flex flex-col font-mono">
+    <div className="bg-[#08080E] border border-white/[0.07] rounded-none p-3.5 h-full flex flex-col font-mono">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/[0.08]">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/[0.07]">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+          <div className="p-1 rounded-none bg-violet-950/60 border border-violet-500/30 text-violet-300">
             <Bot className="w-3.5 h-3.5" />
           </div>
           <div>
@@ -62,7 +62,7 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
               <div
                 key={idx}
                 onClick={() => onSelectMarket(sig.symbol)}
-                className="p-2.5 rounded-none bg-[#0E0E17] border border-white/[0.06] hover:border-violet-500/40 hover:bg-[#12121C] transition-colors cursor-pointer group"
+                className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.06] hover:border-violet-500/40 hover:bg-[#12121C] transition-colors cursor-pointer group"
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="font-mono text-xs font-bold text-white group-hover:text-violet-300 transition-colors flex items-center gap-1.5">
