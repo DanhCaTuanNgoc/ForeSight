@@ -48,6 +48,9 @@
 6. [Proof-of-Thesis Alpha Card Studio (1200×675 HD)](#-6-proof-of-thesis-alpha-card-studio)
 7. [Automated Strategy Bot Suite & Personas](#-7-automated-strategy-bot-suite--personas)
 8. [Full System Architecture & Multi-Tier Data Flow](#-8-full-system-architecture--multi-tier-data-flow)
+   - [End-to-End Architectural Data Flow](#81-end-to-end-architectural-data-flow)
+   - [End-to-End Decision & Settlement Lifecycle](#82-end-to-end-decision--settlement-lifecycle)
+   - [Multi-Tier System Breakdown & Performance SLAs](#83-multi-tier-system-breakdown--performance-slas)
 9. [Developer Diagnostics & Test Verification (120/120 Tests)](#-9-developer-diagnostics--test-verification-120120-tests)
 10. [Somnia & DreamDEX Developer Feedback Report](#-10-somnia--dreamdex-developer-feedback-report)
 11. [Local Installation & Development Guide](#-11-local-installation--development-guide)
@@ -113,31 +116,71 @@ ForeSight organizes raw prediction market data into a structured **4-stage decis
 
 ### Dual AI Adversarial Debate Pipeline
 
-| Step | Flow Layer | Operational Trigger | Data & Protocol Payload | Resulting Invariant |
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                DUAL AI REASONING & ARBITRATION FLOW                             │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                 │
+│  [Market Context Ingestion]                                                                     │
+│  • DreamDEX CLOB Orderbook (Spread bps, Depth)                                                  │
+│  • Live Verified RSS Streams (CoinDesk, Decrypt, Cointelegraph)                                 │
+│                                │                                                                │
+│                ┌───────────────┴───────────────┐                                                │
+│                ▼                               ▼                                                │
+│  ┌───────────────────────────┐   ┌───────────────────────────┐                                  │
+│  │ 🐂 Alpha Bull Persona     │   │ 🐻 Macro Bear Persona     │                                  │
+│  │ • Orderbook bid dominance │   │ • Binary theta decay rate │                                  │
+│  │ • Upside news catalysts   │   │ • Overhead ask resistance │                                  │
+│  │ • Target Prob: P_bull     │   │ • Target Prob: P_bear     │                                  │
+│  │ • Confidence: C_bull      │   │ • Confidence: C_bear      │                                  │
+│  └─────────────┬─────────────┘   └─────────────┬─────────────┘                                  │
+│                │                               │                                                │
+│                └───────────────┬───────────────┘                                                │
+│                                ▼                                                                │
+│  ┌───────────────────────────────────────────────────────────┐                                  │
+│  │ ⚖️ Consensus Arbitration & Schema Validation Engine       │                                  │
+│  │ • Net Alpha Score: S = (C_bull·P_bull + C_bear·P_bear)/ΣC │                                  │
+│  │ • Edge vs Market:  Δ_edge = S - P_clob                    │                                  │
+│  │ • Strict Zod/JSON Validation (Zero hallucinated URLs)     │                                  │
+│  └─────────────────────────────┬─────────────────────────────┘                                  │
+│                                ▼                                                                │
+│  [ Bento Terminal UI: 1-Click Evidence Cards & Half-Kelly Sizing Recommendation ]               │
+│                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Step-by-Step Execution Lifecycle
+
+| Step | Flow Layer | Operational Trigger | Data & Protocol Payload | Guaranteed Invariant |
 | :---: | :--- | :--- | :--- | :--- |
-| **01** | **User Interaction** | Trader clicks contract or spike marker | Target market ID, current probability, orderbook spread | Terminal requests dynamic market synthesis |
-| **02** | **RAG Ingestion** | `NewsIngestionWorker` query | Real-time crypto RSS streams (CoinDesk, Decrypt, Cointelegraph) | Relevant macro & micro catalysts retrieved with source URLs |
-| **03** | **Adversarial Synthesis** | `DualDebateEngine` execution | Structured adversarial prompt (Alpha Bull vs Macro Bear) | LLM reasons over both sides with explicit constraints |
-| **04** | **Schema Validation** | Strict JSON schema parser | `{ bullHeadline, bearHeadline, bullTarget, bearTarget, ... }` | Guarantees deterministic, type-safe data rendering |
-| **05** | **Terminal Delivery** | Single-screen UI update | Dual Arena cards with clickable `[View Evidence]` pills | Trader sees unbiased, evidence-grounded perspective in $<1.5\text{s}$ |
+| **01** | **User Interaction** | Trader clicks contract or spike marker | Target market ID, current probability, orderbook spread | Sub-second dispatch to local AI reasoning worker |
+| **02** | **RAG Ingestion** | `NewsIngestionWorker` query | Real-time crypto RSS streams (CoinDesk, Decrypt, Cointelegraph) | Only verified news with valid source URLs passed to context |
+| **03** | **Adversarial Synthesis** | `DualDebateEngine` execution | Structured adversarial prompt (Alpha Bull vs Macro Bear) | Strict independence: Bull and Bear argue without mutual bias |
+| **04** | **Arbitration & Math** | Consensus Weighted Fusion | $S = \frac{C_{\text{bull}} \cdot P_{\text{bull}} + C_{\text{bear}} \cdot P_{\text{bear}}}{C_{\text{bull}} + C_{\text{bear}}}$, $\Delta_{\text{edge}} = S - P_{\text{clob}}$ | Deterministic edge calibration; zero black-box outputs |
+| **05** | **Schema Validation** | Strict JSON schema parser | Structured payload with headlines, targets, and evidence | Complete type safety; invalid JSON triggers fallback cache |
+| **06** | **Terminal Delivery** | Single-screen UI update | Dual Arena cards with clickable `[View Evidence]` pills | Trader receives balanced, actionable intelligence in $<1.5\text{s}$ |
 
 ---
 
 ### Dynamic Context & Output Schema Architecture
+
+Every debate execution generates a strictly typed JSON payload guaranteeing determinism:
 
 ```json
 {
   "bullHeadline": "Institutional accumulation defending $77.5K strike",
   "bullConfidence": 0.85,
   "bullTarget": 0.80,
-  "bullKeyArguments": ["Orderbook bid asymmetry exceeds ask depth..."],
-  "bullCatalysts": ["Spot volume surge in last 15m..."],
-  "bearHeadline": "Overextended volatility with binary theta decay",
+  "bullKeyArguments": ["Orderbook bid asymmetry exceeds ask depth by 2.4x"],
+  "bullCatalysts": ["Spot volume surge on Binance in last 15m window"],
+  "bearHeadline": "Overextended volatility with binary theta decay acceleration",
   "bearConfidence": 0.75,
   "bearTarget": 0.35,
-  "bearKeyArguments": ["Binary theta decay accelerates near expiry..."],
-  "bearRiskFactors": ["Ask wall resistance at 75% probability..."],
-  "summary": "Consensus favors short-term upside with tight stop..."
+  "bearKeyArguments": ["Binary theta decay accelerates drastically under 10m to expiry"],
+  "bearRiskFactors": ["Heavy ask wall resistance at 75% implied probability"],
+  "consensusScore": 0.589,
+  "netEdgeBps": 89,
+  "summary": "Consensus favors short-term upside with tight stop at 45% probability..."
 }
 ```
 
@@ -243,23 +286,72 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 
 ## 🏗️ 8. Full System Architecture & Multi-Tier Data Flow
 
-| Architectural Tier | Subsystem / Component | Technology Stack | Primary Responsibilities | Guaranteed Protocol Invariants |
+### 8.1 End-to-End Architectural Data Flow
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                1. INGESTION & SENSING TIER                                      │
+│  [Somnia GraphQL Indexer]      [Binance Real-Time Oracle]       [Live Crypto News Feeds]        │
+│  (500+ Active Markets, 10s)    (Spot Momentum & Volatility)     (Catalyst & Sentiment RSS)      │
+└─────────────────────────────────┬───────────────────────────────┬───────────────────────────────┘
+                                  │                               │
+                                  ▼                               ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                2. INTELLIGENCE & PRICING ENGINE                                 │
+│  ┌──────────────────────────────┐                ┌───────────────────────────────────────────┐  │
+│  │ Quantitative Math Core       │   Confluence   │ Dual AI Debate Engine                     │  │
+│  │ • Black-Scholes Φ(d2) Fair P │◄──────────────►│ • 🐂 Alpha Bull (Catalyst & Upside Edge)  │  │
+│  │ • Velocity Coverage (VC)     │   Validation   │ • 🐻 Macro Bear (Tail Risk & Headwinds)   │  │
+│  │ • Half-Kelly Bet Sizing      │                │ • ⚖️ Consensus Alpha Score & Net Sizing   │  │
+│  └──────────────────────────────┘                └───────────────────────────────────────────┘  │
+└─────────────────────────────────┬───────────────────────────────────────────────────────────────┘
+                                  │ Calibrated Alpha Signals
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                3. EXECUTION & AUTOMATION TIER                                   │
+│   [ Bento Trading Cockpit ]         [ 🤖 Autonomous Swarms ]            [ Alpha Card Studio ]   │
+│   • 0ms Client Math Sliders         • ⚡ Volt (Spike Momentum Hunter)    • 1200×675 HD Canvas    │
+│   • 1-Click Order Execution         • 🔮 Oracle (Spot Arbitrageur)      • Proof-of-Thesis Share │
+│   • Live Implied Probability        • 🛡️ Titan (Two-Sided Market Maker) • Social Media Export   │
+└─────────────────────────────────┬───────────────────────────────────────────────────────────────┘
+                                  │ Signed Orders / Batch Claim Calls
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                4. ON-CHAIN SETTLEMENT & L1 TIER                                 │
+│   [ DreamDEX CLOB Contracts ]       [ 🧹 Settlement Sweeper ]          [ Somnia Shannon L1 ]    │
+│   • BinaryPool & BinaryMarket       • Batch claims expired payouts     • 100k+ TPS, <1s Finality│
+│   • Non-custodial escrow            • 100% stranded capital recovery   • Sub-cent EVM gas fees  │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 8.2 End-to-End Decision & Settlement Lifecycle
+
+| Stage | Phase Name | Execution Latency | Data Processing & Protocol Actions |
+| :---: | :--- | :---: | :--- |
+| **1** | **Sensing & Ingestion** | `~100 ms` | Background worker polls Somnia GraphQL (`dev.smk.somnia.host`) for 500+ active event contracts and streams Binance spot feeds. Detects sudden $\Delta P \ge 10\%$ surges. |
+| **2** | **Quantitative & AI Reasoning** | `0 ms (Math) / <2 s (AI)` | Client-side Chebyshev core calculates Black-Scholes fair probability $\Phi(d2)$ and Velocity Coverage ($VC$). Dual AI conducts adversarial Bull vs. Bear debate to establish consensus alpha score. |
+| **3** | **Execution & Order Placement** | `< 1 sec` | User triggers 1-click execution or autonomous bots (Volt, Oracle, Titan) route limit/market orders to DreamDEX CLOB via `@somnia-chain/markets-sdk` and `viem`. |
+| **4** | **Settlement & Capital Sweeping** | `< 1 sec (1-Click)` | Once market oracle reports final settlement, Settlement Sweeper indexes claimable balances and batches redemptions into a single transaction, recirculating 100% of stranded capital. |
+
+### 8.3 Multi-Tier System Breakdown & Performance SLAs
+
+| Architectural Tier | Subsystem / Component | Technology Stack | Primary Responsibilities | Performance SLA & Invariant |
 | :--- | :--- | :--- | :--- | :--- |
-| **1. Presentation Tier** | **Bento Grid Trading Cockpit** | React 19, Vite 6, Tailwind CSS, Lucide | Single-screen terminal layout, probability canvas, order docks | 0 page reloads, responsive layout, dark surface contrast |
-| | **Real-Time Visual Canvas** | Recharts, SVG Sparklines | Live implied probability curves, depth charts, spike markers | Sub-second timeline rendering, zero layout shift |
+| **1. Presentation Tier** | **Bento Grid Trading Cockpit** | React 19, Vite 6, Tailwind CSS, Lucide | Single-screen terminal layout, probability canvas, order docks | **0 page reloads**, responsive layout, dark surface contrast |
+| | **Real-Time Visual Canvas** | Recharts, SVG Sparklines | Live implied probability curves, depth charts, spike markers | **Sub-second timeline rendering**, zero layout shift |
 | | **Simulation Lab Sliders** | Client-Side TypeScript Core | Instant parameter updates for collateral, exit price, and hold time | **0ms network latency** for all PnL and risk math |
-| | **Alpha Card Studio** | HTML5 Canvas, Crypto APIs | 1200×675 HD viral card exports with on-chain watermarks | Certified testnet stamps, 1-click clipboard / X share |
+| | **Alpha Card Studio** | HTML5 Canvas, Crypto APIs | 1200×675 HD viral card exports with on-chain watermarks | **Certified testnet stamps**, 1-click clipboard / X share |
 | **2. Intelligence & Worker Tier** | **Snapshot Polling Worker** | Node.js, Express, TypeScript | Scans 500+ contracts every 10s via GraphQL indexer | Detects $\Delta P \ge 10\%$ surges within 1 block time |
 | | **News Ingestion & RAG** | RSS Ingestion Engine | Ingests real-world crypto news streams continuously | Direct source verification, zero hallucinated claims |
 | | **Dual Debate Engine** | LLM Gateway (Gemini, Groq) | Adversarial Alpha Bull vs Macro Bear reasoning | Strict JSON validation, explicit separation of bull/bear cases |
 | | **Quantitative Pricing Core** | Chebyshev Approximation Core | Black-Scholes $\Phi(d2)$, Half-Kelly, Velocity Coverage ($VC$) | Rational error bound $|\varepsilon| < 1.5 \times 10^{-7}$ |
-| | **Settlement Sweeper Engine** | Batch Scanning Worker | Indexes matured contracts and calculates claimable payouts | Recovers 100% of stranded capital across expired pools |
+| | **Settlement Sweeper Engine** | Batch Scanning Worker | Indexes matured contracts and calculates claimable payouts | **Recovers 100% of stranded capital** across expired pools |
 | **3. Autonomous Swarm Tier** | **⚡ Volt** | Algorithmic Bot Runner | Spike momentum hunter sniping sudden orderbook volume surges | Trigger: $\Delta P / \Delta t > \text{threshold}$ |
 | | **🔮 Oracle** | Algorithmic Bot Runner | Cross-venue arbitrageur exploiting Binance spot vs CLOB lag | Trigger: $\|P_{\text{spot}} - P_{\text{clob}}\| > 50\text{ bps}$ |
 | | **🛡️ Titan** | Algorithmic Bot Runner | Two-sided quantitative market maker providing bid-ask liquidity | Maintains spread $< 40\text{ bps}$ around fair probability |
 | | **🧹 Sweeper** | Algorithmic Bot Runner | Automated listener batch-claiming matured YES/NO tokens | Trigger: $\text{Expiry} < \text{Now} \ \&\ \text{Claimable} > 0$ |
 | **4. Blockchain & Protocol Tier** | **DreamDEX CLOB Contracts** | Solidity, `BinaryPool`, `BinaryMarket` | Central limit order book execution, collateral escrow | Non-custodial settlement, deterministic payouts |
-| | **GraphQL Indexer** | `dev.smk.somnia.host` | High-cadence indexing of active markets, orders, and venues | Sub-second query response across 500+ active pools |
+| | **GraphQL Indexer** | `dev.smk.somnia.host` | High-cadence indexing of active markets, orders, and venues | **Sub-second query response** across 500+ active pools |
 | | **Somnia Shannon Testnet** | Somnia L1 (`Chain ID: 50312`) | High-throughput execution with IceDB & sub-second block finality | **100k+ TPS**, sub-cent gas fees, EVM compatibility |
 
 ---
