@@ -63,9 +63,9 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#0A0A12] w-full max-w-4xl max-h-[90vh] rounded-none border border-white/[0.08] flex flex-col shadow-2xl overflow-hidden font-mono">
+      <div className="bg-[#08080E] w-full max-w-4xl max-h-[90vh] rounded-none border border-white/[0.08] flex flex-col shadow-2xl overflow-hidden font-mono">
         {/* Modal Top Header */}
-        <div className="p-3.5 px-5 border-b border-white/[0.08] flex items-center justify-between bg-[#0E0E17]">
+        <div className="p-3.5 px-5 border-b border-white/[0.07] flex items-center justify-between bg-[#0E0E17]">
           <div className="flex items-center gap-3">
             <div className="p-1.5 rounded-none bg-violet-950/80 text-violet-300 border border-violet-500/40">
               <Zap className="w-3.5 h-3.5" />
@@ -92,7 +92,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
         </div>
 
         {/* Modal Body / Scrollable */}
-        <div className="p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar bg-[#07070B]">
+        <div className="p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar bg-[#07070A]">
           {isLoading ? (
             <div className="py-16 text-center text-gray-400 space-y-2 font-mono">
               <Bot className="w-6 h-6 mx-auto text-violet-400 animate-spin" />
@@ -101,8 +101,8 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
           ) : debateData ? (
             <>
               {/* Executive Summary */}
-              <div className="p-3 rounded-none bg-[#0A0A12] border border-white/[0.08] flex items-start gap-2.5">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+              <div className="p-3 rounded-none bg-[#0B0B14] border border-white/[0.07] flex items-start gap-2.5">
+                <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <h4 className="text-[10px] font-bold text-violet-300 uppercase tracking-wider font-mono">
                     SYNTHESIS & ARBITRATION
@@ -114,7 +114,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
               {/* The Arena: Bull vs Bear Side-by-Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* ALPHA BULL CARD */}
-                <div className="p-3.5 rounded-none border border-emerald-500/30 bg-[#0A0A12] flex flex-col justify-between space-y-3">
+                <div className="p-3.5 rounded-none border border-emerald-500/30 bg-[#0B0B14] flex flex-col justify-between space-y-3">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                       <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
@@ -174,7 +174,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                 </div>
 
                 {/* MACRO BEAR CARD */}
-                <div className="p-3.5 rounded-none border border-rose-500/30 bg-[#0A0A12] flex flex-col justify-between space-y-3">
+                <div className="p-3.5 rounded-none border border-rose-500/30 bg-[#0B0B14] flex flex-col justify-between space-y-3">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                       <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs">
@@ -254,7 +254,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                         href={src.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-2 rounded-none bg-[#0A0A12] hover:bg-[#12121C] border border-white/[0.06] hover:border-violet-500/40 transition-colors flex items-start justify-between group"
+                        className="p-2 rounded-none bg-[#0B0B14] hover:bg-[#0E0E17] border border-white/[0.06] hover:border-violet-500/40 transition-colors flex items-start justify-between group"
                       >
                         <div className="space-y-0.5 pr-2">
                           <p className="text-xs text-gray-200 group-hover:text-violet-300 line-clamp-2">
@@ -285,11 +285,11 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-2.5 px-5 border-t border-white/[0.08] bg-[#0E0E17] flex items-center justify-between text-[10px] text-gray-400 font-mono">
+        <div className="p-2.5 px-5 border-t border-white/[0.07] bg-[#0E0E17] flex items-center justify-between text-[10px] text-gray-400 font-mono">
           <span>AI Multi-Agent Consensus · Somnia L1</span>
           <button
             onClick={onClose}
-            className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#161622] text-gray-200 text-[10px] font-bold border border-white/[0.08] transition-colors cursor-pointer"
+            className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#181826] text-gray-200 text-[10px] font-bold border border-white/[0.07] transition-colors cursor-pointer"
           >
             CLOSE
           </button>

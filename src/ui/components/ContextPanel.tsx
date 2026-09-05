@@ -24,11 +24,11 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
   onViewDebate,
 }) => {
   return (
-    <aside className="w-full h-full flex flex-col divide-y divide-white/[0.06] bg-[#0E0E17] text-gray-300 text-xs overflow-y-auto custom-scrollbar font-mono">
+    <aside className="w-full h-full flex flex-col divide-y divide-white/[0.05] bg-[#0A0A10] text-gray-300 text-xs overflow-y-auto custom-scrollbar font-mono">
       {/* ─── 1. Header: Orderbook ─── */}
-      <div className="p-3 bg-[#0A0A12] flex items-center justify-between sticky top-0 z-10 border-b border-white/[0.08]">
+      <div className="p-3 bg-[#08080E] flex items-center justify-between sticky top-0 z-10 border-b border-white/[0.07]">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+          <div className="p-1.5 rounded-none bg-violet-950/60 border border-violet-500/40 text-violet-300">
             <Layers className="w-3.5 h-3.5" />
           </div>
           <div>
@@ -39,7 +39,7 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
       </div>
 
       {/* ─── 2. Interactive Orderbook Depth Ladder ─── */}
-      <div className="p-2 space-y-2 bg-[#0E0E17]">
+      <div className="p-2 space-y-2 bg-[#0A0A10]">
         <DepthChart
           symbol={symbol}
           midPrice={midPrice}
@@ -48,13 +48,13 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
       </div>
 
       {/* ─── 3. Microstructure Metrics Card ─── */}
-      <div className="p-3 bg-[#0A0A12] space-y-2 border-t border-white/[0.06]">
+      <div className="p-3 bg-[#08080E] space-y-2 border-t border-white/[0.06]">
         <div className="text-[9px] font-mono uppercase tracking-widest text-gray-500 font-bold">
           ENGINE METRICS
         </div>
         <div className="flex items-center justify-between text-[11px]">
           <span className="text-gray-400 font-medium">Latency</span>
-          <span className="text-cyan-400 font-bold font-mono">~15ms</span>
+          <span className="text-violet-300 font-bold font-mono">~15ms</span>
         </div>
         <div className="flex items-center justify-between text-[11px]">
           <span className="text-gray-400 font-medium">Matching Engine</span>
@@ -70,14 +70,14 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
       </div>
 
       {/* ─── 4. Quick Portal to Dedicated Insights ─── */}
-      <div className="p-3 bg-[#0E0E17] border-t border-white/[0.08]">
-        <div className="p-3 rounded-none bg-[#12121C] border border-white/[0.08] space-y-2">
+      <div className="p-3 bg-[#0A0A10] border-t border-white/[0.07]">
+        <div className="p-3 rounded-none bg-[#0E0E17] border border-white/[0.07] space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-gray-200 font-bold text-xs">
               <Brain className="w-3.5 h-3.5 text-violet-400" />
               <span>RESEARCH & SIGNALS</span>
             </div>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/60 text-violet-300 font-mono border border-violet-500/30">
+            <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/50 text-violet-300 font-mono border border-violet-500/30 font-bold">
               DEBATE
             </span>
           </div>
@@ -95,7 +95,7 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
                 onViewDebate();
               }
             }}
-            className="w-full py-2 bg-[#16161F] hover:bg-[#1C1C28] text-violet-300 hover:text-white rounded-none font-mono font-bold text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/[0.08] cursor-pointer"
+            className="w-full py-2 bg-[#12121C] hover:bg-[#161624] text-violet-300 hover:text-white rounded-none font-mono font-bold text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/[0.07] cursor-pointer"
           >
             <span>VIEW RESEARCH</span>
             <ArrowUpRight className="w-3.5 h-3.5" />

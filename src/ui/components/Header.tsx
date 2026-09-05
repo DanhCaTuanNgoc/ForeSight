@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-50 h-12 bg-[#0A0A12] border-b border-white/[0.08] px-3.5 flex items-center justify-between flex-shrink-0">
+    <header className="sticky top-0 z-50 h-12 bg-[#08080E] border-b border-white/[0.07] px-3.5 flex items-center justify-between flex-shrink-0">
       {/* Left: Brand / Logo */}
       <div className="flex items-center gap-3">
         <button
@@ -62,12 +62,12 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-mono font-bold text-sm text-white tracking-widest group-hover:text-violet-300 transition-colors">
               FORESIGHT
             </span>
-            <span className="text-[9px] font-mono text-violet-300 bg-violet-950/60 border border-violet-500/30 px-1 py-0.2 rounded-none font-bold">
+            <span className="text-[9px] font-mono text-violet-300 bg-violet-950/50 border border-violet-500/30 px-1 py-0.2 rounded-none font-bold">
               TERMINAL
             </span>
           </div>
         </button>
-        <div className="flex items-center gap-1.5 pl-2.5 border-l border-white/[0.08]">
+        <div className="flex items-center gap-1.5 pl-2.5 border-l border-white/[0.07]">
           <span className="relative flex h-1.5 w-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -86,8 +86,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => onTabChange(tab.id)}
               className={`px-3 py-1 text-xs font-mono rounded-none transition-colors cursor-pointer ${
                 isActive
-                  ? "bg-violet-600/20 text-violet-300 border border-violet-500/30 font-semibold"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-[#161622] border border-transparent"
+                  ? "bg-violet-600/20 text-violet-300 border border-violet-500/40 font-semibold"
+                  : "text-gray-400 hover:text-gray-200 hover:bg-[#12121C] border border-transparent"
               }`}
             >
               {tab.label}
@@ -109,8 +109,8 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Switch Network</span>
           </button>
         ) : (
-          <div className="hidden sm:flex items-center gap-1.5 bg-[#12121C] border border-white/[0.08] px-2 py-1 rounded-none text-[10px] font-mono text-gray-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+          <div className="hidden sm:flex items-center gap-1.5 bg-[#0E0E17] border border-white/[0.07] px-2 py-1 rounded-none text-[10px] font-mono text-gray-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
             <span>Somnia Shannon</span>
             <span className="text-gray-500 text-[9px]">50312</span>
           </div>
@@ -120,13 +120,13 @@ export const Header: React.FC<HeaderProps> = ({
         {isConnected ? (
           <button
             onClick={handleWalletClick}
-            className="bg-[#16161F] hover:bg-[#1C1C28] border border-white/[0.08] text-gray-200 text-xs font-mono px-2.5 py-1 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="bg-[#0E0E17] hover:bg-[#141420] border border-white/[0.08] text-gray-200 text-xs font-mono px-2.5 py-1 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Manage Connected Wallet"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>{shortAddr}</span>
             {wallet.balance !== null && (
-              <span className="hidden lg:inline text-gray-400 text-[10px] pl-1.5 border-l border-white/[0.08]">
+              <span className="hidden lg:inline text-gray-400 text-[10px] pl-1.5 border-l border-white/[0.07]">
                 {wallet.balance} STT
               </span>
             )}
@@ -143,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Settings button */}
         <button
-          className="p-1 text-gray-400 hover:text-gray-200 hover:bg-[#161622] rounded-none border border-transparent hover:border-white/[0.08] transition-colors"
+          className="p-1 text-gray-400 hover:text-gray-200 hover:bg-[#12121C] rounded-none border border-transparent hover:border-white/[0.07] transition-colors"
           title="Settings"
         >
           <Settings className="w-3.5 h-3.5" />

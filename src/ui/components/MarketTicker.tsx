@@ -109,7 +109,7 @@ export const MarketTicker: React.FC<MarketTickerProps> = ({
   const durationSec = Math.max(60, Math.round(totalStripWidthPx / 25));
 
   return (
-    <div className="h-9 border-b border-[#2A2A3D]/70 bg-[#0D0D14] overflow-hidden flex items-center select-none relative">
+    <div className="h-8 border-b border-white/[0.06] bg-[#090910] overflow-hidden flex items-center select-none relative">
       <div
         className="ticker-track flex items-center gap-0"
         style={{
@@ -132,18 +132,18 @@ export const MarketTicker: React.FC<MarketTickerProps> = ({
               return (
                 <div
                   key={`${stripIdx}-${idx}`}
-                  className="flex items-center gap-2 px-4 text-xs font-mono whitespace-nowrap border-r border-[#2A2A3D]/40 transition-colors hover:bg-white/[0.04]"
+                  className="flex items-center gap-2 px-3 text-[11px] font-mono whitespace-nowrap border-r border-white/[0.05] transition-colors hover:bg-white/[0.03]"
                 >
-                  <CryptoIcon symbol={t.symbol} size={15} />
-                  <span className="text-gray-300 font-semibold">{t.symbol}</span>
-                  <span className="text-gray-100 font-medium">${formattedPrice}</span>
+                  <CryptoIcon symbol={t.symbol} size={14} />
+                  <span className="text-gray-300 font-medium">{t.symbol}</span>
+                  <span className="text-gray-100 font-semibold">${formattedPrice}</span>
                   <span
-                    className={`text-[11px] font-semibold flex items-center gap-0.5 ${
+                    className={`text-[10px] font-semibold flex items-center gap-0.5 ${
                       isUp ? "text-emerald-400" : "text-rose-400"
                     }`}
                   >
-                    {isUp ? "▲ +" : "▼ "}
-                    {Math.abs(t.change).toFixed(2)}%
+                    {isUp ? "+" : ""}
+                    {t.change.toFixed(2)}%
                   </span>
                 </div>
               );

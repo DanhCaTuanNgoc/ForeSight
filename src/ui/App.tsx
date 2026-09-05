@@ -457,14 +457,14 @@ function ForeSightTerminalApp() {
 
   // ─── Else Render All-in-One Zero-Scroll Single-Screen Cockpit ───────────────
   return (
-    <div className="h-screen w-screen bg-[#07070B] text-[#E2E8F0] flex flex-col font-sans selection:bg-violet-600 selection:text-white overflow-hidden">
-      {/* Toast Notification (Sharp Precision Box with Signal LED - Section 20) */}
+    <div className="h-screen w-screen bg-[#07070A] text-[#F1F5F9] flex flex-col font-sans selection:bg-violet-600 selection:text-white overflow-hidden">
+      {/* Toast Notification */}
       {toastMessage && (
         <div
           className={`fixed top-14 right-5 z-50 px-3.5 py-2 rounded-none shadow-2xl border font-mono text-xs fade-in flex items-center gap-2.5 backdrop-blur-md ${
             toastMessage.type === "success"
-              ? "bg-[#0E0E17]/95 text-emerald-300 border-emerald-500/50 shadow-emerald-950/40"
-              : "bg-[#0E0E17]/95 text-rose-300 border-rose-500/50 shadow-rose-950/40"
+              ? "bg-[#0E0E17]/95 text-emerald-300 border-emerald-500/40 shadow-emerald-950/40"
+              : "bg-[#0E0E17]/95 text-rose-300 border-rose-500/40 shadow-rose-950/40"
           }`}
         >
           <span
@@ -531,11 +531,11 @@ function ForeSightTerminalApp() {
 
       {activeTab === "markets" && (
         <>
-          <div className="flex-1 flex min-h-0 overflow-hidden bg-[#07070B]">
+          <div className="flex-1 flex min-h-0 overflow-hidden bg-[#07070A]">
             {/* ── LEFT COLUMN: Markets Navigator ── */}
-            <aside className="w-60 xl:w-64 border-r border-white/[0.08] bg-[#0E0E17] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
+            <aside className="w-60 xl:w-64 border-r border-white/[0.07] bg-[#0A0A10] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
               {/* Search Bar & Categories */}
-              <div className="p-2 border-b border-white/[0.08] bg-[#0A0A12] space-y-1.5">
+              <div className="p-2 border-b border-white/[0.07] bg-[#07070C] space-y-1.5">
                 <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] focus-within:border-violet-500/60 rounded-none px-2 py-1 gap-2 transition-colors">
                   <Search className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                   <input
@@ -558,8 +558,8 @@ function ForeSightTerminalApp() {
                       }}
                       className={`text-[9px] font-mono py-0.5 rounded-none font-bold uppercase transition-colors border cursor-pointer ${
                         categoryFilter === cat
-                          ? "bg-violet-600/30 text-violet-300 border-violet-500/50"
-                          : "bg-[#12121C] text-gray-400 border-white/[0.06] hover:text-gray-200 hover:bg-[#161622]"
+                          ? "bg-violet-600/25 text-violet-300 border-violet-500/50"
+                          : "bg-[#0E0E17] text-gray-400 border-white/[0.05] hover:text-gray-200 hover:bg-[#13131F]"
                       }`}
                     >
                       {cat}
@@ -569,7 +569,7 @@ function ForeSightTerminalApp() {
               </div>
 
               {/* Radar Header with Count and Sort */}
-              <div className="px-2.5 py-1.5 border-b border-white/[0.08] bg-[#0B0B12] flex items-center justify-between">
+              <div className="px-2.5 py-1.5 border-b border-white/[0.07] bg-[#08080E] flex items-center justify-between">
                 <span className="stat-label text-[10px] flex items-center gap-1.5 font-mono">
                   <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full" />
                   MARKETS
@@ -586,14 +586,14 @@ function ForeSightTerminalApp() {
                     <ArrowUpDown className="w-2.5 h-2.5" />
                     <span>{marketSort === "DEFAULT" ? "SORT" : marketSort}</span>
                   </button>
-                  <span className="text-[10px] font-mono text-violet-300 bg-violet-950/60 border border-violet-500/30 px-1 py-0.2 rounded-none font-bold">
+                  <span className="text-[10px] font-mono text-violet-300 bg-violet-950/50 border border-violet-500/30 px-1 py-0.2 rounded-none font-bold">
                     {filteredMarkets.length} ACTIVE
                   </span>
                 </div>
               </div>
 
               {/* Market List */}
-              <div className="flex-1 overflow-y-auto divide-y divide-white/[0.04] custom-scrollbar">
+              <div className="flex-1 overflow-y-auto divide-y divide-white/[0.03] custom-scrollbar">
                 {filteredMarkets.map((m) => {
                   const isSelected = activeMarket.id === m.id;
                   const prob = m.probability ?? 50;
@@ -608,8 +608,8 @@ function ForeSightTerminalApp() {
                       }}
                       className={`w-full text-left p-2.5 transition-colors flex flex-col gap-1 rounded-none border-l-2 cursor-pointer ${
                         isSelected
-                          ? "bg-violet-950/30 border-violet-500 text-violet-300"
-                          : "border-transparent hover:bg-[#12121C] text-gray-300"
+                          ? "bg-violet-950/25 border-violet-500 text-violet-200"
+                          : "border-transparent hover:bg-[#0F0F1A] text-gray-300"
                       }`}
                     >
                       <div className="flex items-center justify-between font-mono">
@@ -624,8 +624,8 @@ function ForeSightTerminalApp() {
                         <span
                           className={`text-[11px] font-bold font-mono px-1.5 py-0.2 border rounded-none ${
                             isYes
-                              ? "text-emerald-400 bg-emerald-950/40 border-emerald-500/30"
-                              : "text-rose-400 bg-rose-950/40 border-rose-500/30"
+                              ? "text-emerald-400 bg-emerald-950/30 border-emerald-500/30"
+                              : "text-rose-400 bg-rose-950/30 border-rose-500/30"
                           }`}
                         >
                           {prob.toFixed(1)}%
@@ -647,9 +647,9 @@ function ForeSightTerminalApp() {
               </div>
 
               {/* Market Navigator Footer Summary */}
-              <div className="p-2 bg-[#0A0A12] border-t border-white/[0.08] flex items-center justify-between text-[9px] font-mono text-gray-500">
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              <div className="p-2 bg-[#07070C] border-t border-white/[0.07] flex items-center justify-between text-[9px] font-mono text-gray-500">
+                <span className="flex items-center gap-1 text-violet-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
                   SOMNIA L1
                 </span>
                 <span className="text-gray-400 font-bold">24H VOL: ${(total24hVol / 1000).toFixed(0)}K</span>
@@ -657,7 +657,7 @@ function ForeSightTerminalApp() {
             </aside>
 
             {/* ── CENTER COLUMN: Visual Intelligence Canvas & Order Simulator ── */}
-            <main className="flex-1 flex flex-col min-w-0 bg-[#07070B] overflow-hidden">
+            <main className="flex-1 flex flex-col min-w-0 bg-[#07070A] overflow-hidden">
               {/* Header Stats Bar */}
               <MarketStats market={activeMarket} serverMode={health?.mode} />
 
@@ -688,6 +688,7 @@ function ForeSightTerminalApp() {
                     prefillOutcome={prefillOutcome}
                     prefillEntryPrice={prefillEntryPrice}
                     prefillTargetExit={prefillTargetExit}
+                    onOutcomeChange={(o) => setPrefillOutcome(o)}
                     onEntryPriceChange={(p) => setPrefillEntryPrice(p)}
                     onTargetExitPriceChange={(p) => setPrefillTargetExit(p)}
                     onTrade={handleExecuteTrade}
@@ -699,7 +700,7 @@ function ForeSightTerminalApp() {
             </main>
 
             {/* ── RIGHT COLUMN: Somnia CLOB Orderbook ────── */}
-            <aside className="w-72 xl:w-80 border-l border-white/[0.08] bg-[#0E0E17] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
+            <aside className="w-72 xl:w-80 border-l border-white/[0.07] bg-[#0A0A10] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
               <ContextPanel
                 symbol={activeSymbol}
                 midPrice={activeMarket?.midPrice || 0.50}

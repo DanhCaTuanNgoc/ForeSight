@@ -128,7 +128,7 @@ function generateMockData(range: TimeRange, baseProbability: number, symbol: str
 // ─── Mode tab config ─────────────────────────────────────────────────────────
 const MODE_TABS: { mode: CanvasVisualMode; icon: React.ElementType; label: string; activeClass: string }[] = [
   { mode: "probability", icon: TrendingUp, label: "Price Chart", activeClass: "bg-violet-600 text-white shadow-sm" },
-  { mode: "montecarlo", icon: Sparkles, label: "Monte Carlo", activeClass: "bg-cyan-600 text-white shadow-sm" },
+  { mode: "montecarlo", icon: Sparkles, label: "Monte Carlo", activeClass: "bg-violet-800 text-violet-100 border border-violet-500/40 shadow-sm" },
 ];
 
 export const PriceChart: React.FC<PriceChartProps> = ({
@@ -382,9 +382,9 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   }, [crosshairPos]);
 
   return (
-    <div className="rounded-xl border border-[#222234] bg-[#0C0C14] flex flex-col overflow-hidden font-mono relative select-none shadow-xl">
+    <div className="rounded-none border border-white/[0.08] bg-[#09090F] flex flex-col overflow-hidden font-mono relative select-none shadow-xl">
       {/* ─── 1. Top Control Toolbar (Clean, Pro & Uncluttered) ─────────── */}
-      <div className="flex flex-wrap items-center justify-between px-3 py-2 border-b border-[#1A1A28] bg-[#09090F] gap-2">
+      <div className="flex flex-wrap items-center justify-between px-3 py-1.5 border-b border-white/[0.07] bg-[#07070C] gap-2">
         {/* Left: Mode Tabs & Live Odds */}
         <div className="flex items-center gap-1">
           {MODE_TABS.map(({ mode, icon: Icon, label, activeClass }) => {
@@ -394,8 +394,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 key={mode}
                 onClick={() => handleModeChange(mode)}
                 title={label}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md transition-all text-[11px] font-bold ${
-                  isActive ? activeClass : "text-gray-400 hover:text-gray-200 hover:bg-[#161620]"
+                className={`flex items-center gap-1 px-2 py-1 rounded-none transition-all text-[11px] font-bold cursor-pointer ${
+                  isActive ? activeClass : "text-gray-400 hover:text-gray-200 hover:bg-[#12121C]"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -404,7 +404,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             );
           })}
 
-          <div className="w-px h-4 bg-[#262638] mx-1" />
+          <div className="w-px h-3.5 bg-white/[0.08] mx-1" />
 
           {/* Live Price Readout with Bar Countdown Timer */}
           <div className="flex items-center gap-2 text-xs">
@@ -413,9 +413,9 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               {isUp ? "+" : ""}{change.toFixed(1)}%
             </span>
 
-            {/* Countdown Badge (⏱ 02:45) */}
+            {/* Countdown Badge */}
             <div
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#161626] border border-[#282840] text-[10px] text-violet-300 font-mono"
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-none bg-[#0E0E17] border border-white/[0.08] text-[10px] text-violet-300 font-mono"
               title="Time left in current candle"
             >
               <Timer className="w-3 h-3 text-violet-400 animate-pulse" />
@@ -435,7 +435,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             <button
               onClick={handleResetZoom}
               title="Reset Zoom & Pan (1x)"
-              className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#141420] text-violet-300 hover:text-white hover:bg-violet-600/30 border border-violet-500/40 rounded transition flex items-center gap-1"
+              className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#0E0E17] text-violet-300 hover:text-white hover:bg-violet-600/30 border border-violet-500/40 rounded-none transition flex items-center gap-1 cursor-pointer"
             >
               <RotateCcw className="w-2.5 h-2.5" />
               <span>{zoomLevel.toFixed(1)}x Reset</span>
@@ -450,35 +450,35 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 setShowEMA(!showEMA);
               }}
               title="Toggle Trend EMA 9 / EMA 21"
-              className={`px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 border transition ${
+              className={`px-2 py-0.5 rounded-none text-[10px] font-bold flex items-center gap-1 border transition cursor-pointer ${
                 showEMA
-                  ? "bg-amber-950/60 border-amber-500/50 text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.2)]"
-                  : "bg-[#12121B] border-[#222234] text-gray-500 hover:text-gray-300"
+                  ? "bg-violet-950/50 border-violet-500/40 text-violet-300"
+                  : "bg-[#0E0E17] border-white/[0.06] text-gray-500 hover:text-gray-300"
               }`}
             >
-              <Activity className="w-3 h-3 text-amber-400" />
+              <Activity className="w-3 h-3 text-violet-400" />
               <span>EMA</span>
             </button>
           )}
 
           {/* Area vs Candle Switcher */}
           {visualMode === "probability" && (
-            <div className="flex items-center bg-[#111118] rounded-md border border-[#222234] text-[10px]">
+            <div className="flex items-center bg-[#0E0E17] rounded-none border border-white/[0.07] text-[10px]">
               <button
                 onClick={() => { sound.playClick(); setCurveMode(curveMode === "dual" ? "yes-only" : "dual"); }}
                 title={curveMode === "dual" ? "YES Only" : "Dual YES/NO"}
-                className={`px-1.5 py-1 rounded-l-md transition ${
-                  curveMode === "dual" ? "text-emerald-400 bg-emerald-950/50" : "text-gray-500 hover:text-gray-300"
+                className={`px-1.5 py-0.5 transition cursor-pointer ${
+                  curveMode === "dual" ? "text-emerald-400 bg-emerald-950/40" : "text-gray-500 hover:text-gray-300"
                 }`}
               >
                 <Split className="w-3 h-3" />
               </button>
-              <div className="w-px h-3.5 bg-[#222234]" />
+              <div className="w-px h-3 bg-white/[0.08]" />
               <button
                 onClick={() => { sound.playClick(); setRenderType(renderType === "area" ? "candles" : "area"); }}
                 title={renderType === "area" ? "Switch to Candlesticks" : "Switch to Area"}
-                className={`px-1.5 py-1 rounded-r-md transition ${
-                  renderType === "candles" ? "text-amber-400 bg-amber-950/50" : "text-gray-500 hover:text-gray-300"
+                className={`px-1.5 py-0.5 transition cursor-pointer ${
+                  renderType === "candles" ? "text-violet-300 bg-violet-950/40" : "text-gray-500 hover:text-gray-300"
                 }`}
               >
                 <CandlestickChart className="w-3 h-3" />
@@ -488,16 +488,16 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
           {/* Monte Carlo Volatility */}
           {visualMode === "montecarlo" && (
-            <div className="flex items-center bg-[#111118] rounded-md border border-[#222234] text-[9px]">
+            <div className="flex items-center bg-[#0E0E17] rounded-none border border-white/[0.07] text-[9px]">
               {(["low", "normal", "high"] as VolatilityLevel[]).map((v) => (
                 <button
                   key={v}
                   onClick={() => { sound.playClick(); setMcVolatility(v); }}
-                  className={`px-1.5 py-1 capitalize font-bold transition ${
+                  className={`px-1.5 py-0.5 capitalize font-bold transition cursor-pointer ${
                     mcVolatility === v
-                      ? v === "high" ? "text-rose-400 bg-rose-950/50" : "text-cyan-400 bg-cyan-950/50"
+                      ? v === "high" ? "text-rose-400 bg-rose-950/40" : "text-violet-300 bg-violet-950/50"
                       : "text-gray-500 hover:text-gray-300"
-                  } ${v === "low" ? "rounded-l-md" : v === "high" ? "rounded-r-md" : ""}`}
+                  }`}
                 >
                   {v}
                 </button>
@@ -505,7 +505,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             </div>
           )}
 
-          <div className="w-px h-4 bg-[#262638]" />
+          <div className="w-px h-3.5 bg-white/[0.08]" />
 
           {/* Timeframe Buttons */}
           <div className="flex items-center gap-0.5 text-[10px]">
@@ -517,7 +517,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                   handleResetZoom();
                   onTimeRangeChange(r);
                 }}
-                className={`px-1.5 py-0.5 rounded font-bold transition ${
+                className={`px-1.5 py-0.5 rounded-none font-bold transition cursor-pointer ${
                   timeRange === r ? "text-violet-300 bg-violet-600/30 border border-violet-500/40" : "text-gray-500 hover:text-gray-300"
                 }`}
               >
@@ -530,14 +530,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
       {/* ─── 2. TradingView-Grade OHLC Legend Ribbon ──────────────────── */}
       {visualMode === "probability" && (
-        <div className="px-3 py-1 bg-[#090911] border-b border-[#1A1A28] flex items-center justify-between text-[10px] font-mono text-gray-400 overflow-x-auto select-none">
+        <div className="px-3 py-1 bg-[#07070C] border-b border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-gray-400 overflow-x-auto select-none">
           <div className="flex items-center gap-2.5 shrink-0">
             <span className="font-bold text-white flex items-center gap-1">
               <span className="text-violet-400 font-black">{symbol}/tUSDC</span>
-              <span className="text-[9px] px-1 py-0.2 rounded bg-[#161622] text-gray-400">{timeRange}</span>
+              <span className="text-[9px] px-1 py-0.2 rounded-none bg-[#0E0E17] text-gray-400">{timeRange}</span>
             </span>
 
-            <span className="text-gray-500">|</span>
+            <span className="text-gray-600">|</span>
 
             <span>O <b className="text-gray-200">{(activePoint?.open ?? activePoint?.price ?? 0.5).toFixed(2)}</b></span>
             <span>H <b className="text-emerald-400">{(activePoint?.high ?? activePoint?.price ?? 0.5).toFixed(2)}</b></span>
@@ -556,8 +556,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
             {/* EMA Readout when active */}
             {showEMA && activePoint?.ema9 && (
-              <span className="hidden sm:inline text-amber-400/90">
-                EMA9 <b className="text-amber-300">{(activePoint.ema9 * 100).toFixed(1)}%</b>
+              <span className="hidden sm:inline text-violet-400/90">
+                EMA9 <b className="text-violet-300">{(activePoint.ema9 * 100).toFixed(1)}%</b>
               </span>
             )}
             {showEMA && activePoint?.ema21 && (
@@ -870,12 +870,12 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
         {/* Mode 2: Monte Carlo Cone */}
         {visualMode === "montecarlo" && (
-          <div className="h-52 sm:h-60 w-full bg-[#08080E] rounded-lg border border-[#161620] relative overflow-hidden p-2">
+          <div className="h-52 sm:h-60 w-full bg-[#08080E] rounded-none border border-white/[0.06] relative overflow-hidden p-2">
             <svg className="w-full h-full" viewBox="0 0 500 180" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="mcUp" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.08} />
-                  <stop offset="100%" stopColor="#06B6D4" stopOpacity={0.35} />
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.06} />
+                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.3} />
                 </linearGradient>
                 <linearGradient id="mcDn" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.04} />
@@ -896,17 +896,17 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 `M 0 100 Q 300 115 500 112`,
                 `M 0 100 Q 180 ${130 + mcStats.spread / 4} 500 ${138 + mcStats.spread / 4}`,
               ].map((d, i) => (
-                <path key={i} d={d} fill="none" stroke={i < 4 ? "#22D3EE" : "#FB7185"} strokeWidth="1" strokeOpacity={0.35} strokeDasharray={i % 2 === 0 ? "3 3" : undefined} />
+                <path key={i} d={d} fill="none" stroke={i < 4 ? "#A78BFA" : "#FB7185"} strokeWidth="1" strokeOpacity={0.35} strokeDasharray={i % 2 === 0 ? "3 3" : undefined} />
               ))}
 
-              <path d="M 0 100 Q 250 80 500 48" fill="none" stroke="#38BDF8" strokeWidth="2" />
+              <path d="M 0 100 Q 250 80 500 48" fill="none" stroke="#C4B5FD" strokeWidth="2" />
               <line x1="0" y1="30" x2="500" y2="30" stroke="#10B981" strokeWidth="1" strokeDasharray="4 4" />
               <line x1="0" y1="150" x2="500" y2="150" stroke="#F43F5E" strokeWidth="1" strokeDasharray="4 4" />
             </svg>
 
             <div className="absolute top-2 right-2 text-[9px] font-mono space-y-0.5">
               <div className="text-emerald-400/80">Strike ↑</div>
-              <div className="text-cyan-300 font-bold">{mcStats.feasibility}% feasible</div>
+              <div className="text-violet-300 font-bold">{mcStats.feasibility}% feasible</div>
               <div className="text-rose-400/80">Break ↓</div>
             </div>
           </div>
@@ -914,7 +914,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
         {/* Panning / Time Horizon Indicator */}
         {(zoomLevel > 1 || panOffset > 0) && (
-          <div className="absolute top-2 left-3 bg-[#0E0E16]/90 border border-violet-500/40 rounded px-2 py-0.5 text-[9px] text-violet-300 font-mono flex items-center gap-1.5 shadow-sm z-30">
+          <div className="absolute top-2 left-3 bg-[#0E0E16]/90 border border-violet-500/40 rounded-none px-2 py-0.5 text-[9px] text-violet-300 font-mono flex items-center gap-1.5 shadow-sm z-30">
             <MoveHorizontal className="w-2.5 h-2.5 text-violet-400" />
             <span>
               Window: {data[0]?.time} → {data[data.length - 1]?.time} ({zoomLevel.toFixed(1)}x)
@@ -927,14 +927,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         {selectedSpike && (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="absolute top-10 right-3 w-72 bg-[#111118]/95 border border-[#2A2A3D] rounded-xl p-3 shadow-xl backdrop-blur-xl z-30 space-y-2 animate-fadeIn"
+            className="absolute top-10 right-3 w-72 bg-[#0E0E17]/95 border border-white/[0.08] rounded-none p-3 shadow-xl backdrop-blur-xl z-30 space-y-2 animate-fadeIn"
           >
-            <div className="flex items-center justify-between pb-1.5 border-b border-[#1F1F2E]">
+            <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.06]">
               <span className="text-emerald-400 font-bold text-[11px] flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 {selectedSpike.time} UTC · {selectedSpike.magnitude}
               </span>
-              <button onClick={() => setSelectedSpike(null)} className="text-gray-500 hover:text-white"><X className="w-3 h-3" /></button>
+              <button onClick={() => setSelectedSpike(null)} className="text-gray-500 hover:text-white cursor-pointer"><X className="w-3 h-3" /></button>
             </div>
 
             <p className="text-gray-300 text-[11px] font-sans leading-relaxed">{selectedSpike.summary}</p>
@@ -946,7 +946,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => { sound.playClick(); sound.speakBriefing(`Spike on ${symbol}. ${selectedSpike.summary}`); }}
-                className="py-1.5 rounded bg-[#161620] hover:bg-[#1E1E2E] border border-[#2A2A3D] text-violet-300 font-bold text-[10px] flex items-center justify-center gap-1 transition"
+                className="py-1.5 rounded-none bg-[#12121C] hover:bg-[#181824] border border-white/[0.08] text-violet-300 font-bold text-[10px] flex items-center justify-center gap-1 transition cursor-pointer"
               >
                 <Volume2 className="w-3 h-3" /> Voice
               </button>
@@ -957,7 +957,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                   if (showToast) showToast(`⚡ Synced Spike Entry $${selectedSpike.price.toFixed(2)} to Simulator!`, "success");
                   setSelectedSpike(null);
                 }}
-                className="py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center justify-center gap-1 transition"
+                className="py-1.5 rounded-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center justify-center gap-1 transition cursor-pointer"
               >
                 <Zap className="w-3 h-3" /> Trade Spike
               </button>

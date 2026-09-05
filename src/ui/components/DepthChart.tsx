@@ -103,27 +103,27 @@ export const DepthChart: React.FC<DepthChartProps> = ({
   );
 
   return (
-    <div className="panel rounded-[4px] flex flex-col">
+    <div className="terminal-panel rounded-none flex flex-col bg-[#08080E] border border-white/[0.07]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2A2A3D]">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.07]">
         <div className="flex items-center gap-1.5">
           <Layers className="w-3.5 h-3.5 text-violet-400" />
           <span className="stat-label">ORDER BOOK DEPTH ({symbol}/tUSDC)</span>
         </div>
         <span className="text-[10px] text-gray-500 font-mono">
-          Visual Analytics Only
+          L2 Depth
         </span>
       </div>
 
       {/* Main Grid: Bids Left | Asks Right */}
-      <div className="p-3 grid grid-cols-2 gap-3 text-xs font-mono">
+      <div className="p-2.5 grid grid-cols-2 gap-2 text-xs font-mono">
         {/* BUY DEPTH */}
         <div>
-          <div className="flex justify-between text-[10px] text-gray-500 border-b border-[#2A2A3D]/40 pb-1 mb-1.5 font-sans uppercase font-medium">
+          <div className="flex justify-between text-[10px] text-gray-500 border-b border-white/[0.05] pb-1 mb-1 font-sans uppercase font-medium">
             <span>Size</span>
             <span>Bid ($)</span>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-0.5">
             {bids.map((b, idx) => {
               const widthPct = Math.min(100, Math.round((b.total / maxTotal) * 100));
               return (
@@ -133,12 +133,12 @@ export const DepthChart: React.FC<DepthChartProps> = ({
                     if (onSelectPrice) onSelectPrice(b.price);
                   }}
                   title={`Click to set $${b.price.toFixed(3)} as Entry Odds`}
-                  className={`relative flex justify-between items-center py-1 px-1.5 rounded overflow-hidden transition-colors ${
-                    onSelectPrice ? "hover:bg-emerald-500/25 cursor-pointer" : ""
+                  className={`relative flex justify-between items-center py-0.5 px-1.5 rounded-none overflow-hidden transition-colors ${
+                    onSelectPrice ? "hover:bg-emerald-500/20 cursor-pointer" : ""
                   }`}
                 >
                   <div
-                    className="absolute right-0 top-0 bottom-0 bg-emerald-500/15 rounded-sm"
+                    className="absolute right-0 top-0 bottom-0 bg-emerald-500/10 rounded-none"
                     style={{ width: `${widthPct}%` }}
                   />
                   <span className="text-gray-400 relative z-10 text-[11px]">
@@ -155,11 +155,11 @@ export const DepthChart: React.FC<DepthChartProps> = ({
 
         {/* SELL DEPTH */}
         <div>
-          <div className="flex justify-between text-[10px] text-gray-500 border-b border-[#2A2A3D]/40 pb-1 mb-1.5 font-sans uppercase font-medium">
+          <div className="flex justify-between text-[10px] text-gray-500 border-b border-white/[0.05] pb-1 mb-1 font-sans uppercase font-medium">
             <span>Ask ($)</span>
             <span>Size</span>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-0.5">
             {asks.map((a, idx) => {
               const widthPct = Math.min(100, Math.round((a.total / maxTotal) * 100));
               return (
@@ -169,12 +169,12 @@ export const DepthChart: React.FC<DepthChartProps> = ({
                     if (onSelectPrice) onSelectPrice(a.price);
                   }}
                   title={`Click to set $${a.price.toFixed(3)} as Entry Odds`}
-                  className={`relative flex justify-between items-center py-1 px-1.5 rounded overflow-hidden transition-colors ${
-                    onSelectPrice ? "hover:bg-rose-500/25 cursor-pointer" : ""
+                  className={`relative flex justify-between items-center py-0.5 px-1.5 rounded-none overflow-hidden transition-colors ${
+                    onSelectPrice ? "hover:bg-rose-500/20 cursor-pointer" : ""
                   }`}
                 >
                   <div
-                    className="absolute left-0 top-0 bottom-0 bg-rose-500/15 rounded-sm"
+                    className="absolute left-0 top-0 bottom-0 bg-rose-500/10 rounded-none"
                     style={{ width: `${widthPct}%` }}
                   />
                   <span className="text-rose-400 font-semibold relative z-10 text-[11px]">
@@ -191,10 +191,10 @@ export const DepthChart: React.FC<DepthChartProps> = ({
       </div>
 
       {/* Mid Price Footer */}
-      <div className="bg-[#111118] border-t border-[#2A2A3D] px-4 py-2 flex items-center justify-between text-xs font-mono">
+      <div className="bg-[#0E0E17] border-t border-white/[0.07] px-3 py-1.5 flex items-center justify-between text-xs font-mono">
         <span className="text-gray-500 uppercase text-[10px]">Spread Mid-Price</span>
-        <span className="text-violet-400 font-bold text-sm">
-          ${midPrice.toFixed(4)}
+        <span className="text-violet-400 font-bold text-xs">
+          ${realMidPrice.toFixed(4)}
         </span>
       </div>
     </div>

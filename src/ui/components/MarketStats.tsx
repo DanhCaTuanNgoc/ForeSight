@@ -18,10 +18,10 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
       : "—";
 
   return (
-    <div className="bg-[#0A0A12] border-b border-white/[0.08] px-3.5 py-2 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+    <div className="bg-[#08080E] border-b border-white/[0.07] px-3.5 py-2 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
       {/* Market Name & Question */}
       <div className="flex items-center gap-3 min-w-[260px]">
-        <CryptoIcon symbol={market.underlyingAsset || market.symbol} size={32} />
+        <CryptoIcon symbol={market.underlyingAsset || market.symbol} size={30} />
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-white font-mono font-bold text-sm tracking-wide">
@@ -77,7 +77,7 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode }) 
             <ArrowUpDown className="w-2.5 h-2.5 text-gray-500" />
             Spread
           </span>
-          <span className="text-xs font-mono font-bold text-cyan-400">
+          <span className="text-xs font-mono font-bold text-violet-300">
             ${spread}
           </span>
         </div>

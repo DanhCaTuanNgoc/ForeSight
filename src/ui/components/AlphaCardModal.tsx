@@ -63,16 +63,16 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
     canvas.width = width;
     canvas.height = height;
 
-    // 1. Background gradient (Deep Cyberpunk Obsidian)
+    // 1. Background gradient (Deep Obsidian Violet)
     const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-    bgGradient.addColorStop(0, "#080811");
-    bgGradient.addColorStop(0.5, "#0D0D1A");
-    bgGradient.addColorStop(1, "#05050A");
+    bgGradient.addColorStop(0, "#07070A");
+    bgGradient.addColorStop(0.5, "#0E0E17");
+    bgGradient.addColorStop(1, "#07070A");
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
     // 2. High-tech cyber grid lines
-    ctx.strokeStyle = "rgba(124, 58, 237, 0.07)";
+    ctx.strokeStyle = "rgba(124, 58, 237, 0.05)";
     ctx.lineWidth = 1;
     for (let x = 0; x < width; x += 40) {
       ctx.beginPath();
@@ -87,10 +87,10 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
       ctx.stroke();
     }
 
-    // 3. Neon Atmospheric Glow Orbs
+    // 3. Atmospheric Glow Orbs
     const isYes = outcome === "YES";
     const primaryColor = isYes ? "#10B981" : "#F43F5E";
-    const primaryGlow = isYes ? "rgba(16, 185, 129, 0.18)" : "rgba(244, 63, 94, 0.18)";
+    const primaryGlow = isYes ? "rgba(16, 185, 129, 0.12)" : "rgba(244, 63, 94, 0.12)";
 
     const radGrad = ctx.createRadialGradient(width * 0.8, height * 0.2, 50, width * 0.8, height * 0.2, 350);
     radGrad.addColorStop(0, primaryGlow);
@@ -99,19 +99,19 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
     ctx.fillRect(0, 0, width, height);
 
     const radGrad2 = ctx.createRadialGradient(width * 0.2, height * 0.8, 50, width * 0.2, height * 0.8, 300);
-    radGrad2.addColorStop(0, "rgba(124, 58, 237, 0.15)");
+    radGrad2.addColorStop(0, "rgba(124, 58, 237, 0.12)");
     radGrad2.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = radGrad2;
     ctx.fillRect(0, 0, width, height);
 
     // 4. Outer Glowing Frame Border
-    ctx.strokeStyle = "rgba(124, 58, 237, 0.4)";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(124, 58, 237, 0.3)";
+    ctx.lineWidth = 2;
     ctx.strokeRect(30, 30, width - 60, height - 60);
 
     // High-tech corner brackets
     ctx.strokeStyle = primaryColor;
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 4;
     const cornerSize = 40;
     // Top-Left
     ctx.beginPath();
@@ -140,7 +140,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
     ctx.fillText("The Cognitive Trading Terminal on Somnia L1", 70, 118);
 
     // Somnia Badge (Top Right)
-    ctx.fillStyle = "rgba(124, 58, 237, 0.25)";
+    ctx.fillStyle = "rgba(124, 58, 237, 0.2)";
     ctx.fillRect(width - 380, 65, 310, 48);
     ctx.strokeStyle = "#8B5CF6";
     ctx.lineWidth = 1.5;
@@ -168,9 +168,9 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
 
     // 7. Grid of 3 High-Impact Quantitative Metrics Boxes
     // Metric 1: Velocity Coverage ($VC$)
-    ctx.fillStyle = "rgba(20, 20, 35, 0.8)";
+    ctx.fillStyle = "rgba(14, 14, 23, 0.85)";
     ctx.fillRect(70, 245, 330, 150);
-    ctx.strokeStyle = "rgba(124, 58, 237, 0.3)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
     ctx.lineWidth = 1.5;
     ctx.strokeRect(70, 245, 330, 150);
 
@@ -179,7 +179,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
     ctx.fillText("TRAJECTORY FEASIBILITY", 95, 280);
 
     ctx.font = "bold 38px monospace";
-    ctx.fillStyle = velocityCoverage >= 1.0 ? "#10B981" : "#F59E0B";
+    ctx.fillStyle = velocityCoverage >= 1.0 ? "#10B981" : "#A78BFA";
     ctx.fillText(`${velocityCoverage.toFixed(2)}×`, 95, 335);
 
     ctx.font = "13px sans-serif";
@@ -191,7 +191,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
     );
 
     // Metric 2: Model Fair Value vs Implied Odds
-    ctx.fillStyle = "rgba(20, 20, 35, 0.8)";
+    ctx.fillStyle = "rgba(14, 14, 23, 0.85)";
     ctx.fillRect(435, 245, 330, 150);
     ctx.strokeRect(435, 245, 330, 150);
 
@@ -201,7 +201,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
 
     const fairDisplay = modelFairValuePercent ? `${modelFairValuePercent}%` : "68.4%";
     ctx.font = "bold 38px monospace";
-    ctx.fillStyle = "#38BDF8";
+    ctx.fillStyle = "#C4B5FD";
     ctx.fillText(fairDisplay, 460, 335);
 
     const edgeDisplay = edgeBps !== undefined ? `${edgeBps > 0 ? "+" : ""}${edgeBps} bps Edge` : "+620 bps Edge";
@@ -210,7 +210,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
     ctx.fillText(`vs ${(entryPrice * 100).toFixed(0)}% Book (${edgeDisplay})`, 460, 368);
 
     // Metric 3: Projected Return / ROI
-    ctx.fillStyle = "rgba(20, 20, 35, 0.8)";
+    ctx.fillStyle = "rgba(14, 14, 23, 0.85)";
     ctx.fillRect(800, 245, 330, 150);
     ctx.strokeRect(800, 245, 330, 150);
 
@@ -224,12 +224,13 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
 
     ctx.font = "13px sans-serif";
     ctx.fillStyle = "#CBD5E1";
-    ctx.fillText(`Target: $${targetExitPrice.toFixed(2)} (+$${projectedPnl} PnL)`, 825, 368);
+    const pnlSign = projectedPnl >= 0 ? `+$${projectedPnl}` : `-$${Math.abs(projectedPnl)}`;
+    ctx.fillText(`Target: $${targetExitPrice.toFixed(2)} (${pnlSign} PnL)`, 825, 368);
 
     // 8. Grounded AI Consensus Banner
-    ctx.fillStyle = "rgba(124, 58, 237, 0.12)";
+    ctx.fillStyle = "rgba(124, 58, 237, 0.1)";
     ctx.fillRect(70, 425, 1060, 120);
-    ctx.strokeStyle = "rgba(124, 58, 237, 0.4)";
+    ctx.strokeStyle = "rgba(124, 58, 237, 0.3)";
     ctx.strokeRect(70, 425, 1060, 120);
 
     ctx.font = "bold 16px monospace";
@@ -313,9 +314,9 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl bg-[#111118] border border-white/[0.14] rounded-none p-5 shadow-2xl flex flex-col space-y-4">
+      <div className="relative w-full max-w-4xl bg-[#08080E] border border-white/[0.08] rounded-none p-5 shadow-2xl flex flex-col space-y-4 font-mono">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+        <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
               <Sparkles className="w-4 h-4 text-violet-400" />
@@ -323,7 +324,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
             <div>
               <h3 className="text-white font-mono font-bold text-sm flex items-center gap-2 uppercase tracking-wide">
                 Proof-of-Thesis Alpha Card Studio
-                <span className="text-[9px] px-1.5 py-0.5 rounded-none bg-emerald-950 text-emerald-300 border border-emerald-500/40 font-mono font-bold">
+                <span className="text-[9px] px-1.5 py-0.5 rounded-none bg-violet-950 text-violet-300 border border-violet-500/40 font-mono font-bold">
                   1200×675 HD
                 </span>
               </h3>
@@ -337,14 +338,14 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
               sound.playClick();
               onClose();
             }}
-            className="p-1 rounded-none text-gray-400 hover:text-white hover:bg-[#1C1C2D] border border-white/[0.08] transition-colors cursor-pointer"
+            className="p-1 rounded-none text-gray-400 hover:text-white hover:bg-[#12121C] border border-white/[0.07] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Canvas Display */}
-        <div className="relative w-full aspect-[16/9] rounded-none overflow-hidden border border-white/[0.08] bg-[#07070D] flex items-center justify-center shadow-inner">
+        <div className="relative w-full aspect-[16/9] rounded-none overflow-hidden border border-white/[0.07] bg-[#07070A] flex items-center justify-center shadow-inner">
           <canvas
             ref={canvasRef}
             className="w-full h-full object-contain"
@@ -366,7 +367,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
-              className="px-3.5 py-1.5 rounded-none bg-[#16161F] hover:bg-[#1C1C28] text-gray-200 border border-white/[0.08] text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-none bg-[#12121C] hover:bg-[#181826] text-gray-200 border border-white/[0.07] text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-violet-400" />}
               {copied ? "COPIED!" : "COPY IMAGE"}
@@ -374,7 +375,7 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
 
             <button
               onClick={handleDownload}
-              className="px-3.5 py-1.5 rounded-none bg-[#16161F] hover:bg-[#1C1C28] text-gray-200 border border-white/[0.08] text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-none bg-[#12121C] hover:bg-[#181826] text-gray-200 border border-white/[0.07] text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-violet-400" />
               <span>DOWNLOAD PNG</span>
