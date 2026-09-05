@@ -66,4 +66,12 @@ export const OUTCOME_NAMES = {
   NO: "NO",
 } as const;
 
+export const FORESIGHT_CONTRACTS = {
+  testnet: {
+    batchSweeper: "0x0df05851d944bfd01e6bc772e27738c23b6e30f9" as Address,
+    transactionHash: "0x0042f7f304e036493b529d2cd6e77e359f0952db358e33799912d9e0a19cf275",
+    blockNumber: "480492425",
+  },
+} as const;
+
 export { SOMNIA_TESTNET_PRICE_FEED };

@@ -20,6 +20,8 @@
     "agent:maker": "tsx src/agents/strategies/market-maker.ts",
     "agent:oracle": "tsx src/agents/strategies/oracle-follower.ts",
     "agent:copilot": "tsx src/agents/strategies/ai-copilot.ts",
+    "contracts:compile": "tsx contracts/compile.ts",
+    "contracts:deploy": "tsx scripts/deploy-sweeper.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -48,6 +50,7 @@
     "@types/react-dom": "^19.0.3",
     "@types/ws": "^8.5.14",
     "@vitejs/plugin-react": "^4.3.4",
+    "solc": "^0.8.20",
     "typescript": "^5.7.3",
     "vite": "^6.1.0",
     "vitest": "^4.1.11"

@@ -13,7 +13,8 @@
 
 [![Somnia Network](https://img.shields.io/badge/Somnia-Shannon_Testnet_(50312)-7C3AED?style=for-the-badge&logo=blockchain)](https://somnia.network)
 [![DreamDEX CLOB](https://img.shields.io/badge/Protocol-DreamDEX_Event_Contracts-06B6D4?style=for-the-badge)](https://dev.smk.somnia.host)
-[![Tests Passing](https://img.shields.io/badge/Tests-120%2F120%20Passed%20(100%25)-00e676?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
+[![Smart Contract](https://img.shields.io/badge/Smart_Contract-ForeSightBatchSweeper.sol-9333EA?style=for-the-badge&logo=solidity&logoColor=white)](contracts/ForeSightBatchSweeper.sol)
+[![Tests Passing](https://img.shields.io/badge/Tests-124%2F124%20Passed%20(100%25)-00e676?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
 [![Evidence-Grounded AI](https://img.shields.io/badge/Adversarial_AI-Gemini_+_Groq_+_RAG-f55036?style=for-the-badge&logo=google&logoColor=white)](src/agents/strategies/dual-debate-engine.ts)
 [![React 19](https://img.shields.io/badge/Frontend-React_19_+_Vite_6-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript_5.7-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -21,7 +22,7 @@
 
 <br/>
 
-🌐 **Live Production Terminal:** [foresightdex.vercel.app](https://foresightdex.vercel.app/) &nbsp;•&nbsp; ⚡ **Somnia Shannon Testnet:** `Chain ID: 50312` &nbsp;•&nbsp; 🎯 **Target Protocol:** `DreamDEX CLOB`
+🌐 **Live Production Terminal:** [foresightdex.vercel.app](https://foresightdex.vercel.app/) &nbsp;•&nbsp; ⚡ **Somnia Shannon Testnet:** `Chain ID: 50312` &nbsp;•&nbsp; 📜 **Sweeper Contract:** [`0x0df05851d944bfd01e6bc772e27738c23b6e30f9`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) &nbsp;•&nbsp; 🎯 **Target Protocol:** `DreamDEX CLOB`
 
 <br/>
 
@@ -53,11 +54,12 @@
    - [End-to-End Architectural Data Flow](#81-end-to-end-architectural-data-flow)
    - [End-to-End Decision & Settlement Lifecycle](#82-end-to-end-decision--settlement-lifecycle)
    - [Multi-Tier System Breakdown & Performance SLAs](#83-multi-tier-system-breakdown--performance-slas)
-9. [Developer Diagnostics & Test Verification (120/120 Tests)](#-9-developer-diagnostics--test-verification-120120-tests)
-10. [Somnia & DreamDEX Developer Feedback Report](#-10-somnia--dreamdex-developer-feedback-report)
-11. [Local Installation & Development Guide](#-11-local-installation--development-guide)
-12. [Future Roadmap Beyond Hackathon (Strategic Matrix)](#-12-future-roadmap-beyond-hackathon)
-13. [License & Acknowledgements](#-13-license--acknowledgements)
+9. [Developer Diagnostics & Test Verification (124/124 Tests)](#-9-developer-diagnostics--test-verification-124124-tests)
+10. [Repository Structure](#-10-repository-structure)
+11. [Somnia & DreamDEX Developer Feedback Report](#-11-somnia--dreamdex-developer-feedback-report)
+12. [Local Installation & Development Guide](#-12-local-installation--development-guide)
+13. [Future Roadmap Beyond Hackathon (Strategic Matrix)](#-13-future-roadmap-beyond-hackathon)
+14. [License & Acknowledgements](#-14-license--acknowledgements)
 
 ---
 
@@ -84,7 +86,7 @@ However, speed without intelligence breeds reckless speculation. **ForeSight** b
 | **The Core Problem** | Eliminates contextless odds spikes, black-box ungrounded AI predictions, and stranded capital across 500+ expired pools. | [Problem Analysis](#-2-the-core-problem--market-opportunity-on-somnia-l1) |
 | **Technical Core** | Deep `@somnia-chain/markets-sdk` integration, Chebyshev Black-Scholes $\Phi(d2)$ math, and Dual Bull/Bear RAG debate. | [Decision Architecture](#-3-the-4-stage-decision-architecture--execution-pipeline) &nbsp;•&nbsp; [Math](#-4-mathematical-formulations--quantitative-foundation) |
 | **Ecosystem Impact** | **Settlement Sweeper** batch-claims matured pools in 1 click, recirculating 100% of stranded capital back into Somnia L1. | [Settlement Sweeper](#-8-full-system-architecture--multi-tier-data-flow) &nbsp;•&nbsp; [Criteria](#-5-hackathon-judging-criteria-alignment) |
-| **Quality & Reliability** | **10 test suites with 120/120 passing tests (100% pass rate)**, React 19, TypeScript 5.7, sub-second block execution. | [Test Verification](#-9-developer-diagnostics--test-verification-120120-tests) |
+| **Quality & Reliability** | **11 test suites with 124/124 passing tests (100% pass rate)**, Custom [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9), React 19, TypeScript 5.7. | [Test Verification](#-9-developer-diagnostics--test-verification-120120-tests) &nbsp;•&nbsp; [Explorer Link](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) |
 
 ---
 
@@ -406,9 +408,9 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 
 ---
 
-## 🧪 9. Developer Diagnostics & Test Verification (120/120 Tests)
+## 🧪 9. Developer Diagnostics & Test Verification (124/124 Tests)
 
-ForeSight maintains **100% test pass rate** with 10 comprehensive Vitest test suites verifying financial math, agent execution, and network resilience:
+ForeSight maintains **100% test pass rate** with 11 comprehensive Vitest test suites verifying smart contracts, financial math, agent execution, and network resilience:
 
 ```bash
 npm test
@@ -417,6 +419,7 @@ npm test
 ```text
  RUN  v4.1.11 D:/Coding/Somnia
 
+ ✓ tests/batch-sweeper-contract.test.ts (4 tests)
  ✓ tests/deterministic-math.test.ts (14 tests)
  ✓ tests/advanced-pricing-and-vc.test.ts (22 tests)
  ✓ tests/quantitative-pricing.test.ts (18 tests)
@@ -428,18 +431,57 @@ npm test
  ✓ tests/wallet-and-network.test.ts (6 tests)
  ✓ tests/market-snapshot-worker.test.ts (6 tests)
 
- Test Files  10 passed (10)
-      Tests  120 passed (120) [100% Pass Rate]
-   Duration  2.60s
+ Test Files  11 passed (11)
+      Tests  124 passed (124) [100% Pass Rate]
+   Duration  2.61s
 ```
 
 ---
 
-## 🛠️ 10. Somnia & DreamDEX Developer Feedback Report
+## 📁 10. Repository Structure
 
-During the development of ForeSight on the **Somnia Shannon Testnet (`Chain ID: 50312`)**, we deeply integrated `@somnia-chain/markets-sdk` with `viem` to build automated snapshot ingestion, AI reasoning agents, scenario simulations, and automated settlement sweeps.
+```text
+ForeSight/
+├── contracts/                  # Solidity smart contracts & compilation artifacts
+│   ├── ForeSightBatchSweeper.sol  # 1-Click atomic multi-pool batch redemption router
+│   ├── ForeSightBatchSweeper.json # Compiled EVM bytecode & ABI artifact
+│   ├── compile.ts                 # solc 0.8.20 compiler script
+│   └── deployment.json            # On-chain testnet deployment receipt (Address & TxHash)
+├── src/                        # Core TypeScript & Frontend application source
+│   ├── agents/                 # Autonomous agent personas & Dual Debate reasoning engine
+│   │   ├── strategies/         # Dual-AI RAG debate, market-maker, oracle follower
+│   │   └── base-agent.ts       # Abstract agent lifecycle & risk guardrails
+│   ├── cli/                    # Diagnostic & operator tools (doctor, claim, markets)
+│   ├── config/                 # Somnia & DreamDEX network constants & contract addresses
+│   ├── core/                   # Order engine, settlement sweeper, pricing core
+│   ├── quant/                  # Black-Scholes Φ(d2), Half-Kelly, Velocity Coverage math
+│   ├── server/                 # Express backend, WebSocket bridge, live market poller
+│   └── ui/                     # React 19 + Vite financial decision terminal & Alpha Card studio
+├── scripts/                    # On-chain deployment & operational scripts
+│   └── deploy-sweeper.ts       # Somnia Shannon Testnet smart contract deployer
+├── tests/                      # 11 Vitest suites (124/124 passing tests - 100% pass rate)
+│   ├── advanced-pricing-and-vc.test.ts # Velocity Coverage & trajectory physics tests
+│   ├── batch-sweeper-contract.test.ts  # Smart contract ABI & bytecode verification
+│   ├── deterministic-math.test.ts      # Chebyshev Black-Scholes & Greeks validation
+│   ├── dual-debate-engine.test.ts      # Adversarial RAG debate & evidence validation
+│   └── settlement-sweeper.test.ts      # Multi-pool batch redemption verification
+├── docs/                       # Official documentation & submission deliverables
+│   ├── SDK_FEEDBACK.md         # Somnia & DreamDEX SDK feedback report
+│   ├── PRESENTATION.md         # Hackathon pitch deck & executive presentation
+│   └── DemoScript.md           # 2-3 minute judge video walkthrough script
+├── package.json                # Project dependencies, scripts & metadata
+├── tsconfig.json               # TypeScript 5.7 compiler configuration
+├── vite.config.ts              # Vite 6 frontend build configuration
+└── README.md                   # Project documentation & fast-track briefing
+```
 
-Below is our structured technical feedback for the Somnia Core Devs:
+---
+
+## 🛠️ 11. Somnia & DreamDEX Developer Feedback Report
+
+During the development of ForeSight on the **Somnia Shannon Testnet (`Chain ID: 50312`)**, we deeply integrated `@somnia-chain/markets-sdk` with `viem` to build automated snapshot ingestion, AI reasoning agents, scenario simulations, smart contract batch routing, and automated settlement sweeps.
+
+*(Full comprehensive SDK Feedback Report available at [`docs/SDK_FEEDBACK.md`](docs/SDK_FEEDBACK.md))*.
 
 ### 🟢 What Worked Exceptionally Well (Strengths)
 1. **High-Performance GraphQL Indexer (`dev.smk.somnia.host`):** Real-time querying of 500+ active event contracts is remarkably fast with sub-second indexer response times.
@@ -449,7 +491,8 @@ Below is our structured technical feedback for the Somnia Core Devs:
 ### 💡 High-Value Opportunities for Protocol Enhancement
 1. **Native Batch Settlement Helper (`batchClaimSettledMarkets`):**
    * *Current Behavior:* Developers currently iterate through individual settled markets to execute sequential claim transactions.
-   * *Recommendation:* Add an SDK method `exchange.claimAllSettled({ venueId })` that batches multiple redemption calls into a single multicall on-chain transaction to save gas and reduce roundtrips.
+   * *ForeSight Solution:* We built and deployed [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) on Shannon testnet.
+   * *Recommendation:* Add an SDK method `exchange.claimAllSettled({ venueId })` that batches multiple redemption calls into a single multicall on-chain transaction.
 2. **WebSocket Orderbook Streaming:**
    * *Current Behavior:* Retrieving granular orderbook depth relies on frequent polling of `fetchOrderBook`.
    * *Recommendation:* Expose typed WebSocket subscriptions (`exchange.subscribeOrderBook(symbol, callback)` and `exchange.subscribeSpikes(threshold, callback)`) out-of-the-box in `@somnia-chain/markets-sdk`.
@@ -459,7 +502,7 @@ Below is our structured technical feedback for the Somnia Core Devs:
 
 ---
 
-## ⚡ 11. Local Installation & Development Guide
+## ⚡ 12. Local Installation & Development Guide
 
 ### Prerequisites
 * Node.js $\ge 20.0.0$
@@ -491,18 +534,20 @@ Open **`http://localhost:3000`** in your browser.
 
 ### 5. CLI Developer Utilities
 ```bash
-npm run doctor          # Validate Somnia RPC, Indexer, Venue ID, and wallet state
-npm run markets         # Query and inspect all 500+ active event contracts
-npm run claim           # Scan finalized markets and execute batch settlement sweep
-npm run agent:starter   # Launch Baseline Starter Bot
-npm run agent:maker     # Launch Two-Sided Market Maker Bot
-npm run agent:oracle    # Launch Oracle Momentum Follower Bot
-npm run agent:copilot   # Launch Autonomous AI Copilot Bot
+npm run doctor            # Validate Somnia RPC, Indexer, Venue ID, and wallet state
+npm run markets           # Query and inspect all 500+ active event contracts
+npm run claim             # Scan finalized markets and execute batch settlement sweep
+npm run contracts:compile # Compile ForeSightBatchSweeper.sol smart contract
+npm run contracts:deploy  # Deploy ForeSightBatchSweeper to Somnia Shannon Testnet
+npm run agent:starter     # Launch Baseline Starter Bot
+npm run agent:maker       # Launch Two-Sided Market Maker Bot
+npm run agent:oracle      # Launch Oracle Momentum Follower Bot
+npm run agent:copilot     # Launch Autonomous AI Copilot Bot
 ```
 
 ---
 
-## 🗺️ 12. Future Roadmap Beyond Hackathon
+## 🗺️ 13. Future Roadmap Beyond Hackathon
 
 | Phase & Milestone | Target Timeline | Strategic Focus | Core Technical Deliverables | Ecosystem Impact on Somnia | Status |
 | :--- | :---: | :--- | :--- | :--- | :---: |
@@ -512,10 +557,7 @@ npm run agent:copilot   # Launch Autonomous AI Copilot Bot
 
 ---
 
-## 📄 13. License & Acknowledgements
+## 📄 14. License & Acknowledgements
 
 MIT License — see the [LICENSE](LICENSE) file for details. Built with ❤️ for the **Somnia × DreamDEX Event Contracts Hackathon**.  
 Special thanks to the **Somnia Network** & **DreamDEX** engineering teams for developer tools, GraphQL indexers, and documentation support.
-
-
-
