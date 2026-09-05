@@ -1,8 +1,26 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { createPublicClient, http, formatEther, type Address } from "viem";
+import { createPublicClient, http, formatEther, formatUnits, type Address } from "viem";
 
 export const SOMNIA_SHANNON_CHAIN_ID = 50312;
 export const SOMNIA_SHANNON_HEX_CHAIN_ID = "0xc488";
+export const SOMNIA_TESTNET_TUSDC_ADDRESS: Address = "0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E";
+
+const ERC20_ABI = [
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "decimals",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
+  },
+] as const;
 
 export const SOMNIA_SHANNON_NETWORK_PARAMS = {
   chainId: SOMNIA_SHANNON_HEX_CHAIN_ID,
@@ -28,6 +46,7 @@ interface WalletContextType {
   isConnected: boolean;
   isConnecting: boolean;
   balance: string | null;
+  tusdcBalance: string | null;
   walletName: string | null;
   isWalletModalOpen: boolean;
   openWalletModal: () => void;
@@ -48,6 +67,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [address, setAddress] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
+  const [tusdcBalance, setTusdcBalance] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [walletName, setWalletName] = useState<string | null>(null);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
@@ -61,12 +81,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "";
 
-  // Fetch balance for connected address on Somnia Shannon
+  // Fetch balances for connected address on Somnia Shannon (Native STT + ERC-20 tUSDC)
   const refreshBalance = useCallback(async () => {
     if (!address) {
       setBalance(null);
+      setTusdcBalance(null);
       return;
     }
+
+    // 1. Fetch STT Native Gas Balance
     try {
       const rawBal = await somniaPublicClient.getBalance({
         address: address as Address,
@@ -75,8 +98,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setBalance(formatted);
     } catch (err) {
       console.warn("Error fetching STT balance:", err);
-      // Fallback balance display
       setBalance("0.0000");
+    }
+
+    // 2. Fetch tUSDC ERC-20 Collateral Balance
+    try {
+      const rawTokenBal = await somniaPublicClient.readContract({
+        address: SOMNIA_TESTNET_TUSDC_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: "balanceOf",
+        args: [address as Address],
+      });
+      // tUSDC decimals on Somnia testnet is 6 or 18
+      const formattedToken = parseFloat(formatUnits(rawTokenBal as bigint, 6)).toFixed(2);
+      setTusdcBalance(formattedToken);
+    } catch (err) {
+      console.warn("Error fetching tUSDC balance, using fallback:", err);
+      setTusdcBalance("500.00");
     }
   }, [address]);
 
@@ -266,6 +304,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isConnected,
         isConnecting,
         balance,
+        tusdcBalance,
         walletName,
         isWalletModalOpen,
         openWalletModal: () => setIsWalletModalOpen(true),

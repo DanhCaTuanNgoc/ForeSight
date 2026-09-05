@@ -23,6 +23,8 @@ import {
   MoveHorizontal,
   Activity,
   Timer,
+  Target,
+  ArrowUpRight,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
 
@@ -77,18 +79,20 @@ function computeEMA(prices: number[], period: number): number[] {
   return emaValues;
 }
 
+// ─── Realistic Mock Data Generator with Continuous OHLC Candles ────────────────
 function generateMockData(range: TimeRange, baseProbability: number, symbol: string = "BTC"): ChartDataPoint[] {
-  const pointsMap: Record<TimeRange, number> = { "15m": 40, "1H": 75, "4H": 120, "1D": 60 };
+  const pointsMap: Record<TimeRange, number> = { "15m": 45, "1H": 75, "4H": 120, "1D": 60 };
   const points = pointsMap[range];
-  let base = baseProbability / 100;
+  let base = baseProbability > 1 ? baseProbability / 100 : baseProbability;
+  base = Math.max(0.08, Math.min(0.92, base));
 
-  // Compute a deterministic seed from symbol and range
+  // Deterministic seed
   let seed = 0;
   for (let c = 0; c < symbol.length; c++) {
     seed = (seed << 5) - seed + symbol.charCodeAt(c);
     seed |= 0;
   }
-  seed += points + Math.round(baseProbability * 10);
+  seed += points + Math.round(base * 100);
 
   const pseudoRandom = () => {
     seed = (seed * 9301 + 49297) % 233280;
@@ -100,26 +104,30 @@ function generateMockData(range: TimeRange, baseProbability: number, symbol: str
   const spanMs = msMap[range];
   const stepMs = spanMs / points;
 
+  let currentClose = base;
   return Array.from({ length: points }, (_, i) => {
-    const prev = base;
-    base += (pseudoRandom() - 0.48) * 0.015;
-    base = Math.max(0.05, Math.min(0.97, base));
+    const open = currentClose;
+    const delta = (pseudoRandom() - 0.49) * 0.022;
+    currentClose = Math.max(0.05, Math.min(0.95, open + delta));
+
+    const wickTop = pseudoRandom() * 0.012;
+    const wickBot = pseudoRandom() * 0.012;
+    const high = Math.min(0.98, Math.max(open, currentClose) + wickTop);
+    const low = Math.max(0.02, Math.min(open, currentClose) - wickBot);
+
     const ptTime = new Date(now - (points - 1 - i) * stepMs);
     const timeStr = ptTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const isSpike = i === Math.floor(points * 0.72);
 
-    const high = Math.min(0.98, Math.max(prev, base) + pseudoRandom() * 0.015);
-    const low = Math.max(0.02, Math.min(prev, base) - pseudoRandom() * 0.015);
-
     return {
       time: timeStr,
-      price: parseFloat(base.toFixed(4)),
-      priceNo: parseFloat((1 - base).toFixed(4)),
-      open: parseFloat(prev.toFixed(4)),
+      price: parseFloat(currentClose.toFixed(4)),
+      priceNo: parseFloat((1 - currentClose).toFixed(4)),
+      open: parseFloat(open.toFixed(4)),
       high: parseFloat(high.toFixed(4)),
       low: parseFloat(low.toFixed(4)),
-      close: parseFloat(base.toFixed(4)),
-      volume: Math.floor(pseudoRandom() * 5000 + 500),
+      close: parseFloat(currentClose.toFixed(4)),
+      volume: Math.floor(pseudoRandom() * 6000 + 800),
       isSpike,
     };
   });
@@ -152,7 +160,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const [renderType, setRenderType] = useState<RenderType>("area");
   const [selectedSpike, setSelectedSpike] = useState<any | null>(null);
   const [mcVolatility, setMcVolatility] = useState<VolatilityLevel>("normal");
-  const [showEMA, setShowEMA] = useState<boolean>(true); // Pro Indicator Toggle
+  const [showEMA, setShowEMA] = useState<boolean>(true); // Trend Indicators Toggle
+  const [clickTargetMode, setClickTargetMode] = useState<"entry" | "tp">("entry");
 
   // ─── Crosshair & Interactive Hover State ─────────────────────────────────────
   const [hoveredPoint, setHoveredPoint] = useState<ChartDataPoint | null>(null);
@@ -183,8 +192,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   }, [timeRange]);
 
   // ─── Pro Zoom & Pan Dragging Engine (Binance / MEXC style) ───────────────────
-  const [zoomLevel, setZoomLevel] = useState<number>(1); // 1 = 1x (full), up to 5x
-  const [panOffset, setPanOffset] = useState<number>(0); // 0 = latest data on right
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [panOffset, setPanOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStartX, setDragStartX] = useState<number>(0);
   const [dragStartPan, setDragStartPan] = useState<number>(0);
@@ -228,35 +237,41 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     [propData, timeRange, currentPrice, symbol]
   );
 
-  // ─── Slicing Data Based on Zoom and Pan Offset ──────────────────────────────
-  const slicedData = useMemo(() => {
-    if (zoomLevel <= 1 && panOffset === 0) return rawData;
-    const visibleCount = Math.max(8, Math.floor(rawData.length / zoomLevel));
-    const maxOffset = Math.max(0, rawData.length - visibleCount);
-    const clampedOffset = Math.max(0, Math.min(maxOffset, panOffset));
-    const end = rawData.length - clampedOffset;
-    const start = Math.max(0, end - visibleCount);
-    return rawData.slice(start, end);
-  }, [rawData, zoomLevel, panOffset]);
-
-  // ─── Enrich Data with EMA 9 and EMA 21 ──────────────────────────────────────
-  const data = useMemo(() => {
-    const prices = slicedData.map((d) => d.close ?? d.price);
+  // ─── Compute Invariant EMAs on Full Raw Dataset First ────────────────────────
+  const enrichedRawData = useMemo(() => {
+    const prices = rawData.map((d) => d.close ?? d.price);
     const ema9Arr = computeEMA(prices, 9);
     const ema21Arr = computeEMA(prices, 21);
 
-    return slicedData.map((d, idx) => ({
+    return rawData.map((d, idx) => ({
       ...d,
       ema9: ema9Arr[idx],
       ema21: ema21Arr[idx],
     }));
-  }, [slicedData]);
+  }, [rawData]);
+
+  // ─── Slicing Data Based on Zoom and Pan Offset ──────────────────────────────
+  const data = useMemo(() => {
+    if (zoomLevel <= 1 && panOffset === 0) return enrichedRawData;
+    const visibleCount = Math.max(8, Math.floor(enrichedRawData.length / zoomLevel));
+    const maxOffset = Math.max(0, enrichedRawData.length - visibleCount);
+    const clampedOffset = Math.max(0, Math.min(maxOffset, panOffset));
+    const end = enrichedRawData.length - clampedOffset;
+    const start = Math.max(0, end - visibleCount);
+    return enrichedRawData.slice(start, end);
+  }, [enrichedRawData, zoomLevel, panOffset]);
 
   const first = data[0]?.price ?? 0;
   const last = data[data.length - 1]?.price ?? 0;
   const lastNo = 1 - last;
   const change = first > 0 ? ((last - first) / first) * 100 : 0;
   const isUp = change >= 0;
+
+  // Expected upside from Entry to Target Exit
+  const upsidePct =
+    entryPrice > 0 && targetExitPrice > entryPrice
+      ? (((targetExitPrice - entryPrice) / entryPrice) * 100).toFixed(1)
+      : null;
 
   const formatY = (v: number) => `${(v * 100).toFixed(0)}%`;
   const step = Math.max(1, Math.ceil(data.length / 6));
@@ -280,7 +295,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    // Crosshair coordinates calculation
     const rect = chartWrapperRef.current?.getBoundingClientRect();
     if (rect) {
       const mouseX = e.clientX - rect.left;
@@ -314,9 +328,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     setIsDragging(false);
   };
 
-  // ─── Unified Chart Click Handler: Syncs ANY clicked price point to Simulator ───
+  // ─── Interactive Click: Syncs clicked price to Entry or TP in Simulator ──────
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // If user was dragging to pan history, don't trigger click
     if (hasDragged) {
       setHasDragged(false);
       return;
@@ -326,24 +339,26 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     if (!rect) return;
 
     const clickY = e.clientY - rect.top;
-    // Chart plot area height: top margin ~6px, bottom margin ~30px for volume
-    const plotTop = 6;
-    const plotBottom = rect.height - 30;
+    const plotTop = 10;
+    const plotBottom = rect.height - 35;
     const plotHeight = Math.max(1, plotBottom - plotTop);
 
-    // Calculate normalized price from click Y: 0 (bottom) to 1.0 (top)
-    const normalizedPrice = Math.max(0.05, Math.min(0.95, 1 - (clickY - plotTop) / plotHeight));
+    const normalizedPrice = Math.max(0.01, Math.min(0.99, 1 - (clickY - plotTop) / plotHeight));
     const roundedPrice = Number(normalizedPrice.toFixed(2));
 
     sound.playClick();
-    if (onSetEntryPrice) {
-      onSetEntryPrice(roundedPrice);
-    }
-    if (showToast) {
-      showToast(
-        `⚡ Synced Entry Price $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%) to Decision Simulator!`,
-        "success"
-      );
+    const isTP = e.shiftKey || clickTargetMode === "tp";
+
+    if (isTP) {
+      if (onSetTargetExitPrice) onSetTargetExitPrice(roundedPrice);
+      if (showToast) {
+        showToast(`🎯 Set Target Exit (TP) $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%)`, "success");
+      }
+    } else {
+      if (onSetEntryPrice) onSetEntryPrice(roundedPrice);
+      if (showToast) {
+        showToast(`⚡ Set Entry Price $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%)`, "success");
+      }
     }
   };
 
@@ -372,13 +387,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     ? (((activePoint.close ?? activePoint.price) - activePoint.open) / activePoint.open) * 100
     : 0;
 
-  // Crosshair Price & Time projection
+  // Crosshair Price & Probability projection
   const currentHoverPrice = useMemo(() => {
     if (!crosshairPos || !chartWrapperRef.current) return null;
     const h = chartWrapperRef.current.clientHeight || 240;
-    // Map Y coordinate (0 at top, h at bottom) to 0.00 -> 1.00 domain
     const normalized = Math.max(0, Math.min(1, 1 - (crosshairPos.y - 10) / (h - 40)));
-    return (normalized * 100).toFixed(1);
+    return {
+      pct: (normalized * 100).toFixed(1),
+      price: normalized.toFixed(2),
+    };
   }, [crosshairPos]);
 
   return (
@@ -591,7 +608,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           <>
             {/* Horizontal Line */}
             <div
-              className="pointer-events-none absolute left-0 right-8 border-b border-dashed border-gray-500/40 z-20"
+              className="pointer-events-none absolute left-0 right-10 border-b border-dashed border-gray-500/40 z-20"
               style={{ top: crosshairPos.y }}
             />
             {/* Vertical Line */}
@@ -602,10 +619,11 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             {/* Right Y-Axis Dynamic Price Badge */}
             {currentHoverPrice && (
               <div
-                className="pointer-events-none absolute right-1 px-1.5 py-0.5 bg-violet-600 text-white font-mono text-[9px] font-bold rounded shadow-lg z-30 transform -translate-y-1/2 transition-transform"
+                className="pointer-events-none absolute right-1 px-1.5 py-0.5 bg-violet-600 text-white font-mono text-[9px] font-bold rounded shadow-lg z-30 transform -translate-y-1/2 transition-transform flex items-center gap-1"
                 style={{ top: crosshairPos.y }}
               >
-                {currentHoverPrice}%
+                <span>{currentHoverPrice.pct}%</span>
+                <span className="text-violet-200 text-[8px]">(${currentHoverPrice.price})</span>
               </div>
             )}
             {/* Bottom X-Axis Dynamic Time Badge */}
@@ -620,14 +638,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           </>
         )}
 
-        {/* Mode 1A: Probability Area with Dual YES/NO & EMA Overlays */}
+        {/* Mode 1A: Probability Area with Dual YES/NO & Distinct Colors */}
         {visualMode === "probability" && renderType === "area" && (
           <div>
             <div className="h-48 sm:h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={data}
-                  margin={{ top: 6, right: 14, left: 0, bottom: 0 }}
+                  margin={{ top: 8, right: 20, left: 0, bottom: 0 }}
                   onMouseMove={(state: any) => {
                     if (state && state.activePayload && state.activePayload[0]) {
                       setHoveredPoint(state.activePayload[0].payload);
@@ -636,64 +654,116 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 >
                   <defs>
                     <linearGradient id="yesGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10B981" stopOpacity={0.28} />
+                      <stop offset="0%" stopColor="#10B981" stopOpacity={0.22} />
                       <stop offset="100%" stopColor="#10B981" stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id="noGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.16} />
-                      <stop offset="100%" stopColor="#F43F5E" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
 
-                  <CartesianGrid stroke="#1A1A28" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="time" tickFormatter={formatX} tick={{ fill: "#4B5563", fontSize: 9 }} axisLine={false} tickLine={false} interval={step - 1} />
-                  <YAxis domain={[0, 1]} tickFormatter={formatY} tick={{ fill: "#4B5563", fontSize: 9 }} axisLine={false} tickLine={false} width={32} orientation="right" />
+                  <CartesianGrid stroke="#161624" strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="time"
+                    tickFormatter={formatX}
+                    tick={{ fill: "#4B5563", fontSize: 9 }}
+                    axisLine={false}
+                    tickLine={false}
+                    interval={step - 1}
+                  />
+                  <YAxis
+                    domain={[0, 1]}
+                    tickFormatter={formatY}
+                    tick={{ fill: "#6B7280", fontSize: 9 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={36}
+                    orientation="right"
+                  />
 
-                  {/* 50% Battleground Line */}
+                  {/* 50% Fair Odds Battleground Line */}
                   <ReferenceLine
                     y={0.5}
                     stroke="#4B5563"
                     strokeDasharray="2 4"
                     strokeWidth={1}
-                    strokeOpacity={0.6}
-                    label={{ value: "50%", fill: "#6B7280", fontSize: 8, position: "insideTopRight" }}
+                    strokeOpacity={0.5}
+                    label={{ value: "50% Fair", fill: "#6B7280", fontSize: 8, position: "insideTopLeft" }}
                   />
 
-                  {/* TP & Entry reference lines */}
+                  {/* Live Last Price Horizontal Ray */}
+                  <ReferenceLine
+                    y={last}
+                    stroke={isUp ? "#10B981" : "#F43F5E"}
+                    strokeDasharray="2 2"
+                    strokeWidth={1.2}
+                    strokeOpacity={0.85}
+                    label={{
+                      value: `LIVE $${last.toFixed(2)} (${(last * 100).toFixed(1)}%)`,
+                      fill: isUp ? "#34D399" : "#FB7185",
+                      fontSize: 8.5,
+                      position: "insideTopRight",
+                    }}
+                  />
+
+                  {/* Target Exit Price (TP) Reference Line - Amber Gold */}
                   <ReferenceLine
                     y={targetExitPrice}
-                    stroke="#10B981"
+                    stroke="#F59E0B"
                     strokeDasharray="6 3"
-                    strokeWidth={1.2}
-                    strokeOpacity={0.8}
-                    label={{ value: `TP ${Math.round(targetExitPrice * 100)}%`, fill: "#10B981", fontSize: 9, position: "right" }}
-                  />
-                  <ReferenceLine
-                    y={entryPrice}
-                    stroke="#A78BFA"
-                    strokeDasharray="4 4"
-                    strokeWidth={1.2}
-                    strokeOpacity={0.8}
-                    label={{ value: `Entry ${Math.round(entryPrice * 100)}%`, fill: "#A78BFA", fontSize: 9, position: "right" }}
+                    strokeWidth={1.5}
+                    strokeOpacity={0.9}
+                    label={{
+                      value: `TP $${targetExitPrice.toFixed(2)} (${Math.round(targetExitPrice * 100)}%)`,
+                      fill: "#F59E0B",
+                      fontSize: 9,
+                      position: "insideTopRight",
+                    }}
                   />
 
-                  {/* YES Curve */}
+                  {/* Entry Price Reference Line - Electric Cyan */}
+                  <ReferenceLine
+                    y={entryPrice}
+                    stroke="#06B6D4"
+                    strokeDasharray="4 4"
+                    strokeWidth={1.5}
+                    strokeOpacity={0.9}
+                    label={{
+                      value: `ENTRY $${entryPrice.toFixed(2)} (${Math.round(entryPrice * 100)}%)`,
+                      fill: "#06B6D4",
+                      fontSize: 9,
+                      position: "insideTopRight",
+                    }}
+                  />
+
+                  {/* YES Curve (Emerald Green Area) */}
                   <Area
                     type="monotone"
                     dataKey="price"
                     name="YES"
                     stroke="#10B981"
-                    strokeWidth={1.8}
+                    strokeWidth={2}
                     fill="url(#yesGrad)"
+                    isAnimationActive={false}
                     dot={(props: any) => {
                       const { cx, cy, payload, index } = props;
                       const isLast = index === data.length - 1;
 
                       if (payload?.isSpike) {
                         return (
-                          <g key={`spike-${payload.time}`} className="cursor-pointer" onClick={() => handleInspectSpike(payload)}>
-                            <circle cx={cx} cy={cy} r={4} fill="#10B981" stroke="#FFFFFF" strokeWidth={1.5} />
-                            <text x={cx + 7} y={cy - 5} fill="#10B981" fontSize={8} fontFamily="JetBrains Mono" fontWeight="bold">⚡ Spike</text>
+                          <g
+                            key={`spike-${payload.time}`}
+                            className="cursor-pointer"
+                            onClick={() => handleInspectSpike(payload)}
+                          >
+                            <circle cx={cx} cy={cy} r={4.5} fill="#10B981" stroke="#FFFFFF" strokeWidth={1.5} />
+                            <text
+                              x={cx + 7}
+                              y={cy - 5}
+                              fill="#10B981"
+                              fontSize={8}
+                              fontFamily="JetBrains Mono"
+                              fontWeight="bold"
+                            >
+                              ⚡ Spike
+                            </text>
                           </g>
                         );
                       }
@@ -701,52 +771,55 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                       if (isLast && panOffset === 0) {
                         return (
                           <g key="live-dot">
-                            <circle cx={cx} cy={cy} r={3.5} fill="#10B981" stroke="#FFFFFF" strokeWidth={1} />
+                            <circle cx={cx} cy={cy} r={4} fill="#10B981" stroke="#FFFFFF" strokeWidth={1.5} />
+                            <circle cx={cx} cy={cy} r={7} fill="none" stroke="#10B981" strokeWidth={1} opacity={0.6} />
                           </g>
                         );
                       }
 
                       return null;
                     }}
-                    activeDot={{ r: 4.5, fill: "#10B981", stroke: "#fff", strokeWidth: 1.5 }}
+                    activeDot={{ r: 5, fill: "#10B981", stroke: "#fff", strokeWidth: 2 }}
                   />
 
-                  {/* NO Curve */}
+                  {/* NO Curve (Clean Rose Line without opaque fill overlap) */}
                   {curveMode === "dual" && (
-                    <Area
+                    <Line
                       type="monotone"
                       dataKey="priceNo"
                       name="NO"
                       stroke="#F43F5E"
-                      strokeWidth={1.2}
+                      strokeWidth={1.4}
                       strokeDasharray="3 3"
-                      fill="url(#noGrad)"
+                      isAnimationActive={false}
                       dot={false}
-                      activeDot={{ r: 3.5, fill: "#F43F5E", stroke: "#fff", strokeWidth: 1 }}
+                      activeDot={{ r: 4, fill: "#F43F5E", stroke: "#fff", strokeWidth: 1.5 }}
                     />
                   )}
 
-                  {/* Trend Indicator: EMA 9 (Amber) */}
+                  {/* Trend Indicator: EMA 9 (Warm Orange) */}
                   {showEMA && (
                     <Line
                       type="monotone"
                       dataKey="ema9"
                       name="EMA 9"
-                      stroke="#F59E0B"
+                      stroke="#FB923C"
                       strokeWidth={1.2}
+                      strokeOpacity={0.8}
                       dot={false}
                       isAnimationActive={false}
                     />
                   )}
 
-                  {/* Trend Indicator: EMA 21 (Purple) */}
+                  {/* Trend Indicator: EMA 21 (Soft Indigo) */}
                   {showEMA && (
                     <Line
                       type="monotone"
                       dataKey="ema21"
                       name="EMA 21"
-                      stroke="#A855F7"
+                      stroke="#818CF8"
                       strokeWidth={1.2}
+                      strokeOpacity={0.8}
                       dot={false}
                       isAnimationActive={false}
                     />
@@ -766,7 +839,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                     className="flex-1 rounded-t-[1px] transition-all"
                     style={{
                       height: `${Math.max(8, h)}%`,
-                      background: isGreen ? "rgba(16,185,129,0.28)" : "rgba(244,63,94,0.24)",
+                      background: isGreen ? "rgba(16,185,129,0.32)" : "rgba(244,63,94,0.28)",
                     }}
                   />
                 );
@@ -775,29 +848,68 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           </div>
         )}
 
-        {/* Mode 1B: Candlestick OHLC with EMA Trend Overlay */}
+        {/* Mode 1B: Normalized Candlestick OHLC with Pro Y Coordinates */}
         {visualMode === "probability" && renderType === "candles" && (
           <div>
-            <div className="h-48 sm:h-56 w-full bg-[#08080E] rounded-lg border border-[#161620] p-2 relative">
-              <svg className="w-full h-full" viewBox="0 0 500 180" preserveAspectRatio="none">
-                {[36, 72, 108, 144].map((y) => (
-                  <line key={y} x1="0" y1={y} x2="500" y2={y} stroke="#141420" strokeDasharray="3 3" />
-                ))}
-                
-                {/* 50% Battleground Line */}
-                <line x1="0" y1={90} x2="500" y2={90} stroke="#4B5563" strokeDasharray="2 4" strokeOpacity={0.5} />
-                <text x="480" y={87} fill="#6B7280" fontSize="7" textAnchor="end">50%</text>
+            <div className="h-48 sm:h-56 w-full bg-[#07070C] rounded-none border border-white/[0.06] p-2 relative">
+              <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+                {/* SVG Coordinate Scaling: plot Top = 16, Bottom = 180, Height = 164 */}
+                {/* Grid Line 75% (y = 180 - 0.75 * 164 = 57) */}
+                <line x1="0" y1={57} x2="470" y2={57} stroke="#161624" strokeDasharray="3 3" />
+                <text x="495" y={60} fill="#4B5563" fontSize="8" textAnchor="end">75% ($0.75)</text>
+
+                {/* Grid Line 50% (y = 180 - 0.50 * 164 = 98) */}
+                <line x1="0" y1={98} x2="470" y2={98} stroke="#2D2D42" strokeDasharray="3 3" strokeWidth="1" />
+                <text x="495" y={101} fill="#6B7280" fontSize="8" fontWeight="bold" textAnchor="end">50% ($0.50)</text>
+
+                {/* Grid Line 25% (y = 180 - 0.25 * 164 = 139) */}
+                <line x1="0" y1={139} x2="470" y2={139} stroke="#161624" strokeDasharray="3 3" />
+                <text x="495" y={142} fill="#4B5563" fontSize="8" textAnchor="end">25% ($0.25)</text>
+
+                {/* TP Line Overlay on SVG */}
+                {targetExitPrice && (
+                  <line
+                    x1="0"
+                    y1={180 - targetExitPrice * 164}
+                    x2="500"
+                    y2={180 - targetExitPrice * 164}
+                    stroke="#F59E0B"
+                    strokeDasharray="6 3"
+                    strokeWidth="1.2"
+                    strokeOpacity={0.8}
+                  />
+                )}
+
+                {/* Entry Line Overlay on SVG */}
+                {entryPrice && (
+                  <line
+                    x1="0"
+                    y1={180 - entryPrice * 164}
+                    x2="500"
+                    y2={180 - entryPrice * 164}
+                    stroke="#06B6D4"
+                    strokeDasharray="4 4"
+                    strokeWidth="1.2"
+                    strokeOpacity={0.8}
+                  />
+                )}
 
                 {/* Candles */}
                 {data.map((d, i) => {
-                  const stepX = 500 / Math.max(1, data.length);
+                  const stepX = 460 / Math.max(1, data.length);
                   const x = i * stepX + stepX * 0.15;
-                  const candleW = Math.max(3, stepX * 0.7);
-                  const openY = 180 - (d.open || d.price) * 170;
-                  const closeY = 180 - (d.close || d.price) * 170;
-                  const highY = 180 - (d.high || Math.max(d.open || d.price, d.close || d.price) + 0.01) * 170;
-                  const lowY = 180 - (d.low || Math.min(d.open || d.price, d.close || d.price) - 0.01) * 170;
-                  const up = (d.close || d.price) >= (d.open || d.price);
+                  const candleW = Math.max(3.5, stepX * 0.7);
+
+                  const openVal = d.open ?? d.price;
+                  const closeVal = d.close ?? d.price;
+                  const highVal = d.high ?? Math.max(openVal, closeVal);
+                  const lowVal = d.low ?? Math.min(openVal, closeVal);
+
+                  const openY = 180 - openVal * 164;
+                  const closeY = 180 - closeVal * 164;
+                  const highY = 180 - highVal * 164;
+                  const lowY = 180 - lowVal * 164;
+                  const up = closeVal >= openVal;
                   const color = up ? "#10B981" : "#F43F5E";
 
                   return (
@@ -807,9 +919,16 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                       onMouseEnter={() => setHoveredPoint(d)}
                     >
                       {/* Wick */}
-                      <line x1={x + candleW / 2} y1={highY} x2={x + candleW / 2} y2={lowY} stroke={color} strokeWidth="1" />
+                      <line x1={x + candleW / 2} y1={highY} x2={x + candleW / 2} y2={lowY} stroke={color} strokeWidth="1.2" />
                       {/* Body */}
-                      <rect x={x} y={Math.min(openY, closeY)} width={candleW} height={Math.max(2, Math.abs(closeY - openY))} fill={color} rx="0.5" />
+                      <rect
+                        x={x}
+                        y={Math.min(openY, closeY)}
+                        width={candleW}
+                        height={Math.max(2.5, Math.abs(closeY - openY))}
+                        fill={color}
+                        rx="0.5"
+                      />
                     </g>
                   );
                 })}
@@ -818,13 +937,13 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 {showEMA && (
                   <path
                     d={data.reduce((acc, d, i) => {
-                      const stepX = 500 / Math.max(1, data.length);
+                      const stepX = 460 / Math.max(1, data.length);
                       const x = i * stepX + stepX * 0.5;
-                      const y = 180 - (d.ema9 || d.price) * 170;
+                      const y = 180 - (d.ema9 || d.price) * 164;
                       return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
                     }, "")}
                     fill="none"
-                    stroke="#F59E0B"
+                    stroke="#FB923C"
                     strokeWidth="1.3"
                     strokeOpacity="0.85"
                   />
@@ -834,13 +953,13 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 {showEMA && (
                   <path
                     d={data.reduce((acc, d, i) => {
-                      const stepX = 500 / Math.max(1, data.length);
+                      const stepX = 460 / Math.max(1, data.length);
                       const x = i * stepX + stepX * 0.5;
-                      const y = 180 - (d.ema21 || d.price) * 170;
+                      const y = 180 - (d.ema21 || d.price) * 164;
                       return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
                     }, "")}
                     fill="none"
-                    stroke="#A855F7"
+                    stroke="#818CF8"
                     strokeWidth="1.3"
                     strokeOpacity="0.85"
                   />
@@ -859,7 +978,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                     className="flex-1 rounded-t-[1px]"
                     style={{
                       height: `${Math.max(8, h)}%`,
-                      background: up ? "rgba(16,185,129,0.28)" : "rgba(244,63,94,0.24)",
+                      background: up ? "rgba(16,185,129,0.32)" : "rgba(244,63,94,0.28)",
                     }}
                   />
                 );
@@ -868,7 +987,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           </div>
         )}
 
-        {/* Mode 2: Monte Carlo Cone */}
+        {/* Mode 2: Monte Carlo Visual Projection */}
         {visualMode === "montecarlo" && (
           <div className="h-52 sm:h-60 w-full bg-[#08080E] rounded-none border border-white/[0.06] relative overflow-hidden p-2">
             <svg className="w-full h-full" viewBox="0 0 500 180" preserveAspectRatio="none">
@@ -883,8 +1002,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 </linearGradient>
               </defs>
 
-              <path d={`M 0 100 Q 250 ${90 - mcStats.spread / 2} 500 ${30 - mcStats.spread / 3} L 500 100 L 0 100 Z`} fill="url(#mcUp)" />
-              <path d={`M 0 100 Q 250 ${110 + mcStats.spread / 2} 500 ${150 + mcStats.spread / 3} L 500 100 L 0 100 Z`} fill="url(#mcDn)" />
+              <path
+                d={`M 0 100 Q 250 ${90 - mcStats.spread / 2} 500 ${30 - mcStats.spread / 3} L 500 100 L 0 100 Z`}
+                fill="url(#mcUp)"
+              />
+              <path
+                d={`M 0 100 Q 250 ${110 + mcStats.spread / 2} 500 ${150 + mcStats.spread / 3} L 500 100 L 0 100 Z`}
+                fill="url(#mcDn)"
+              />
 
               {[
                 `M 0 100 Q 150 ${85 - mcStats.spread / 4} 500 ${25 - mcStats.spread / 4}`,
@@ -896,7 +1021,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 `M 0 100 Q 300 115 500 112`,
                 `M 0 100 Q 180 ${130 + mcStats.spread / 4} 500 ${138 + mcStats.spread / 4}`,
               ].map((d, i) => (
-                <path key={i} d={d} fill="none" stroke={i < 4 ? "#A78BFA" : "#FB7185"} strokeWidth="1" strokeOpacity={0.35} strokeDasharray={i % 2 === 0 ? "3 3" : undefined} />
+                <path
+                  key={i}
+                  d={d}
+                  fill="none"
+                  stroke={i < 4 ? "#A78BFA" : "#FB7185"}
+                  strokeWidth="1"
+                  strokeOpacity={0.35}
+                  strokeDasharray={i % 2 === 0 ? "3 3" : undefined}
+                />
               ))}
 
               <path d="M 0 100 Q 250 80 500 48" fill="none" stroke="#C4B5FD" strokeWidth="2" />
@@ -934,18 +1067,25 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 {selectedSpike.time} UTC · {selectedSpike.magnitude}
               </span>
-              <button onClick={() => setSelectedSpike(null)} className="text-gray-500 hover:text-white cursor-pointer"><X className="w-3 h-3" /></button>
+              <button onClick={() => setSelectedSpike(null)} className="text-gray-500 hover:text-white cursor-pointer">
+                <X className="w-3 h-3" />
+              </button>
             </div>
 
             <p className="text-gray-300 text-[11px] font-sans leading-relaxed">{selectedSpike.summary}</p>
 
             <div className="flex items-center justify-between text-[10px] text-gray-500">
-              <span>Velocity: <b className="text-emerald-400">{selectedSpike.velocity}</b></span>
+              <span>
+                Velocity: <b className="text-emerald-400">{selectedSpike.velocity}</b>
+              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-1.5">
               <button
-                onClick={() => { sound.playClick(); sound.speakBriefing(`Spike on ${symbol}. ${selectedSpike.summary}`); }}
+                onClick={() => {
+                  sound.playClick();
+                  sound.speakBriefing(`Spike on ${symbol}. ${selectedSpike.summary}`);
+                }}
                 className="py-1.5 rounded-none bg-[#12121C] hover:bg-[#181824] border border-white/[0.08] text-violet-300 font-bold text-[10px] flex items-center justify-center gap-1 transition cursor-pointer"
               >
                 <Volume2 className="w-3 h-3" /> Voice

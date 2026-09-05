@@ -403,6 +403,7 @@ app.get("/api/timeline/:symbol", async (req, res) => {
         return seed / 233280;
       };
 
+      let prevP = baseProb;
       for (let i = count; i >= 0; i--) {
         const timestamp = new Date(toMs - i * stepMs).toISOString();
         const noise = (pseudoRandom() - 0.49) * 0.015;
@@ -411,13 +412,24 @@ app.get("/api/timeline/:symbol", async (req, res) => {
         if (isSpike) {
           p = Math.min(0.95, p + 0.12);
         }
+        const candleOpen = prevP;
+        const candleClose = p;
+        const wickRand = pseudoRandom() * 0.008;
+        const highWick = Math.min(0.98, Math.max(candleOpen, candleClose) + wickRand);
+        const lowWick = Math.max(0.02, Math.min(candleOpen, candleClose) - wickRand);
+        prevP = p;
+
         data.push({
           id: `snap-${toMs - i * stepMs}`,
           symbol,
           timestamp,
           mid_price: Number(p.toFixed(4)),
-          best_bid: Number((p - 0.01).toFixed(4)),
-          best_ask: Number((p + 0.01).toFixed(4)),
+          open: Number(candleOpen.toFixed(4)),
+          high: Number(highWick.toFixed(4)),
+          low: Number(lowWick.toFixed(4)),
+          close: Number(candleClose.toFixed(4)),
+          best_bid: Number(Math.max(0.01, p - 0.01).toFixed(4)),
+          best_ask: Number(Math.min(0.99, p + 0.01).toFixed(4)),
           volume_24h: 120000 + Math.floor(pseudoRandom() * 20000),
           is_spike: isSpike,
         });

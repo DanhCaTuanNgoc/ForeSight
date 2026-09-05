@@ -192,17 +192,26 @@ function ForeSightTerminalApp() {
       if (res.ok) {
         const json = await res.json();
         if (json.data && json.data.length > 0) {
-          const formatted = json.data.map((d: any) => ({
-            time: new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            price: d.mid_price,
-            priceNo: Number((1 - d.mid_price).toFixed(4)),
-            open: d.mid_price,
-            high: d.best_ask || d.mid_price,
-            low: d.best_bid || d.mid_price,
-            close: d.mid_price,
-            volume: d.volume_24h || 12000,
-            isSpike: Boolean(d.is_spike),
-          }));
+          let prevClose = json.data[0].mid_price || 0.5;
+          const formatted = json.data.map((d: any, idx: number) => {
+            const mid = d.mid_price ?? 0.5;
+            const open = d.open ?? (idx === 0 ? mid : prevClose);
+            const close = d.close ?? mid;
+            prevClose = close;
+            const high = d.high ?? Math.min(0.99, Math.max(open, close) + 0.006);
+            const low = d.low ?? Math.max(0.01, Math.min(open, close) - 0.006);
+            return {
+              time: new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              price: Number(close.toFixed(4)),
+              priceNo: Number((1 - close).toFixed(4)),
+              open: Number(open.toFixed(4)),
+              high: Number(high.toFixed(4)),
+              low: Number(low.toFixed(4)),
+              close: Number(close.toFixed(4)),
+              volume: d.volume_24h || 12000,
+              isSpike: Boolean(d.is_spike),
+            };
+          });
           setTimelineData(formatted);
           return;
         }

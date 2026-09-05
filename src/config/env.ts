@@ -10,6 +10,7 @@ const EnvSchema = z.object({
   RPC_URL: z.string().optional(),
   WS_RPC_URL: z.string().optional(),
   INDEXER_URL: z.string().optional(),
+  VENUE_ID: z.string().optional(),
   PRIVATE_KEY: z
     .string()
     .optional()

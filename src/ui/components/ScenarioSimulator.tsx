@@ -49,6 +49,21 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const [investment, setInvestment] = useState<number>(50); // in tUSDC
   const wallet = useWallet();
 
+  const realBalanceNum = useMemo(() => {
+    if (wallet.isConnected && wallet.tusdcBalance !== null) {
+      const parsed = parseFloat(wallet.tusdcBalance);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  }, [wallet.isConnected, wallet.tusdcBalance]);
+
+  const availDisplay = useMemo(() => {
+    if (!wallet.isConnected) return "—";
+    if (wallet.tusdcBalance === null) return "Loading...";
+    const num = parseFloat(wallet.tusdcBalance);
+    return `${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} tUSDC`;
+  }, [wallet.isConnected, wallet.tusdcBalance]);
+
   // Implied price default (0.01 - 0.99)
   const defaultEntry = prefillEntryPrice || (market?.midPrice ? Math.max(0.05, Math.min(0.95, market.midPrice)) : 0.50);
   const [entryPrice, setEntryPrice] = useState<number>(defaultEntry);
@@ -468,17 +483,29 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 </span>
                 <div className="flex items-center gap-1.5 text-[10px] font-mono">
                   <span className="text-gray-500">Avail:</span>
-                  <span className="text-gray-300 font-bold">1,000.00 tUSDC</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setInvestment(1000);
-                    }}
-                    className="text-[9px] text-violet-400 hover:text-violet-300 font-bold px-1 py-0.2 bg-violet-950/40 hover:bg-violet-900/60 border border-violet-500/30 transition-colors cursor-pointer"
-                  >
-                    MAX
-                  </button>
+                  {wallet.isConnected ? (
+                    <span className="text-gray-200 font-bold">{availDisplay}</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => wallet.openWalletModal()}
+                      className="text-violet-400 hover:text-violet-300 font-bold underline cursor-pointer"
+                    >
+                      Connect Wallet
+                    </button>
+                  )}
+                  {wallet.isConnected && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setInvestment(realBalanceNum > 0 ? Number(realBalanceNum.toFixed(2)) : 0);
+                      }}
+                      className="text-[9px] text-violet-400 hover:text-violet-300 font-bold px-1 py-0.2 bg-violet-950/40 hover:bg-violet-900/60 border border-violet-500/30 transition-colors cursor-pointer"
+                    >
+                      MAX
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -539,28 +566,34 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                   Est. Contracts: <b className="text-violet-300 font-bold">{calculation.contractsCount.toLocaleString()}</b> shares
                 </span>
                 <div className="flex items-center gap-1">
-                  {[
-                    { label: "25%", val: 250 },
-                    { label: "50%", val: 500 },
-                    { label: "75%", val: 750 },
-                    { label: "100%", val: 1000 },
-                  ].map((p) => (
-                    <button
-                      key={p.label}
-                      type="button"
-                      onClick={() => {
-                        sound.playClick();
-                        setInvestment(p.val);
-                      }}
-                      className={`text-[9px] px-1.5 py-0.2 border transition-colors cursor-pointer ${
-                        investment === p.val
-                          ? "bg-violet-950 text-violet-300 border-violet-500/50"
-                          : "bg-[#0A0A10] text-gray-500 border-white/[0.04] hover:text-gray-300 hover:border-white/[0.1]"
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+                  {[25, 50, 75, 100].map((pct) => {
+                    const targetVal =
+                      realBalanceNum > 0
+                        ? Number(((realBalanceNum * pct) / 100).toFixed(2))
+                        : pct * 10;
+                    const isSelected = investment === targetVal && targetVal > 0;
+                    return (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          if (!wallet.isConnected) {
+                            wallet.openWalletModal();
+                            return;
+                          }
+                          setInvestment(targetVal);
+                        }}
+                        className={`text-[9px] px-1.5 py-0.2 border transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-violet-950 text-violet-300 border-violet-500/50"
+                            : "bg-[#0A0A10] text-gray-500 border-white/[0.04] hover:text-gray-300 hover:border-white/[0.1]"
+                        }`}
+                      >
+                        {pct}%
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -569,23 +602,23 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-400">Limit Price</span>
-                  <span className="font-bold text-violet-300 font-mono">
+                  <span className="text-gray-400">Entry Price</span>
+                  <span className="font-bold text-cyan-300 font-mono">
                     ${entryPrice.toFixed(2)} ({Math.round(entryPrice * 100)}%)
                   </span>
                 </div>
                 <input
                   type="range"
-                  min="0.05"
-                  max="0.95"
+                  min="0.01"
+                  max="0.99"
                   step="0.01"
                   value={entryPrice}
                   onChange={(e) => {
-                    sound.playClick();
                     const val = Number(e.target.value);
                     setEntryPrice(val);
                     if (onEntryPriceChange) onEntryPriceChange(val);
                   }}
+                  onPointerUp={() => sound.playClick()}
                   className="w-full h-1.5 bg-[#07070A] rounded-none cursor-pointer accent-violet-500"
                 />
               </div>
@@ -609,16 +642,16 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 </div>
                 <input
                   type="range"
-                  min="0.05"
-                  max="0.95"
+                  min="0.01"
+                  max="0.99"
                   step="0.01"
                   value={targetExitPrice}
                   onChange={(e) => {
-                    sound.playClick();
                     const val = Number(e.target.value);
                     setTargetExitPrice(val);
                     if (onTargetExitPriceChange) onTargetExitPriceChange(val);
                   }}
+                  onPointerUp={() => sound.playClick()}
                   className={`w-full h-1.5 bg-[#07070A] rounded-none cursor-pointer ${
                     targetExitPrice >= entryPrice ? "accent-emerald-500" : "accent-rose-500"
                   }`}

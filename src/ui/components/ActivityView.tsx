@@ -136,6 +136,15 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           <div className="w-px h-6 bg-white/[0.08]" />
           <div className="space-y-0.5">
             <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
+              tUSDC Wallet
+            </span>
+            <span className="text-sm sm:text-base font-bold font-mono text-emerald-300 tracking-tight block">
+              {isConnected ? (wallet.tusdcBalance ? `${wallet.tusdcBalance} tUSDC` : "0.00 tUSDC") : "—"}
+            </span>
+          </div>
+          <div className="w-px h-6 bg-white/[0.08]" />
+          <div className="space-y-0.5">
+            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
               STT Gas
             </span>
             <span className="text-sm sm:text-base font-bold font-mono text-amber-300 tracking-tight block">
