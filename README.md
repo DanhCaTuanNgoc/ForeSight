@@ -21,7 +21,7 @@
 
 <br/>
 
-🌐 **Live Terminal:** [foresightdex.vercel.app](https://foresightdex.vercel.app/) &nbsp;•&nbsp; ⚡ **Somnia Shannon Testnet:** `Chain ID: 50312` &nbsp;•&nbsp; 🎯 **Target Protocol:** `DreamDEX CLOB`
+🌐 **Live Production Terminal:** [foresightdex.vercel.app](https://foresightdex.vercel.app/) &nbsp;•&nbsp; ⚡ **Somnia Shannon Testnet:** `Chain ID: 50312` &nbsp;•&nbsp; 🎯 **Target Protocol:** `DreamDEX CLOB`
 
 <br/>
 
@@ -32,22 +32,52 @@
 
 ---
 
-### 🧭 Hackathon Judges & Developers Quick Navigation
+## 📑 Table of Contents
 
-| Resource | Description | Direct Link |
-| :--- | :--- | :--- |
-| 🚀 **Live Production Terminal** | High-performance institutional trading terminal on Vercel | [foresightdex.vercel.app](https://foresightdex.vercel.app/) |
-| 📖 **Technical Architecture Document** | Deep product specification, mathematical modeling & risk framework | [Project-Details.md](docs/Project-Details.md) |
-| 🛠️ **DreamDEX SDK & Protocol Feedback** | 12 technical findings & ergonomic suggestions for Somnia Core Devs | [DreamDEX-SDK-Feedback.md](docs/DreamDEX-SDK-Feedback.md) |
-| 🎬 **Demo Video Pitch & Script** | 2.5-minute structured demonstration video pitch guide | [Demo-Video-Script.md](docs/Demo-Video-Script.md) |
-| 📋 **Milestone Backlog & Verification** | Complete development log & verification checklist | [Plan-Tracking-v1.md](docs/Plan-Tracking-v1.md) |
-| 🎨 **UI Design System Spec** | Institutional cyberpunk token design specifications | [ui-design-system.md](ui-design-system.md) |
+1. [Executive Summary & Product Vision](#-1-executive-summary--product-vision)
+2. [The Core Problem & Market Opportunity on Somnia L1](#-2-the-core-problem--market-opportunity-on-somnia-l1)
+3. [The 4-Stage Decision Architecture](#-3-the-4-stage-decision-architecture)
+   - [Stage 1: DETECT (10s Orderbook Anomaly Scanner)](#1️⃣-detect-orderbook-anomaly-detection)
+   - [Stage 2: CHALLENGE (Dual-Agent Adversarial Debate & Grounded RAG)](#2️⃣-challenge-adversarial-dual-agent-debate--grounded-rag)
+   - [Stage 3: SIMULATE (Trajectory Physics & Zero-Lag Math)](#3️⃣-simulate-trajectory-physics--feasibility-modeling)
+   - [Stage 4: EXECUTE (1-Click CLOB & Batch Settlement Sweeper)](#4️⃣-execute-1-click-clob-trading--settlement-sweeper)
+4. [Mathematical Formulations & Quantitative Foundation](#-4-mathematical-formulations--quantitative-foundation)
+   - [Velocity Coverage ($VC$) Trajectory Feasibility](#1-velocity-coverage-vc--trajectory-feasibility)
+   - [Closed-Form Black-Scholes Binary Option Pricing & Half-Kelly](#2-closed-form-black-scholes-binary-option-pricing--model-edge)
+   - [Discrete Binary Payoff Matrix & Early Exit](#3-discrete-binary-payoff-matrix--early-exit-formulation)
+5. [Proof-of-Thesis Alpha Card Studio (1200×675 HD)](#-5-proof-of-thesis-alpha-card-studio)
+6. [Automated Strategy Bot Suite & Personas](#-6-automated-strategy-bot-suite--personas)
+7. [Three-Tier System Architecture & Data Flow](#-7-three-tier-system-architecture--data-flow)
+8. [Developer Diagnostics & Test Verification (120/120 Tests)](#-8-developer-diagnostics--test-verification-120120-tests)
+9. [Somnia & DreamDEX Developer Feedback Report](#-9-somnia--dreamdex-developer-feedback-report)
+10. [Hackathon Judging Criteria Alignment](#-10-hackathon-judging-criteria-alignment)
+11. [2.5-Minute Demo Video Walkthrough & Script](#-11-25-minute-demo-video-walkthrough--script)
+12. [Local Installation & Development Guide](#-12-local-installation--development-guide)
+13. [Future Roadmap Beyond Hackathon](#-13-future-roadmap-beyond-hackathon)
+14. [License & Acknowledgements](#-14-license--acknowledgements)
 
 ---
 
-## 🌟 1. The Core Problem on DreamDEX & Somnia
+## 🌟 1. Executive Summary & Product Vision
 
-On high-throughput, sub-second finality blockchains like **Somnia Layer 1 (100k+ TPS)**, binary event contracts (1m, 5m, 15m, 1h BTC/ETH/SOL contracts) operate at unprecedented speed. Across **500+ active markets** on DreamDEX, traders face three critical bottlenecks:
+Binary event contracts represent the purest financial vehicle for expressing conviction on future events. On high-throughput, sub-second finality Layer 1 blockchains like **Somnia (100k+ TPS, sub-second finality)**, prediction markets operate at microsecond velocities across hundreds of concurrent pools.
+
+However, speed without intelligence breeds reckless speculation. **ForeSight** bridges the gap between raw blockchain throughput and disciplined financial execution:
+
+* **No Black-Box Predictions:** ForeSight never gives arbitrary "buy/sell" advice. Instead, it surfaces the macro and orderbook context so traders understand the market structure before committing capital.
+* **Separation of Reasoning from Math:** Subjective reasoning is handled by an adversarial Dual AI debate with live news citations (RAG), while capital allocation and trajectory feasibilities are computed through deterministic financial physics.
+* **Capital Efficiency:** Automatic detection and 1-click batch sweeping of matured contracts eliminates the stranded capital problem common in fast-cadence binary markets.
+
+```
+       RAW DREAMDEX CLOB DATA ──► [ DETECT ] ──► [ CHALLENGE ] ──► [ SIMULATE ] ──► [ EXECUTE ]
+       (500+ Active Markets)       Spike Radar    Adversarial AI    Velocity Math    1-Click / Sweeper
+```
+
+---
+
+## ⚡ 2. The Core Problem & Market Opportunity on Somnia L1
+
+Across **500+ active event contracts** on DreamDEX (1m, 5m, 15m, 1h BTC/ETH/SOL contracts), traders face three fundamental bottlenecks:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -63,11 +93,12 @@ On high-throughput, sub-second finality blockchains like **Somnia Layer 1 (100k+
 └──────────────────────────────┴──────────────────────────────┴──────────────────────────────────┘
 ```
 
+### Why a "Decision Terminal" Instead of Another DEX?
+DreamDEX already provides an exceptional CLOB orderbook and liquidity infrastructure. Building another basic trading UI adds little value. **ForeSight acts as the "Bloomberg Terminal + Quant Simulator" layer for Somnia Event Contracts**, elevating prediction markets from blind casinos into structured, professional trading environments.
+
 ---
 
-## 🔄 2. The 4-Stage Decision Architecture
-
-ForeSight transforms raw CLOB orderbooks into a structured **cognitive decision loop**:
+## 🔄 3. The 4-Stage Decision Architecture
 
 ```text
                  DREAMDEX ON-CHAIN CLOB (500+ Active Markets)
@@ -117,49 +148,33 @@ ForeSight transforms raw CLOB orderbooks into a structured **cognitive decision 
 * **Adversarial Synthesis (`DualDebateEngine`):** Rather than outputting a single speculative number, two specialized agents synthesize the market context:
   * 🐂 **Alpha Bull AI:** Analyzes orderbook bid depth, upside momentum, order asymmetry, and positive spot catalysts.
   * 🐻 **Macro Bear AI:** Evaluates overhead resistance, binary time decay ($\theta$), downside risk skew, and volatility traps.
-* **Verifiable Source Citations:** Every thesis cites real-world articles (`[View Evidence]`) ingested via live crypto RSS streams (CoinDesk, Cointelegraph, Decrypt). Subjective reasoning is strictly separated from deterministic mathematics.
+* **Verifiable Source Citations:** Every thesis cites real-world articles (`[View Evidence]`) ingested via live crypto RSS streams (CoinDesk, Cointelegraph, Decrypt).
 
-#### 🧠 Dynamic Context & Output Schema Architecture
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                      DYNAMIC CONTEXT INGESTION                         │
-│  - Market: [Asset] Event Contract ([Interval] Cadence)                 │
-│  - On-Chain State: Live Implied Odds [X]%, Orderbook Spread [Y] bps    │
-│  - Grounding Context (RAG): Live RSS Ingestion (CoinDesk, Cointelegraph)│
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │
-                                   ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                   ADVERSARIAL PROMPT INSTRUCTION                       │
-│  "Synthesize two opposing institutional perspectives for this         │
-│   prediction market. Return strictly valid structured JSON."           │
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │
-                                   ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                      STRUCTURED JSON OUTPUT SCHEMA                     │
-│  {                                                                     │
-│    "bullHeadline": "Institutional accumulation defending strike",      │
-│    "bullConfidence": 0.85, "bullTarget": 0.80,                         │
-│    "bullKeyArguments": ["Orderbook bid asymmetry exceeds ask depth..."],│
-│    "bullCatalysts": ["Spot volume surge in last 15m..."],              │
-│    "bearHeadline": "Overextended volatility with binary theta decay", │
-│    "bearConfidence": 0.75, "bearTarget": 0.35,                         │
-│    "bearKeyArguments": ["Binary theta decay accelerates near expiry..."],│
-│    "bearRiskFactors": ["Ask wall resistance at 75% probability..."],  │
-│    "summary": "Consensus favors short-term upside with tight stop..."  │
-│  }                                                                     │
-└────────────────────────────────────────────────────────────────────────┘
+#### 🧠 Context Ingestion & Structured Output Schema
+```json
+{
+  "bullHeadline": "Institutional accumulation defending $77.5K strike",
+  "bullConfidence": 0.85,
+  "bullTarget": 0.80,
+  "bullKeyArguments": ["Orderbook bid asymmetry exceeds ask depth..."],
+  "bullCatalysts": ["Spot volume surge in last 15m..."],
+  "bearHeadline": "Overextended volatility with binary theta decay",
+  "bearConfidence": 0.75,
+  "bearTarget": 0.35,
+  "bearKeyArguments": ["Binary theta decay accelerates near expiry..."],
+  "bearRiskFactors": ["Ask wall resistance at 75% probability..."],
+  "summary": "Consensus favors short-term upside with tight stop..."
+}
 ```
 
 ### 3️⃣ SIMULATE: Trajectory Physics & Feasibility Modeling
-* **Velocity Coverage Metric (`VC`):** Evaluates whether the underlying asset has sufficient physical momentum to cross the strike before round expiry:
+* **Velocity Coverage Metric (`VC`):** Evaluates whether the underlying spot asset has sufficient physical momentum to reach the strike price before round expiry:
   $$\Delta P_{\text{required}} = \frac{|P_{\text{strike}} - P_{\text{current}}|}{P_{\text{current}}} \times 100\%$$
   $$v_{\text{required}} = \frac{\Delta P_{\text{required}}}{T_{\text{remaining}}} \quad (\%/\text{minute})$$
   $$VC = \frac{v_{\text{observed}}}{v_{\text{required}}}$$
   * **$VC \ge 1.00\times$:** Realized spot momentum exceeds the required drift rate $\rightarrow$ **Trajectory physically feasible**.
   * **$VC < 1.00\times$:** Asset requires external momentum surge $\rightarrow$ **Elevated risk of expiring at zero ($0.00)**.
-* **Zero-Latency Client-Side Math:** Interactive sliders compute capital allocation, early-exit take-profit targets, expiration payoffs, and breakeven boundaries directly in the browser with 0ms network lag.
+* **Zero-Latency Client-Side Math:** Sliders compute capital allocation, early-exit take-profit targets, expiration payoffs, and breakeven boundaries directly in the browser with 0ms network lag.
 
 ### 4️⃣ EXECUTE: 1-Click CLOB Trading & Settlement Sweeper
 * **1-Click CLOB Dispatch:** Places limit and market orders directly to DreamDEX contracts via `@somnia-chain/markets-sdk` and Viem.
@@ -168,7 +183,88 @@ ForeSight transforms raw CLOB orderbooks into a structured **cognitive decision 
 
 ---
 
-## 🏗️ 3. Three-Tier System Architecture
+## 📐 4. Mathematical Formulations & Quantitative Foundation
+
+ForeSight strictly separates qualitative multi-agent reasoning from **deterministic financial mathematics**:
+
+### 1. Velocity Coverage (`VC`) — Trajectory Feasibility
+Evaluates whether the spot asset has sufficient physical momentum to reach the strike price before round expiry:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  1. Distance to Strike:    ΔP = | P_strike - P_current |               │
+│  2. Required Velocity:     v_req = (ΔP / P_current) / T_remaining      │
+│  3. Observed Velocity:     v_obs = (P_current - P_t-15m) / 15m         │
+│  4. Velocity Coverage:     VC = v_obs / v_req                          │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+| Metric | Formulation | Operational Interpretation |
+| :--- | :--- | :--- |
+| **`v_req`** | $(\Delta P / P_{\text{current}}) / T_{\text{remaining}}$ | Required price drift rate (% per minute) to cross strike |
+| **`v_obs`** | $(P_{\text{current}} - P_{t-15\text{m}}) / 15$ | Realized 15-minute price drift rate from spot oracle |
+| **`VC ≥ 1.0×`** | $v_{\text{obs}} / v_{\text{req}} \ge 1.0$ | **Feasible Trajectory:** Current momentum exceeds required drift |
+| **`VC < 1.0×`** | $v_{\text{obs}} / v_{\text{req}} < 1.0$ | **High Decay Risk:** Asset requires external momentum |
+
+### 2. Closed-Form Black-Scholes Binary Option Pricing & Model Edge
+To compute theoretical fair value independent of temporary orderbook imbalances, ForeSight implements the standard normal cumulative distribution $\Phi(d_2)$ via the **Abramowitz & Stegun rational Chebyshev approximation** (Formula 7.1.26, error $|\varepsilon| < 1.5 \times 10^{-7}$):
+
+$$d_2 = \frac{\ln(S / K) + (r - 0.5 \sigma^2)\tau}{\sigma \sqrt{\tau}}$$
+$$P_{\text{fair}} = \Phi(d_2)$$
+$$\text{Theoretical Edge (bps)} = (P_{\text{fair}} - P_{\text{market}}) \times 10,000 \text{ bps}$$
+$$\text{Half-Kelly Fraction } (f^*) = 0.5 \times \min\left(\frac{P_{\text{fair}} - P_{\text{market}}}{1 - P_{\text{market}}}, 0.25\right)$$
+
+| Parameter / Metric | Definition & Value Range | Operational Role |
+| :--- | :--- | :--- |
+| **`S / K`** | Spot Price `S` / Strike Price `K` | Moneyness ratio from spot oracle |
+| **`τ_eff` (Anti-Pin Risk)** | $\max(\tau, 45\text{s})$ | Diffusion floor preventing probability cliff collapses near expiry |
+| **`Edge (bps)`** | $(P_{\text{fair}} - P_{\text{market}}) \times 10,000$ | Mispricing spread in basis points relative to CLOB mid-price |
+| **`Half-Kelly (f*)`** | $\min(f^*, 25\%)$ | Recommended capital allocation percentage, capped for preservation |
+
+### 3. Discrete Binary Payoff Matrix & Early-Exit Formulation
+Given user collateral $C$ and entry price $P_{\text{entry}} \in (0.01, 0.99)$:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  Contracts Minted (N) = C / P_entry                                    │
+│  Early-Exit PnL       = C × [ (P_target - P_entry) / P_entry ]         │
+│  Expiry Settlement    = C × [ (1.00 - P_entry) / P_entry ]             │
+│  Maximum Loss         = -100% × C  (Explicit downside cap)             │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+| Scenario | Payoff Equation | Example ($100 Collateral @ 0.60 Entry) |
+| :--- | :--- | :--- |
+| **Early Take-Profit** | $\text{PnL} = C \times \frac{P_{\text{exit}} - P_{\text{entry}}}{P_{\text{entry}}}$ | Exit @ 0.85 $\rightarrow$ **+$41.67 (+41.7% ROI)** |
+| **Expiry Win (YES)** | $\text{PnL} = C \times \frac{1.00 - P_{\text{entry}}}{P_{\text{entry}}}$ | Settle @ $1.00 $\rightarrow$ **+$66.67 (+66.7% ROI)** |
+| **Expiry Loss (NO)** | $\text{PnL} = -C$ | Settle @ $0.00 $\rightarrow$ **-$100.00 (-100.0% Max Loss)** |
+
+---
+
+## 📸 5. Proof-of-Thesis Alpha Card Studio
+
+To support viral social prediction sharing across the Somnia ecosystem, ForeSight provides an in-terminal **Alpha Card Studio**:
+* **1200×675 HD Canvas Export:** Generates high-resolution cybernetic trading cards formatted for X / Twitter (16:9) and Telegram.
+* **Dual Evidence Stamps:** Displays quantitative metrics (VC momentum ratio, Model Edge in bps) alongside Dual AI consensus excerpts.
+* **Network Verification Seal:** Certified watermark referencing Somnia Shannon Testnet (`Chain ID: 50312`) and DreamDEX CLOB.
+* **1-Click Social Sharing:** 1-click copy raw image to clipboard, download PNG, or open a pre-populated tweet intent on X.
+
+---
+
+## 🤖 6. Automated Strategy Bot Suite & Personas
+
+For algorithmic traders and automated market operations, ForeSight includes modular strategy runners powered by `@somnia-chain/markets-sdk`:
+
+| Strategy CLI | Bot Persona | Strategy Description & Logic |
+| :--- | :--- | :--- |
+| `npm run agent:starter` | **Baseline Validator** | Submits baseline limit orders and validates wallet approvals on Somnia Shannon |
+| `npm run agent:maker` | **🛡️ Titan (Market Maker)** | Continuously quotes dynamic bid-ask spreads around fair probability $\Phi(d2)$ |
+| `npm run agent:oracle` | **🔮 Oracle (Arbitrageur)** | Evaluates spot oracle drift (Binance feeds) and snipes mispriced CLOB orders |
+| `npm run agent:copilot` | **⚡ Volt (AI Copilot)** | Executes conditional orders based on Dual AI Arena conviction thresholds |
+
+---
+
+## 🏗️ 7. Three-Tier System Architecture & Data Flow
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -197,107 +293,14 @@ ForeSight transforms raw CLOB orderbooks into a structured **cognitive decision 
 
 ---
 
-## 📐 4. Mathematical Formulations & Financial Modeling
+## 🧪 8. Developer Diagnostics & Test Verification (120/120 Tests)
 
-ForeSight strictly separates qualitative multi-agent analysis from **deterministic financial mathematics**:
-
-### 1. Trajectory Feasibility ($VC$)
-| Metric | Formulation | Operational Interpretation |
-| :--- | :--- | :--- |
-| **`v_req`** | $(\Delta P / P_{\text{current}}) / T_{\text{remaining}}$ | Required price drift rate (% per minute) to cross strike |
-| **`v_obs`** | $(P_{\text{current}} - P_{t-15\text{m}}) / 15$ | Realized 15-minute price drift rate from spot oracle |
-| **`VC ≥ 1.0×`** | $v_{\text{obs}} / v_{\text{req}} \ge 1.0$ | **Feasible Trajectory:** Current momentum exceeds required drift |
-| **`VC < 1.0×`** | $v_{\text{obs}} / v_{\text{req}} < 1.0$ | **High Decay Risk:** Asset requires external momentum |
-
-### 2. Closed-Form Black-Scholes Binary Option Pricing
-Computes theoretical fair value using the standard normal cumulative distribution $\Phi(d_2)$ via the **Abramowitz & Stegun rational Chebyshev approximation** (Formula 7.1.26, error $|\varepsilon| < 1.5 \times 10^{-7}$):
-
-$$d_2 = \frac{\ln(S / K) + (r - 0.5 \sigma^2)\tau}{\sigma \sqrt{\tau}}$$
-$$P_{\text{fair}} = \Phi(d_2)$$
-$$\text{Theoretical Edge (bps)} = (P_{\text{fair}} - P_{\text{market}}) \times 10,000 \text{ bps}$$
-$$\text{Half-Kelly Fraction } (f^*) = 0.5 \times \min\left(\frac{P_{\text{fair}} - P_{\text{market}}}{1 - P_{\text{market}}}, 0.25\right)$$
-
-### 3. Discrete Binary Payoff Matrix
-Given user collateral $C$ and entry price $P_{\text{entry}} \in (0.01, 0.99)$:
-
-| Scenario | Payoff Equation | Example ($100 Collateral @ 0.60 Entry) |
-| :--- | :--- | :--- |
-| **Early Take-Profit** | $\text{PnL} = C \times \frac{P_{\text{exit}} - P_{\text{entry}}}{P_{\text{entry}}}$ | Exit @ 0.85 $\rightarrow$ **+$41.67 (+41.7% ROI)** |
-| **Expiry Win (YES)** | $\text{PnL} = C \times \frac{1.00 - P_{\text{entry}}}{P_{\text{entry}}}$ | Settle @ $1.00 $\rightarrow$ **+$66.67 (+66.7% ROI)** |
-| **Expiry Loss (NO)** | $\text{PnL} = -C$ | Settle @ $0.00 $\rightarrow$ **-$100.00 (-100.0% Max Loss)** |
-
----
-
-## 📸 5. Proof-of-Thesis Alpha Card Studio
-
-To support viral social prediction sharing across the Somnia ecosystem, ForeSight provides an in-terminal **Alpha Card Studio**:
-* **1200×675 HD Canvas Export:** Generates high-resolution cybernetic trading cards formatted for X / Twitter (16:9) and Telegram.
-* **Dual Evidence Stamps:** Displays quantitative metrics (VC momentum ratio, Model Edge in bps) alongside Dual AI consensus excerpts.
-* **Network Verification Seal:** Certified watermark referencing Somnia Shannon Testnet (`Chain ID: 50312`) and DreamDEX CLOB.
-* **1-Click Social Sharing:** 1-click copy raw image to clipboard, download PNG, or open a pre-populated tweet intent on X.
-
----
-
-## 🤖 6. Automated Strategy Bot Suite
-
-For algorithmic traders and automated market operations, ForeSight includes modular strategy runners powered by `@somnia-chain/markets-sdk`:
-
-| Strategy CLI | Strategy Description | Execution Logic |
-| :--- | :--- | :--- |
-| `npm run agent:starter` | **Starter Order Bot** | Submits baseline limit orders and validates wallet approvals on Somnia Shannon |
-| `npm run agent:maker` | **Two-Sided Market Maker** | Continuously quotes dynamic bid-ask spreads around fair probability |
-| `npm run agent:oracle` | **Oracle Momentum Follower** | Evaluates spot oracle drift (Binance feeds) and snipes mispriced CLOB orders |
-| `npm run agent:copilot` | **Autonomous AI Copilot** | Executes conditional orders based on Dual AI Arena conviction thresholds |
-
----
-
-## 🎯 7. Hackathon Judging Criteria Alignment
-
-| Hackathon Criterion | Weight | How ForeSight Delivers Impact |
-| :--- | :---: | :--- |
-| **Innovation & Originality** | **20%** | Replaces black-box guessing with **Adversarial Dual AI debate (Bull vs Bear)** grounded in live RAG news citations and deterministic trajectory physics ($VC$). |
-| **Technical Implementation** | **25%** | Deep integration with `@somnia-chain/markets-sdk`, automated 10s anomaly indexer, 4 autonomous bot runners, and **120/120 passing Vitest tests (100%)**. |
-| **User Experience & Design** | **20%** | Institutional cyberpunk bento cockpit, zero-latency client-side math, 1200×675 HD social Alpha Cards, and interactive onboarding guide. |
-| **Business & Ecosystem Impact**| **20%** | Bridges retail traders and quants to DreamDEX CLOB, solves stranded capital via Settlement Sweeper, and drives continuous on-chain transactions on Somnia. |
-| **Presentation & Demo** | **15%** | Comprehensive documentation, live working production terminal on Vercel, and a concise 2.5-minute video pitch walkthrough. |
-
----
-
-## 🛠️ 8. Developer Feedback for Somnia & DreamDEX SDK
-
-During the hackathon, we compiled **12 key findings & architectural recommendations** for the Somnia Core Team (see [DreamDEX-SDK-Feedback.md](docs/DreamDEX-SDK-Feedback.md)):
-
-1. **Batch Settlement Claim Helper (`batchClaimSettledMarkets`):** Add a native SDK method `exchange.claimAllSettled({ venueId })` to batch-redeem winning shares across multiple matured pools in one multicall.
-2. **Native WebSocket Orderbook Subscriptions:** Expose typed WebSocket subscriptions (`subscribeOrderBook`, `subscribeSpikes`) in `@somnia-chain/markets-sdk` to eliminate HTTP polling.
-3. **Strict TypeScript Schemas for Binary Events:** Provide strongly-typed `BinaryMarketInfo` interfaces for `strikePrice`, `expiryTimestamp`, and `moneyness`.
-
----
-
-## 💻 9. Developer Diagnostics & Test Coverage
-
-ForeSight emphasizes protocol reliability, reproducible builds, and comprehensive test coverage:
+ForeSight maintains **100% test pass rate** with 10 comprehensive Vitest test suites verifying financial math, agent execution, and network resilience:
 
 ```bash
-# 1. Validate Somnia RPC, Indexer, Venue ID, and wallet state
-npm run doctor
-
-# 2. Query and inspect all 500+ active event contracts on Somnia Shannon
-npm run markets
-
-# 3. Scan finalized markets and execute automated batch settlement sweep
-npm run claim
-
-# 4. Run automated test suite (120/120 unit & integration tests passing)
 npm test
-
-# 5. Compile backend TypeScript engine
-npm run build
-
-# 6. Build production-optimized React 19 / Vite bundle
-npm run build:ui
 ```
 
-### Test Suite Execution Summary:
 ```text
  RUN  v4.1.11 D:/Coding/Somnia
 
@@ -319,7 +322,63 @@ npm run build:ui
 
 ---
 
-## ⚡ 10. Quickstart Guide (Local Setup in 3 Minutes)
+## 🛠️ 9. Somnia & DreamDEX Developer Feedback Report
+
+During the development of ForeSight on the **Somnia Shannon Testnet (`Chain ID: 50312`)**, we deeply integrated `@somnia-chain/markets-sdk` with `viem` to build automated snapshot ingestion, AI reasoning agents, scenario simulations, and automated settlement sweeps.
+
+Below is our structured technical feedback for the Somnia Core Devs:
+
+### 🟢 What Worked Exceptionally Well (Strengths)
+1. **High-Performance GraphQL Indexer (`dev.smk.somnia.host`):** Real-time querying of 500+ active event contracts is remarkably fast with sub-second indexer response times.
+2. **Modular SDK Design (`SomniaMarkets`):** The unified abstraction for order placement (`createOrder`), balance checks (`fetchBalance`), and book depth retrieval (`fetchOrderBook`) aligns smoothly with standard CCXT-style trading paradigms.
+3. **Sub-Second Block Finality on Somnia Shannon:** Rapid block confirmations enable automated snapshot workers to record micro-volatility shifts and detect probability spikes without missing interim price updates.
+
+### 💡 High-Value Opportunities for Protocol Enhancement
+1. **Native Batch Settlement Helper (`batchClaimSettledMarkets`):**
+   * *Current Behavior:* Developers currently iterate through individual settled markets to execute sequential claim transactions.
+   * *Recommendation:* Add an SDK method `exchange.claimAllSettled({ venueId })` that batches multiple redemption calls into a single multicall on-chain transaction to save gas and reduce roundtrips.
+2. **WebSocket Orderbook Streaming:**
+   * *Current Behavior:* Retrieving granular orderbook depth relies on frequent polling of `fetchOrderBook`.
+   * *Recommendation:* Expose typed WebSocket subscriptions (`exchange.subscribeOrderBook(symbol, callback)` and `exchange.subscribeSpikes(threshold, callback)`) out-of-the-box in `@somnia-chain/markets-sdk`.
+3. **Strict TypeScript Typing for Binary Event Contracts:**
+   * *Current Behavior:* In the raw indexer response, `marketType`, `expiry`, and `strike` sometimes appear under dynamic `info` fields as varied string/number formats.
+   * *Recommendation:* Provide strict TypeScript interfaces (`BinaryMarketInfo` with guaranteed `expiryTimestamp`, `strikePrice`, `underlyingAsset`, and `timeRemainingSec`).
+
+---
+
+## 🎯 10. Hackathon Judging Criteria Alignment
+
+| Hackathon Criterion | Weight | How ForeSight Delivers Maximum Impact |
+| :--- | :---: | :--- |
+| **1. Innovation & Originality** | **20%** | Replaces black-box guessing with **Adversarial Dual AI debate (Bull vs Bear)** grounded in live RAG news citations and deterministic trajectory physics ($VC$). |
+| **2. Technical Implementation** | **25%** | Deep integration with `@somnia-chain/markets-sdk`, automated 10s anomaly indexer, 4 autonomous bot runners, and **120/120 passing Vitest tests (100%)**. |
+| **3. User Experience & Design** | **20%** | Institutional cyberpunk bento cockpit, zero-latency client-side math, 1200×675 HD social Alpha Cards, and interactive onboarding guide. |
+| **4. Business & Ecosystem Impact**| **20%** | Bridges retail traders and quants to DreamDEX CLOB, solves stranded capital via Settlement Sweeper, and drives continuous on-chain transactions on Somnia. |
+| **5. Presentation & Demo** | **15%** | Comprehensive documentation, live working production terminal on Vercel, and a concise 2.5-minute video pitch walkthrough. |
+
+---
+
+## 🎬 11. 2.5-Minute Demo Video Walkthrough & Script
+
+Our official demonstration follows a tight 2.5-minute narrative designed for judges:
+
+```
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│   0:00 - 0:25   │   0:25 - 0:55   │   0:55 - 1:35   │   1:35 - 2:10   │   2:10 - 2:30   │
+│   The Problem   │   1. DETECT     │   2. DEBATE     │   3. SIMULATE   │   4. EXECUTE    │
+│ (Chaos & 500+)  │ (Area & Spikes) │ (Bull vs Bear)  │(VC & Trajectory)│ (& Auto-Sweep)  │
+└─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
+```
+
+* **Scene 1: The Problem (0:00 – 0:25):** The chaos of 500+ rapid binary contracts on Somnia and the danger of contextless 30% flash spikes. Introducing ForeSight's core philosophy: *"Understand the market before you trade it"*.
+* **Scene 2: DETECT (0:25 – 0:55):** Live probability curve plotting and the 10-second anomaly scanner tagging sudden surges with interactive pulsing markers.
+* **Scene 3: DEBATE (0:55 – 1:35):** Dual AI Arena modal opening with Alpha Bull AI and Macro Bear AI presenting grounded arguments with clickable `[View Evidence]` news sources.
+* **Scene 4: SIMULATE (1:35 – 2:10):** Physical trajectory validation using Velocity Coverage ($VC = 1.28\times$), Thesis Break Conditions, and instant zero-latency PnL sliders.
+* **Scene 5: EXECUTE & Auto-Sweep (2:10 – 2:30):** 1-Click order submission directly to DreamDEX CLOB, followed by 1-click batch claim with the Settlement Sweeper.
+
+---
+
+## ⚡ 12. Local Installation & Development Guide
 
 ### Prerequisites
 * Node.js $\ge 20.0.0$
@@ -347,11 +406,22 @@ npm run server
 ```bash
 npm run ui
 ```
-Open **`http://localhost:3000`** in your browser to access the live ForeSight terminal.
+Open **`http://localhost:3000`** in your browser.
+
+### 5. CLI Developer Utilities
+```bash
+npm run doctor          # Validate Somnia RPC, Indexer, Venue ID, and wallet state
+npm run markets         # Query and inspect all 500+ active event contracts
+npm run claim           # Scan finalized markets and execute batch settlement sweep
+npm run agent:starter   # Launch Baseline Starter Bot
+npm run agent:maker     # Launch Two-Sided Market Maker Bot
+npm run agent:oracle    # Launch Oracle Momentum Follower Bot
+npm run agent:copilot   # Launch Autonomous AI Copilot Bot
+```
 
 ---
 
-## 🗺️ 11. Future Roadmap Beyond Hackathon
+## 🗺️ 13. Future Roadmap Beyond Hackathon
 
 * **Phase 1 (Current):** Testnet MVP on Somnia Shannon (`50312`), Dual AI Arena, 4 Strategy Bots, Alpha Card Studio.
 * **Phase 2 (Somnia Mainnet):** Mainnet Deployment, Somnia Native Reactive Agent VM integration, Institutional REST API SDK, Mobile PWA Terminal.
@@ -359,7 +429,7 @@ Open **`http://localhost:3000`** in your browser to access the live ForeSight te
 
 ---
 
-## 📄 License & Acknowledgements
+## 📄 14. License & Acknowledgements
 
 MIT License — see the [LICENSE](LICENSE) file for details. Built with ❤️ for the **Somnia × DreamDEX Event Contracts Hackathon**.  
 Special thanks to the **Somnia Network** & **DreamDEX** engineering teams for developer tools, GraphQL indexers, and documentation support.
