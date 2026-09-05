@@ -397,13 +397,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                     <h3 className="font-bold text-white text-sm tracking-wide uppercase font-mono">
                       DUAL AI ARENA · {selectedSymbol}/tUSDC
                     </h3>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/60 border border-violet-500/40 text-violet-300 font-bold tracking-wider font-mono animate-pulse">
-                      GEMINI 2.5 VS LLAMA 3.3 70B
-                    </span>
                   </div>
-                  <p className="text-[10px] text-gray-400 font-mono">
-                    <span className="text-emerald-400 font-bold">Google Gemini 2.5 Flash (Bull)</span> vs <span className="text-rose-400 font-bold">Meta LLaMA 3.3 70B (Bear)</span> on Somnia L1 CLOB
-                  </p>
                 </div>
               </div>
 
