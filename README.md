@@ -103,10 +103,52 @@ ForeSight resolves these bottlenecks by organizing raw CLOB orderbooks into a st
 * **10-Second Anomaly Scanner:** Continuously monitors active event contracts. Any probability shift $\ge 10\%$ between snapshots is automatically flagged with an interactive timeline marker.
 
 ### 2️⃣ CHALLENGE: Dual-Agent Thesis Debate & Grounded RAG
-* **Adversarial Multi-Agent Debate:** When a spike is selected, two specialized agents synthesize the market context:
-  * **Alpha Bull AI:** Analyzes orderbook bid depth, upside momentum, and positive spot drift.
-  * **Macro Bear AI:** Evaluates overhead resistance, time decay, and downside risk factors.
+* **Adversarial Multi-Agent Debate:** When an asset or spike is selected, two specialized agents synthesize the market context:
+  * **Alpha Bull AI:** Analyzes orderbook bid depth, upside momentum, order asymmetry, and positive spot catalysts.
+  * **Macro Bear AI:** Evaluates overhead resistance, time decay ($\theta$ decay), downside risk skew, and binary asymmetry.
 * **Verifiable Source Citations:** Every thesis cites real-world articles (`[View Evidence]`) ingested via live crypto RSS streams (CoinDesk, Cointelegraph, Decrypt). Subjective reasoning is strictly separated from deterministic mathematics.
+
+#### 🧠 Context-Grounding Prompt & Schema Architecture
+ForeSight transforms raw on-chain state and live news streams into a structured adversarial prompt:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                      DYNAMIC CONTEXT INGESTION                         │
+│  - Market: [Asset] Event Contract ([Interval] Cadence)                 │
+│  - On-Chain State: Live Implied Odds [X]%, Orderbook Spread [Y] bps    │
+│  - Real-Time Grounding Context (RAG):                                  │
+│    [1] "Bitcoin Spot ETF Inflows Expand..." (CoinDesk)                 │
+│    [2] "Macro Fed Liquidity Sentiment..." (CoinTelegraph)              │
+│    [3] "Decentralized Prediction Orderbooks..." (Decrypt)              │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   ADVERSARIAL PROMPT INSTRUCTION                       │
+│  "You are ForeSight Dual AI Arena on Somnia L1. Synthesize two        │
+│   opposing institutional perspectives for this prediction market.      │
+│   Return strictly valid JSON with bull & bear cases."                  │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                      STRUCTURED JSON OUTPUT SCHEMA                     │
+│  {                                                                     │
+│    "bullHeadline": "Institutional accumulation defending $77.5K strike",│
+│    "bullConfidence": 0.85,                                             │
+│    "bullTarget": 0.80,                                                 │
+│    "bullKeyArguments": ["Orderbook bid asymmetry exceeds ask depth..."],│
+│    "bullCatalysts": ["Spot volume surge in last 15m..."],              │
+│    "bearHeadline": "Overextended volatility with binary theta decay", │
+│    "bearConfidence": 0.75,                                             │
+│    "bearTarget": 0.35,                                                 │
+│    "bearKeyArguments": ["Binary theta decay accelerates near expiry..."],│
+│    "bearRiskFactors": ["Ask wall resistance at 75% probability..."],  │
+│    "summary": "Consensus favors short-term upside with tight stop..."  │
+│  }                                                                     │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
 
 ### 3️⃣ SIMULATE: Trajectory Physics & Feasibility Modeling
 * **Velocity Coverage Metric (`VC`):** Rather than speculative guesses, ForeSight calculates a physical trajectory feasibility ratio:

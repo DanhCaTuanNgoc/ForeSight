@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, Clock, ExternalLink, ShieldCheck, Coins, Zap, Wallet } from "lucide-react";
+import { CheckCircle2, Clock, ExternalLink, ShieldCheck, Coins, Zap, Wallet, Share2 } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { useWallet } from "../context/WalletContext.js";
 
@@ -24,9 +24,16 @@ interface PositionsTableProps {
   onClaim: () => void;
   isClaiming: boolean;
   onEarlyExit?: (positionId: string, exitPrice?: number) => void;
+  onShareAlphaCard?: (position: Position) => void;
 }
 
-export const PositionsTable: React.FC<PositionsTableProps> = ({ positions, onClaim, isClaiming, onEarlyExit }) => {
+export const PositionsTable: React.FC<PositionsTableProps> = ({
+  positions,
+  onClaim,
+  isClaiming,
+  onEarlyExit,
+  onShareAlphaCard,
+}) => {
   const wallet = useWallet();
 
   return (
@@ -91,6 +98,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({ positions, onCla
                 <th className="py-2 px-2.5">Max Payout</th>
                 <th className="py-2 px-2.5">Tx Audit</th>
                 <th className="py-2 px-2.5 text-center">Early Exit</th>
+                <th className="py-2 px-2.5 text-center">Alpha Card</th>
                 <th className="py-2 px-2.5 text-right whitespace-nowrap">Status</th>
               </tr>
             </thead>
@@ -165,6 +173,16 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({ positions, onCla
                       ) : (
                         <span className="text-gray-600 text-[10px]">—</span>
                       )}
+                    </td>
+                    <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => onShareAlphaCard && onShareAlphaCard(p)}
+                        className="px-2 py-0.5 rounded-none bg-[#12121C] hover:bg-violet-950/90 text-violet-300 hover:text-violet-100 border border-violet-500/30 hover:border-violet-400 font-bold text-[9px] inline-flex items-center gap-1 transition-colors cursor-pointer whitespace-nowrap shadow-sm"
+                        title="Export High-Resolution Verifiable Alpha Card"
+                      >
+                        <Share2 className="w-2.5 h-2.5 text-violet-400" />
+                        <span>CARD</span>
+                      </button>
                     </td>
                     <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
                       {p.status === "OPEN" ? (

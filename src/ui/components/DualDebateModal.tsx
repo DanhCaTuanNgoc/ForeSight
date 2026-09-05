@@ -119,7 +119,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                       <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
                         <TrendingUp className="w-3.5 h-3.5" />
-                        <span>ALPHA BULL THESIS</span>
+                        <span>GEMINI 2.5 FLASH · ALPHA BULL</span>
                       </div>
                       <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 font-bold">
                         {Math.round(debateData.bullCase.confidence * 100)}% Conviction
@@ -132,7 +132,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
 
                     <div className="space-y-1 pt-0.5">
                       <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">
-                        Key Arguments:
+                        Gemini Bull Arguments:
                       </p>
                       <ul className="space-y-1 text-xs text-gray-300 font-sans">
                         {debateData.bullCase.keyArguments.map((arg: string, i: number) => (
@@ -166,9 +166,9 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                       onLoadScenario("YES", debateData.bullCase.targetProbability);
                       onClose();
                     }}
-                    className="w-full py-2 rounded-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-emerald-400/40 cursor-pointer"
+                    className="w-full py-2 rounded-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-emerald-400/40 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.2)]"
                   >
-                    <span>LOAD BULL · BUY YES @ {(debateData.bullCase.targetProbability * 100).toFixed(0)}%</span>
+                    <span>BACK GEMINI 2.5 · BUY YES @ {(debateData.bullCase.targetProbability * 100).toFixed(0)}%</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -179,7 +179,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                       <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs">
                         <TrendingDown className="w-3.5 h-3.5" />
-                        <span>MACRO BEAR THESIS</span>
+                        <span>META LLAMA 3.3 70B · MACRO BEAR</span>
                       </div>
                       <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-rose-950/60 text-rose-300 border border-rose-500/40 font-bold">
                         {Math.round(debateData.bearCase.confidence * 100)}% Risk Skew
@@ -192,7 +192,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
 
                     <div className="space-y-1 pt-0.5">
                       <p className="text-[9px] font-bold text-rose-400 uppercase tracking-wider font-mono">
-                        Counter Arguments:
+                        LLaMA Bear Arguments:
                       </p>
                       <ul className="space-y-1 text-xs text-gray-300 font-sans">
                         {debateData.bearCase.keyArguments.map((arg: string, i: number) => (
@@ -226,9 +226,9 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                       onLoadScenario("NO", debateData.bearCase.targetProbability);
                       onClose();
                     }}
-                    className="w-full py-2 rounded-none bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-rose-400/40 cursor-pointer"
+                    className="w-full py-2 rounded-none bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-rose-400/40 cursor-pointer shadow-[0_0_12px_rgba(244,63,94,0.2)]"
                   >
-                    <span>LOAD BEAR · BUY NO @ {(debateData.bearCase.targetProbability * 100).toFixed(0)}%</span>
+                    <span>BACK LLAMA 3.3 · BUY NO @ {(debateData.bearCase.targetProbability * 100).toFixed(0)}%</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

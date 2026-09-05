@@ -389,18 +389,21 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
             {/* Arena Header */}
             <div className="flex flex-wrap items-center justify-between border-b border-white/[0.07] pb-2.5 gap-2">
               <div className="flex items-center gap-2">
-                <div className="p-1 rounded-none bg-violet-950/60 border border-violet-500/30 text-violet-300">
-                  <Swords className="w-3.5 h-3.5" />
+                <div className="p-1.5 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+                  <Swords className="w-4 h-4 text-violet-400" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-white text-sm tracking-wide uppercase font-mono">
-                      DUAL ARENA · {selectedSymbol}/tUSDC
+                      DUAL AI ARENA · {selectedSymbol}/tUSDC
                     </h3>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/40 border border-violet-500/30 text-violet-300 font-bold tracking-wider font-mono">
-                      ADVERSARIAL
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/60 border border-violet-500/40 text-violet-300 font-bold tracking-wider font-mono animate-pulse">
+                      GEMINI 2.5 VS LLAMA 3.3 70B
                     </span>
                   </div>
+                  <p className="text-[10px] text-gray-400 font-mono">
+                    <span className="text-emerald-400 font-bold">Google Gemini 2.5 Flash (Bull)</span> vs <span className="text-rose-400 font-bold">Meta LLaMA 3.3 70B (Bear)</span> on Somnia L1 CLOB
+                  </p>
                 </div>
               </div>
 
@@ -414,10 +417,10 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                       ? "bg-[#0E0E17] text-gray-500 border-white/[0.06] cursor-not-allowed"
                       : "bg-[#0E0E17] text-violet-300 hover:text-white hover:border-violet-500/40 border-white/[0.07]"
                   }`}
-                  title="Re-run debate synthesis"
+                  title="Trigger live AI re-debate"
                 >
                   <Sparkles className={`w-3 h-3 ${debateLoading ? "animate-spin text-violet-400" : "text-violet-400"}`} />
-                  <span>{debateLoading ? "Synthesizing..." : "Re-Debate"}</span>
+                  <span>{debateLoading ? "Clashing..." : "Trigger AI Clash"}</span>
                 </button>
 
                 <button
@@ -442,25 +445,25 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-spin" />
                     <span className="text-xs font-bold text-white tracking-wide">
-                      ADVERSARIAL AGENTS DEBATING MARKET THESIS...
+                      GEMINI 2.5 FLASH ⚔️ META LLAMA 3.3 70B CLASHING...
                     </span>
                   </div>
                   <span className="text-[9px] font-mono text-violet-300 bg-violet-950/60 px-1.5 py-0.2 rounded-none border border-violet-500/30 font-bold">
-                    Dual Synthesis
+                    Dual Arena
                   </span>
                 </div>
                 <div className="space-y-1 text-[10px] font-mono text-gray-300">
                   <div className="flex items-center gap-1.5 text-emerald-400">
                     <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                    <span>[1/3] Alpha Bull assessing bid asymmetry & momentum...</span>
+                    <span>[Google Gemini 2.5 Flash: Bull] Assessing bid asymmetry & upside momentum...</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-rose-400">
                     <CheckCircle2 className="w-3 h-3 text-rose-400 flex-shrink-0" />
-                    <span>[2/3] Macro Bear stress-testing resistance & theta decay...</span>
+                    <span>[Meta LLaMA 3.3 70B: Bear] Stress-testing resistance & binary theta decay...</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-violet-300">
                     <Radio className="w-3 h-3 text-violet-400 animate-spin flex-shrink-0" />
-                    <span>[3/3] Cross-examining counter-arguments with RAG evidence...</span>
+                    <span>[Arbitration Referee] Cross-examining counter-arguments with RAG news evidence...</span>
                   </div>
                 </div>
               </div>
@@ -481,13 +484,14 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
               <div className="flex justify-between items-center text-xs font-bold font-mono">
                 <div className="flex items-center gap-1 text-emerald-400">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  <span>ALPHA BULL ({bullConfidence}%)</span>
+                  <span>GEMINI 2.5 FLASH · BULL ({bullConfidence}%)</span>
                 </div>
                 <div className="px-2 py-0.2 rounded-none bg-[#12121C] border border-white/[0.07] text-[9px] text-gray-300 font-bold flex items-center gap-1">
-                  <span>{bullConfidence >= 50 ? `Bull Lead (+${bullConfidence - bearConfidence}%)` : `Bear Lead (+${bearConfidence - bullConfidence}%)`}</span>
+                  <Swords className="w-3 h-3 text-violet-400" />
+                  <span>{bullConfidence >= 50 ? `Gemini Lead (+${bullConfidence - bearConfidence}%)` : `LLaMA Lead (+${bearConfidence - bullConfidence}%)`}</span>
                 </div>
                 <div className="flex items-center gap-1 text-rose-400">
-                  <span>({bearConfidence}%) MACRO BEAR</span>
+                  <span>({bearConfidence}%) BEAR · META LLAMA 3.3 70B</span>
                   <TrendingDown className="w-3.5 h-3.5" />
                 </div>
               </div>
@@ -506,8 +510,8 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
 
             {/* ─── THE ADVERSARIAL RING: BULL VS BEAR FACE-OFF ──────────── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative">
-              {/* 🟢 ALPHA BULL */}
-              <div className="p-3.5 rounded-none bg-[#0E0E17] border border-emerald-500/30 flex flex-col justify-between space-y-3">
+              {/* 🟢 GOOGLE GEMINI 2.5 FLASH (ALPHA BULL) */}
+              <div className="p-3.5 rounded-none bg-[#0E0E17] border border-emerald-500/30 flex flex-col justify-between space-y-3 relative overflow-hidden">
                 <div className="space-y-2.5">
                   {/* Header */}
                   <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
@@ -516,11 +520,16 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         <TrendingUp className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-emerald-300 block">
-                          ALPHA BULL THESIS
-                        </span>
-                        <span className="text-[9px] text-emerald-400/80 uppercase font-mono font-bold">
-                          Long YES
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-emerald-300 block">
+                            GEMINI 2.5 FLASH
+                          </span>
+                          <span className="text-[8px] px-1 py-0.2 rounded-none bg-emerald-950/90 text-emerald-400 border border-emerald-500/40 font-bold">
+                            ALPHA BULL
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-gray-400 font-mono">
+                          Google DeepMind · Momentum Specialist
                         </span>
                       </div>
                     </div>
@@ -532,15 +541,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Model Engine Tag */}
-                  <div className="flex items-center justify-between text-[10px] font-mono bg-[#12121C] px-2 py-0.5 rounded-none border border-white/[0.06]">
-                    <span className="text-gray-300 flex items-center gap-1">
-                      <Cpu className="w-3 h-3 text-violet-400" />
-                      {debate?.bullCase?.modelUsed || debate?.bullModel || "Gemini 2.5 Flash"}
-                    </span>
-                    <span className="text-gray-400">Target: {(targetBullOdds * 100).toFixed(0)}%</span>
-                  </div>
-
                   {/* Headline */}
                   <div className="p-2.5 rounded-none bg-[#12121C] border border-emerald-500/20 text-xs text-gray-200 leading-relaxed font-sans">
                     "{debate?.bullCase?.headline || `Aggressive buying pressure on ${selectedSymbol} with deep bid support on DreamDEX CLOB.`}"
@@ -550,7 +550,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                   <div className="space-y-1 pt-0.5">
                     <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1 font-mono">
                       <Zap className="w-3 h-3 text-emerald-400" />
-                      <span>Bull Arguments:</span>
+                      <span>Gemini Bull Thesis:</span>
                     </span>
                     <ul className="space-y-1 text-xs text-gray-300 font-sans">
                       {debate?.bullCase?.keyArguments && debate.bullCase.keyArguments.length > 0 ? (
@@ -579,15 +579,15 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                 {/* Bull Action Button */}
                 <button
                   onClick={() => onTradeSignal(selectedSymbol, "YES", targetBullOdds)}
-                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-none font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer"
+                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-none font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.2)]"
                 >
-                  <span>LOAD BULL · BUY YES @ ${(targetBullOdds * 100).toFixed(0)}%</span>
+                  <span>BACK GEMINI 2.5 · BUY YES @ ${(targetBullOdds * 100).toFixed(0)}%</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* 🔴 MACRO BEAR */}
-              <div className="p-3.5 rounded-none bg-[#0E0E17] border border-rose-500/30 flex flex-col justify-between space-y-3">
+              {/* 🔴 META LLAMA 3.3 70B (MACRO BEAR) */}
+              <div className="p-3.5 rounded-none bg-[#0E0E17] border border-rose-500/30 flex flex-col justify-between space-y-3 relative overflow-hidden">
                 <div className="space-y-2.5">
                   {/* Header */}
                   <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
@@ -596,11 +596,16 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         <TrendingDown className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-rose-300 block">
-                          MACRO BEAR THESIS
-                        </span>
-                        <span className="text-[9px] text-rose-400/80 uppercase font-mono font-bold">
-                          Short NO
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-rose-300 block">
+                            META LLAMA 3.3 70B
+                          </span>
+                          <span className="text-[8px] px-1 py-0.2 rounded-none bg-rose-950/90 text-rose-400 border border-rose-500/40 font-bold">
+                            MACRO BEAR
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-gray-400 font-mono">
+                          Meta AI · Risk & Theta Decay Specialist
                         </span>
                       </div>
                     </div>
@@ -612,15 +617,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Model Engine Tag */}
-                  <div className="flex items-center justify-between text-[10px] font-mono bg-[#12121C] px-2 py-0.5 rounded-none border border-white/[0.06]">
-                    <span className="text-gray-300 flex items-center gap-1">
-                      <Cpu className="w-3 h-3 text-violet-400" />
-                      {debate?.bearCase?.modelUsed || debate?.bearModel || "LLaMA 3.3 70B"}
-                    </span>
-                    <span className="text-gray-400">Target: {(targetBearOdds * 100).toFixed(0)}%</span>
-                  </div>
-
                   {/* Headline */}
                   <div className="p-2.5 rounded-none bg-[#12121C] border border-rose-500/20 text-xs text-gray-200 leading-relaxed font-sans">
                     "{debate?.bearCase?.headline || `Overextended probability on ${selectedSymbol} with heavy overhead resistance and time decay.`}"
@@ -630,7 +626,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                   <div className="space-y-1 pt-0.5">
                     <span className="text-[9px] text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1 font-mono">
                       <ShieldAlert className="w-3 h-3 text-rose-400" />
-                      <span>Bear Arguments:</span>
+                      <span>LLaMA Bear Thesis:</span>
                     </span>
                     <ul className="space-y-1 text-xs text-gray-300 font-sans">
                       {debate?.bearCase?.keyArguments && debate.bearCase.keyArguments.length > 0 ? (
@@ -659,9 +655,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                 {/* Bear Action Button */}
                 <button
                   onClick={() => onTradeSignal(selectedSymbol, "NO", targetBearOdds)}
-                  className="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-none font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1.5 border border-rose-400/40 cursor-pointer"
+                  className="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-none font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1.5 border border-rose-400/40 cursor-pointer shadow-[0_0_12px_rgba(244,63,94,0.2)]"
                 >
-                  <span>LOAD BEAR · BUY NO @ ${(targetBearOdds * 100).toFixed(0)}%</span>
+                  <span>BACK LLAMA 3.3 · BUY NO @ ${(targetBearOdds * 100).toFixed(0)}%</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
               </div>

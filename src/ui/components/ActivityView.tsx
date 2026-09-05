@@ -9,7 +9,9 @@ import {
 } from "lucide-react";
 import { PositionsTable } from "./PositionsTable.js";
 import { ActivityTable } from "./ActivityTable.js";
+import { AlphaCardModal } from "./AlphaCardModal.js";
 import { useWallet } from "../context/WalletContext.js";
+import { sound } from "../utils/sound-fx.js";
 
 interface ActivityViewProps {
   positions: any[];
@@ -31,6 +33,8 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
   onEarlyExit,
 }) => {
   const [filter, setFilter] = useState<"ALL" | "OPEN" | "SETTLED">("ALL");
+  const [showAlphaCard, setShowAlphaCard] = useState<boolean>(false);
+  const [cardPosition, setCardPosition] = useState<any | null>(null);
   const wallet = useWallet();
 
   const activeAddress = wallet.address || propAddress;
@@ -231,6 +235,11 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           onClaim={onClaimAll}
           isClaiming={isClaiming}
           onEarlyExit={onEarlyExit}
+          onShareAlphaCard={(pos) => {
+            sound.playClick();
+            setCardPosition(pos);
+            setShowAlphaCard(true);
+          }}
         />
       </div>
 
@@ -251,6 +260,20 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           }))}
         />
       </div>
+
+      {/* ─── 5. SETTLED / IN-FLIGHT ALPHA CARD MODAL ───────────────────────── */}
+      {showAlphaCard && cardPosition && (
+        <AlphaCardModal
+          isOpen={showAlphaCard}
+          onClose={() => {
+            setShowAlphaCard(false);
+            setCardPosition(null);
+          }}
+          mode="SETTLED"
+          position={cardPosition}
+          assetName={cardPosition.symbol}
+        />
+      )}
     </div>
   );
 };
