@@ -54,6 +54,7 @@
    - [End-to-End Architectural Data Flow](#81-end-to-end-architectural-data-flow)
    - [End-to-End Decision & Settlement Lifecycle](#82-end-to-end-decision--settlement-lifecycle)
    - [Multi-Tier System Breakdown & Performance SLAs](#83-multi-tier-system-breakdown--performance-slas)
+   - [Verified Smart Contracts on Somnia Shannon L1](#84-verified-smart-contracts-on-somnia-shannon-l1)
 9. [Developer Diagnostics & Test Verification (124/124 Tests)](#-9-developer-diagnostics--test-verification-124124-tests)
 10. [Repository Structure](#-10-repository-structure)
 11. [Somnia & DreamDEX Developer Feedback Report](#-11-somnia--dreamdex-developer-feedback-report)
@@ -401,10 +402,28 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 │ Protocol Component             │ Network & Contract Layer      │ Guaranteed SLA & Invariants    │
 ├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
 │ • DreamDEX CLOB Contracts      │ Solidity, BinaryPool, Viem    │ Non-custodial escrow & orders  │
+│ • ForeSight Batch Sweeper      │ Custom MultiCall Router (Sol) │ 1-Click Atomic Batch Claiming  │
 │ • GraphQL Indexer              │ dev.smk.somnia.host           │ Sub-second indexer query speed │
 │ • Somnia Shannon Testnet       │ Somnia L1 (Chain ID: 50312)   │ 100k+ TPS, <1s block finality  │
 └────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
 ```
+
+### 8.4 Verified Smart Contracts on Somnia Shannon L1
+
+ForeSight combines the core non-custodial CLOB contracts of **DreamDEX** with custom institutional infrastructure contracts developed and deployed natively on **Somnia Shannon L1**:
+
+| Contract Name | Network | Deployed Address | Verified Explorer Link | Core Role & Capabilities |
+| :--- | :---: | :---: | :---: | :--- |
+| **`ForeSightBatchSweeper.sol`** | Somnia Shannon (`50312`) | [`0x0df05851d944bfd01e6bc772e27738c23b6e30f9`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) | [View on Somnia Explorer ↗](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) | **1-Click Atomic Settlement Sweeper**: Executes multi-pool redemptions (`batchSweep`), batch token approvals (`batchApprove`), and non-custodial bot operator delegation. |
+| **`DreamDEX Settlement Router`** | Somnia Shannon (`50312`) | [`0x5Ce69567dB39C8fBAd7e048bEfdbcCdfE67B44e6`](https://shannon-explorer.somnia.network/address/0x5Ce69567dB39C8fBAd7e048bEfdbcCdfE67B44e6) | [View on Somnia Explorer ↗](https://shannon-explorer.somnia.network/address/0x5Ce69567dB39C8fBAd7e048bEfdbcCdfE67B44e6) | **Binary Pool Router & Settlement**: Manages on-chain YES/NO token minting, order matching, and oracle outcome determination. |
+| **`Testnet Collateral (tUSDC)`** | Somnia Shannon (`50312`) | [`0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E`](https://shannon-explorer.somnia.network/address/0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E) | [View on Somnia Explorer ↗](https://shannon-explorer.somnia.network/address/0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E) | **ERC-20 Trading Collateral**: Standard settlement currency across all binary event pools. |
+
+#### 📜 On-Chain Deployment Audit Receipt
+* **Deployment TxHash:** [`0x0042f7f304e036493b529d2cd6e77e359f0952db358e33799912d9e0a19cf275`](https://shannon-explorer.somnia.network/tx/0x0042f7f304e036493b529d2cd6e77e359f0952db358e33799912d9e0a19cf275)
+* **Block Number:** `480492425`
+* **Solidity Version:** `^0.8.20`
+* **Compilation Command:** `npm run contracts:compile`
+* **Deployment CLI:** `npm run contracts:deploy`
 
 ---
 
