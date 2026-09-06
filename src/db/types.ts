@@ -80,6 +80,31 @@ export type UserStrategyInsert = Omit<UserStrategyRow, "id" | "created_at" | "up
   updated_at?: string;
 };
 
+// ── user_positions ────────────────────────────────────────────
+export interface UserPositionRow {
+  id: string;
+  symbol: string;
+  outcome: "YES" | "NO";
+  amount: number;
+  entry_price: number;
+  timestamp: number;
+  status: "OPEN" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED";
+  wallet_address: string | null;
+  order_id: string | null;
+  tx_hash: string | null;
+  is_live_on_chain: boolean;
+  exit_price: number | null;
+  realized_pnl: number | null;
+  realized_roi_percent: number | null;
+  closed_at: number | null;
+  close_tx_hash: string | null;
+  created_at?: string;
+}
+
+export type UserPositionInsert = Omit<UserPositionRow, "created_at"> & {
+  created_at?: string;
+};
+
 // ── Supabase Database type definition (for createClient generic) ──
 export interface Database {
   public: {
@@ -103,6 +128,11 @@ export interface Database {
         Row: UserStrategyRow;
         Insert: UserStrategyInsert;
         Update: Partial<UserStrategyInsert>;
+      };
+      user_positions: {
+        Row: UserPositionRow;
+        Insert: UserPositionInsert;
+        Update: Partial<UserPositionInsert>;
       };
     };
   };

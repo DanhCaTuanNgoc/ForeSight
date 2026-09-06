@@ -217,6 +217,7 @@ export async function getLatestNews(limit = 20, asset?: string): Promise<NewsEve
 }
 
 // ────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────
 // User Strategies
 // ────────────────────────────────────────────────────────────
 
@@ -240,6 +241,7 @@ export async function saveStrategy(strategy: UserStrategyInsert): Promise<UserSt
 
 /** Get all strategies for a wallet. */
 export async function getStrategiesByWallet(walletAddress: string): Promise<UserStrategyRow[]> {
+  if (!isSupabaseConfigured()) return [];
   const sb = getSupabase();
   const { data, error } = await sb
     .from("user_strategies")
@@ -252,4 +254,93 @@ export async function getStrategiesByWallet(walletAddress: string): Promise<User
     return [];
   }
   return (data ?? []) as unknown as UserStrategyRow[];
+}
+
+// ────────────────────────────────────────────────────────────
+// User Positions & Trade Orders
+// ────────────────────────────────────────────────────────────
+
+/** Save a new position in Supabase */
+export async function insertPosition(pos: any): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  try {
+    const sb = getSupabase();
+    const row = {
+      id: pos.id,
+      symbol: pos.symbol,
+      outcome: pos.outcome,
+      amount: pos.amount,
+      entry_price: pos.entryPrice,
+      timestamp: pos.timestamp,
+      status: pos.status,
+      wallet_address: pos.walletAddress ? pos.walletAddress.toLowerCase() : null,
+      order_id: pos.orderId || null,
+      tx_hash: pos.txHash || null,
+      is_live_on_chain: Boolean(pos.isLiveOnChain),
+      exit_price: pos.exitPrice || null,
+      realized_pnl: pos.realizedPnl || null,
+      realized_roi_percent: pos.realizedRoiPercent || null,
+      closed_at: pos.closedAt || null,
+      close_tx_hash: pos.closeTxHash || null,
+    };
+    const { error } = await (sb as any).from("user_positions").upsert(row);
+    if (error) {
+      console.warn("[repo] insertPosition Supabase warn:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    console.warn("[repo] insertPosition exception:", err?.message || err);
+    return false;
+  }
+}
+
+/** Update position status / exit in Supabase */
+export async function updatePositionInDb(id: string, updates: any): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  try {
+    const sb = getSupabase();
+    const { error } = await (sb as any).from("user_positions").update(updates).eq("id", id);
+    if (error) {
+      console.warn("[repo] updatePositionInDb Supabase warn:", error.message);
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Fetch all positions from Supabase */
+export async function getAllPositionsFromDb(): Promise<any[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const sb = getSupabase();
+    const { data, error } = await (sb as any)
+      .from("user_positions")
+      .select("*")
+      .order("timestamp", { ascending: false });
+
+    if (error || !data) return [];
+    return data.map((r: any) => ({
+      id: r.id,
+      symbol: r.symbol,
+      outcome: r.outcome,
+      amount: Number(r.amount),
+      entryPrice: Number(r.entry_price),
+      timestamp: Number(r.timestamp),
+      status: r.status,
+      walletAddress: r.wallet_address || undefined,
+      orderId: r.order_id || undefined,
+      txHash: r.tx_hash || undefined,
+      isLiveOnChain: Boolean(r.is_live_on_chain),
+      exitPrice: r.exit_price !== null ? Number(r.exit_price) : undefined,
+      realizedPnl: r.realized_pnl !== null ? Number(r.realized_pnl) : undefined,
+      realizedRoiPercent: r.realized_roi_percent !== null ? Number(r.realized_roi_percent) : undefined,
+      closedAt: r.closed_at !== null ? Number(r.closed_at) : undefined,
+      closeTxHash: r.close_tx_hash || undefined,
+    }));
+  } catch {
+    return [];
+  }
 }

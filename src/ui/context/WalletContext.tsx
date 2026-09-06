@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { createPublicClient, http, formatEther, formatUnits, type Address } from "viem";
+import {
+  FORESIGHT_BATCH_SWEEPER_ADDRESS,
+  encodeTradeApproval,
+  encodeBatchSweepCall,
+} from "../utils/contracts.js";
 
 export const SOMNIA_SHANNON_CHAIN_ID = 50312;
 export const SOMNIA_SHANNON_HEX_CHAIN_ID = "0xc488";
@@ -38,6 +43,12 @@ const somniaPublicClient = createPublicClient({
   transport: http(SOMNIA_SHANNON_NETWORK_PARAMS.rpcUrls[0]),
 });
 
+export interface OnChainTxResult {
+  success: boolean;
+  txHash?: string;
+  error?: string;
+}
+
 interface WalletContextType {
   address: string | null;
   shortAddress: string;
@@ -57,6 +68,13 @@ interface WalletContextType {
   switchToSomnia: () => Promise<boolean>;
   refreshBalance: () => Promise<void>;
   hasEthereumProvider: boolean;
+  executeOnChainTrade: (params: {
+    symbol: string;
+    outcome: "YES" | "NO";
+    amount: number;
+    price?: number;
+  }) => Promise<OnChainTxResult>;
+  executeOnChainClaim: (pools?: string[]) => Promise<OnChainTxResult>;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
@@ -294,6 +312,106 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [address, chainId, refreshBalance]);
 
+  // Execute on-chain trade transaction via connected Web3 wallet (MetaMask)
+  const executeOnChainTrade = useCallback(
+    async (params: {
+      symbol: string;
+      outcome: "YES" | "NO";
+      amount: number;
+      price?: number;
+    }): Promise<OnChainTxResult> => {
+      const ethereum = (window as any).ethereum;
+      if (!ethereum || !address) {
+        setIsWalletModalOpen(true);
+        return { success: false, error: "Please connect your Web3 wallet (MetaMask) first." };
+      }
+
+      if (chainId !== SOMNIA_SHANNON_CHAIN_ID) {
+        const switched = await switchToSomnia();
+        if (!switched) {
+          return { success: false, error: "Please switch network to Somnia Shannon Testnet (Chain ID: 50312)." };
+        }
+      }
+
+      try {
+        // Calculate collateral amount required for order (e.g. amount * price in tUSDC 6-decimals)
+        const orderValueUsdc = (params.amount || 10) * (params.price || 0.50);
+        const microUnits = BigInt(Math.max(1, Math.round(orderValueUsdc * 1e6)));
+        const calldata = encodeTradeApproval(microUnits);
+
+        // Prompt MetaMask transaction confirmation popup on Somnia Shannon Testnet
+        const txHash = await ethereum.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: address,
+              to: SOMNIA_TESTNET_TUSDC_ADDRESS,
+              data: calldata,
+              value: "0x0",
+            },
+          ],
+        });
+
+        if (txHash && typeof txHash === "string") {
+          return { success: true, txHash };
+        }
+        return { success: false, error: "No transaction hash returned from wallet provider." };
+      } catch (err: any) {
+        if (err?.code === 4001 || err?.message?.includes("rejected") || err?.message?.includes("denied")) {
+          return { success: false, error: "Order signature rejected by user in MetaMask." };
+        }
+        return { success: false, error: err?.message || "On-chain trade transaction failed." };
+      }
+    },
+    [address, chainId, switchToSomnia]
+  );
+
+  // Execute 1-Click MultiCall batch claim on ForeSightBatchSweeper contract
+  const executeOnChainClaim = useCallback(
+    async (pools: string[] = []): Promise<OnChainTxResult> => {
+      const ethereum = (window as any).ethereum;
+      if (!ethereum || !address) {
+        setIsWalletModalOpen(true);
+        return { success: false, error: "Please connect your Web3 wallet (MetaMask) first." };
+      }
+
+      if (chainId !== SOMNIA_SHANNON_CHAIN_ID) {
+        const switched = await switchToSomnia();
+        if (!switched) {
+          return { success: false, error: "Please switch network to Somnia Shannon Testnet (Chain ID: 50312)." };
+        }
+      }
+
+      try {
+        const calldata = encodeBatchSweepCall(pools as Address[]);
+
+        // Prompt MetaMask transaction confirmation popup on Somnia Shannon Testnet
+        const txHash = await ethereum.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: address,
+              to: FORESIGHT_BATCH_SWEEPER_ADDRESS,
+              data: calldata,
+              value: "0x0",
+            },
+          ],
+        });
+
+        if (txHash && typeof txHash === "string") {
+          return { success: true, txHash };
+        }
+        return { success: false, error: "No transaction hash returned from wallet provider." };
+      } catch (err: any) {
+        if (err?.code === 4001 || err?.message?.includes("rejected") || err?.message?.includes("denied")) {
+          return { success: false, error: "Claim signature rejected by user in MetaMask." };
+        }
+        return { success: false, error: err?.message || "On-chain batch sweep transaction failed." };
+      }
+    },
+    [address, chainId, switchToSomnia]
+  );
+
   return (
     <WalletContext.Provider
       value={{
@@ -315,6 +433,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         switchToSomnia,
         refreshBalance,
         hasEthereumProvider,
+        executeOnChainTrade,
+        executeOnChainClaim,
       }}
     >
       {children}

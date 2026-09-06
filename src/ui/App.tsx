@@ -106,13 +106,13 @@ function ForeSightTerminalApp() {
   const [prefillOutcome, setPrefillOutcome] = useState<"YES" | "NO">("YES");
   const [prefillEntryPrice, setPrefillEntryPrice] = useState<number>(0.55);
   const [prefillTargetExit, setPrefillTargetExit] = useState<number>(0.85);
-  const [toastMessage, setToastMessage] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ msg: string; type: "success" | "error" | "info" } | null>(null);
   const [timelineData, setTimelineData] = useState<any[]>([]);
   const [tickers, setTickers] = useState<any[]>([]);
 
   const wallet = useWallet();
 
-  const showToast = (msg: string, type: "success" | "error" = "success") => {
+  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
     setToastMessage({ msg, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
@@ -307,21 +307,37 @@ function ForeSightTerminalApp() {
     fetchPositions();
   }, [wallet.address, fetchPositions]);
 
-  // Sweep & Claim All Winnings
+  // Sweep & Claim All Winnings (1-Click MultiCall via ForeSightBatchSweeper)
   const handleClaimAll = async () => {
+    if (!wallet.isConnected) {
+      wallet.openWalletModal();
+      showToast("Please connect your Web3 wallet (MetaMask) to claim payouts on Somnia.", "info");
+      return;
+    }
+
     setIsClaiming(true);
     try {
+      // 1. Request on-chain signing in MetaMask for ForeSightBatchSweeper contract
+      const txResult = await wallet.executeOnChainClaim();
+      if (!txResult.success) {
+        showToast(txResult.error || "Claim transaction signing cancelled", "error");
+        return;
+      }
+
+      // 2. Dispatch claimed status to backend with verified TxHash
       const res = await fetch(apiUrl("/api/claim"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           walletAddress: wallet.address,
+          txHash: txResult.txHash,
         }),
       });
       const data = await res.json();
       if (data.success) {
         sound.playSuccessChime();
-        showToast(`Swept and claimed ${data.claimedCount || 1} settled positions!`, "success");
+        const shortHash = txResult.txHash ? `${txResult.txHash.slice(0, 6)}...${txResult.txHash.slice(-4)}` : "";
+        showToast(`🎉 1-Click MultiCall Sweeper Claimed on Somnia L1! [${shortHash}]`, "success");
         await fetchPositions();
         await wallet.refreshBalance();
       } else {
@@ -356,15 +372,35 @@ function ForeSightTerminalApp() {
     }
   };
 
-  // Trade Execution
+  // Trade Execution (Web3 MetaMask signing on Somnia Shannon L1)
   const handleExecuteTrade = async (
     symbol: string,
     outcome: "YES" | "NO",
     amount: number,
     price?: number
   ) => {
+    if (!wallet.isConnected) {
+      wallet.openWalletModal();
+      showToast("Please connect your Web3 wallet (MetaMask) to sign and place orders.", "info");
+      return;
+    }
+
     setIsSubmittingOrder(true);
     try {
+      // 1. Request on-chain signature/transaction in MetaMask
+      const txResult = await wallet.executeOnChainTrade({
+        symbol,
+        outcome,
+        amount,
+        price,
+      });
+
+      if (!txResult.success) {
+        showToast(txResult.error || "Order signature cancelled", "error");
+        return;
+      }
+
+      // 2. Broadcast order to backend with verified on-chain TxHash
       const res = await fetch(apiUrl("/api/orders"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -375,14 +411,16 @@ function ForeSightTerminalApp() {
           amount,
           price,
           walletAddress: wallet.address,
-          signerType: wallet.isConnected ? wallet.walletName : "SIMULATION",
+          signerType: wallet.walletName || "MetaMask",
+          txHash: txResult.txHash,
         }),
       });
       const data = await res.json();
       if (data.success) {
-        const signerLabel = wallet.isConnected ? `[${wallet.shortAddress}]` : "[Simulated]";
+        sound.playSuccessChime();
+        const shortHash = txResult.txHash ? `${txResult.txHash.slice(0, 6)}...${txResult.txHash.slice(-4)}` : "";
         showToast(
-          `Order executed ${signerLabel}: ${amount.toFixed(1)} ${outcome} contracts on ${symbol}`,
+          `✅ Order Confirmed on Somnia L1 [${shortHash}]: ${amount.toFixed(1)} ${outcome} contracts on ${symbol}`,
           "success"
         );
         await fetchPositions();
@@ -752,6 +790,23 @@ function ForeSightTerminalApp() {
 
       {/* Web3 Wallet Connection Modal */}
       <WalletModal />
+
+      {/* Floating System Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-12 right-6 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200 pointer-events-none">
+          <div
+            className={`px-4 py-2.5 rounded-none font-mono text-xs border shadow-2xl backdrop-blur-md flex items-center gap-2 ${
+              toastMessage.type === "success"
+                ? "bg-emerald-950/90 text-emerald-300 border-emerald-500/50"
+                : toastMessage.type === "error"
+                ? "bg-rose-950/90 text-rose-300 border-rose-500/50"
+                : "bg-cyan-950/90 text-cyan-300 border-cyan-500/50"
+            }`}
+          >
+            <span>{toastMessage.msg}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

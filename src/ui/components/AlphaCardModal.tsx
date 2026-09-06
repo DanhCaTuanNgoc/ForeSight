@@ -1031,17 +1031,6 @@ export const AlphaCardModal: React.FC<AlphaCardModalProps> = ({
               )}
             </div>
             <div>
-              <h3 className="text-white font-mono font-bold text-sm flex items-center gap-2 uppercase tracking-wide">
-                {isSettledMode ? "Settled Alpha Card Studio" : "Proof-of-Thesis Alpha Card Studio"}
-                <span className="text-[9px] px-1.5 py-0.5 rounded-none bg-violet-950 text-violet-300 border border-violet-500/40 font-mono font-bold">
-                  1200×675 HD
-                </span>
-                {isSettledMode && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-none bg-emerald-950 text-emerald-300 border border-emerald-500/40 font-mono font-bold">
-                    ON-CHAIN VERIFIED
-                  </span>
-                )}
-              </h3>
               <p className="text-[11px] text-gray-400 font-sans">
                 {isSettledMode
                   ? "Verifiable on-chain receipt card with Somnia Explorer audit link."
