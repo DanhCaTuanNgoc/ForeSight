@@ -129,6 +129,7 @@ Across **active rolling event contracts** on DreamDEX (1m, 5m, 15m, 1h BTC/ETH/S
 | :--- | :--- | :--- |
 | **Core Mentality** | **"Casino Mode":** Blind FOMO, gut feeling, reactive gambling | **"Informed Mode":** *Understand the market before you trade it* |
 | **Cognitive Loop** | Speculate blindly $\rightarrow$ Lose on theta decay $\rightarrow$ Churn | **What Changed? $\rightarrow$ What Happened? $\rightarrow$ What If? $\rightarrow$ What Do I Do?** |
+| **Cognitive Loop** | Speculate blindly $\rightarrow$ Lose on theta decay $\rightarrow$ Churn | **DETECT $\rightarrow$ CHALLENGE $\rightarrow$ SIMULATE $\rightarrow$ EXECUTE** |
 | **Market Intelligence** | Raw odds chart with 0 contextual explanation | **Automated $\Delta P \ge 10\%$ Spike Radar** + historical timeseries database |
 | **AI Decision Support** | Black-box "prediction" bot with ungrounded outputs | **Adversarial Dual Bull/Bear Debate** with verified clickable `[View Evidence]` URLs |
 | **Quantitative Risk** | Guesswork and basic payout display | **Closed-form Black-Scholes $\Phi(d2)$**, Half-Kelly sizing, and Velocity Coverage ($VC$) |
@@ -148,11 +149,16 @@ Across **active rolling event contracts** on DreamDEX (1m, 5m, 15m, 1h BTC/ETH/S
 
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ FORESIGHT INFORMED TRADING LOOP ("Understand the market before you trade it")                          │
+│ FORESIGHT 4-STAGE DECISION LOOP ("Understand the market before you trade it")                          │
 │                                                                                                        │
 │   1. WHAT CHANGED?   ──► Anomaly Radar detects ΔP ≥ 10% surge on BTC 5m pool.                          │
 │   2. WHAT HAPPENED?  ──► Dual AI (Gemini + LLaMA) parses orderbook imbalance & live RSS evidence.      │
 │   3. WHAT IF?        ──► Quant Core calculates VC = 0.35x (decay trap) & Black-Scholes Fair P = 52%.   │
 │   4. WHAT DO I DO?   ──► Terminal rejects FOMO, advises Half-Kelly sizing or counter-trade on edge.    │
+│   1. DETECT     (What Changed?)   ──► Anomaly Radar detects ΔP ≥ 10% surge on BTC 5m pool.             │
+│   2. CHALLENGE  (What Happened?)  ──► Dual AI (Gemini + LLaMA) parses orderbook depth & live RAG RSS.  │
+│   3. SIMULATE   (What If?)        ──► Quant Core calculates VC = 0.35x (decay trap) & Fair P = 52%.    │
+│   4. EXECUTE    (What Do I Do?)   ──► Terminal rejects FOMO, enforces Half-Kelly / 1-click execution.  │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
