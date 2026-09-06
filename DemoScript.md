@@ -177,6 +177,28 @@
 
 ---
 
+### 🛡️ SCENE 5.1: THE CLIMAX — QUANT ENGINE BÁC BỎ AI BULLISH (ANTI-BLACK-BOX PROOF) (2:30 - 2:55)
+* **Tab / Màn hình:** Khung **Scenario Simulator** ([ScenarioSimulator.tsx](file:///D:/Coding/Somnia/src/ui/components/ScenarioSimulator.tsx)) — Thử kéo thanh Entry Price lên **$0.75 (75%)** khi thị trường bị FOMO.
+* **Thao tác thực hiện (Tiếng Việt):**
+  1. Thử kéo thanh **Entry Price** từ 0.55 lên **0.75 (75%)** để mô phỏng một cú Flash Spike fomo.
+  2. **Quan sát Hệ Thống Bảo Vệ Vốn Kích Hoạt Tức Thì:**
+     - **Model Edge:** Chuyển sang **MÀU ĐỎ: `-1,800 bps`** (Giá thị trường 75% đắt hơn nhiều so với giá trị thực 57%).
+     - **Velocity Coverage ($VC$):** Rơi xuống **`0.27x` (Màu đỏ `Lagging`)** — Tốc độ tăng giá thực tế chỉ đạt 27% tốc độ cần thiết để vượt Strike trước giờ đáo hạn.
+     - **Banner Cảnh Báo Đỏ Bật Lên:** `⛔ QUANT GUARD: NEGATIVE MODEL EDGE (-1800 bps) & TRAJECTORY INFEASIBLE (VC: 0.27x)`.
+     - **Half-Kelly Sizing:** Tự động khóa về **`0.0% Bankroll`**.
+  3. **Thông điệp đắt giá với Ban Giám Khảo:**
+     - Nhấn mạnh sự khác biệt giữa ForeSight và các bot phán bừa: *ForeSight sẵn sàng từ chối lệnh và bảo vệ 100% tiền vốn của người dùng khỏi cạm bẫy FOMO.*
+
+* **🎙️ Lời thoại Tiếng Anh (English Spoken Script):**
+> *"Now, observe this critical scenario — the **Anti-Black-Box Proof**.*  
+> *Suppose a sudden flash spike drives market odds to 75%. An ordinary predictive bot would tell you to FOMO in.*  
+> * **WATCH WHAT FORESIGHT DOES:**  
+> *Our Quant Guard triggers immediately: **Model Edge drops to negative 1,800 bps**, and **Velocity Coverage plunges to 0.27x**.*  
+> *The system flags a **CRITICAL QUANT REJECTION WARNING** and sets Kelly allocation to **0%**.*  
+> *ForeSight just saved 100% of the trader's capital by proving the move is mathematically infeasible. We separate subjective AI hype from deterministic financial physics!"*
+
+---
+
 ### 🛡️ SCENE 6: REAL-TIME THESIS HEALTH MONITORING & DYNAMIC EARLY EXIT (2:55 - 3:35)
 * **Tab / Màn hình:** Quan sát **Bottom Dock** ([ThesisHealthMonitor.tsx](file:///D:/Coding/Somnia/src/ui/components/ThesisHealthMonitor.tsx)) & Chuyển sang Tab **`Portfolio`** (`ActivityView.tsx`).
 * **Thao tác thực hiện (Tiếng Việt):**
