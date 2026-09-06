@@ -7,6 +7,8 @@
 # ForeSight
 ### *The Precision Trading & Cognitive Intelligence Terminal for DreamDEX on Somnia L1*
 
+<br/>
+
 **Detect the move. Challenge the thesis. Model the trajectory. Execute on-chain.**
 
 <br/>
@@ -28,8 +30,6 @@
 
 > **Core Philosophy:** *"Understand the market before you trade it"*  
 > ForeSight is **not a black-box predictive chatbot**. It is an **institutional-grade decision support and execution terminal** built specifically for DreamDEX Event Contracts on Somnia L1. ForeSight transforms volatile, sub-second prediction market noise into an actionable, verifiable 4-step decision loop: **DETECT $\rightarrow$ CHALLENGE $\rightarrow$ SIMULATE $\rightarrow$ EXECUTE**.
-
-</div>
 
 ---
 
@@ -382,8 +382,6 @@ graph TD
 ## 📸 6. Proof-of-Thesis Alpha Card Studio (1200×675 HD 1:1 Terminal Window)
 
 To support viral social prediction sharing across the Somnia ecosystem, ForeSight features a 1:1 **Terminal Window Canvas Studio**:
-
-<div align="center">
 
 | 🏆 Settled Round Alpha Card | 📈 Live Thesis & Trajectory Alpha Card |
 | :---: | :---: |
