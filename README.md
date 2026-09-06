@@ -16,7 +16,7 @@
 [![DreamDEX CLOB](https://img.shields.io/badge/Protocol-DreamDEX_Event_Contracts-06B6D4?style=for-the-badge)](https://dev.smk.somnia.host)
 [![Smart Contract](https://img.shields.io/badge/Smart_Contract-ForeSightBatchSweeper.sol-9333EA?style=for-the-badge&logo=solidity&logoColor=white)](contracts/ForeSightBatchSweeper.sol)
 [![Tests Passing](https://img.shields.io/badge/Tests-124%2F124%20Passed%20(100%25)-00e676?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
-[![Evidence-Grounded AI](https://img.shields.io/badge/Adversarial_AI-Gemini_+_Groq_+_RAG-f55036?style=for-the-badge&logo=google&logoColor=white)](src/agents/strategies/dual-debate-engine.ts)
+[![Evidence-Grounded AI](https://img.shields.io/badge/Adversarial_AI-Gemini_+_Meta_LLaMA_3.3_+_RAG-f55036?style=for-the-badge&logo=google&logoColor=white)](src/agents/strategies/dual-debate-engine.ts)
 [![React 19](https://img.shields.io/badge/Frontend-React_19_+_Vite_6-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript_5.7-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
@@ -507,7 +507,7 @@ ForeSight organizes all trading and quantitative operations into **5 specialized
 ├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
 │ • Snapshot Polling Worker      │ Node.js, Express, TypeScript  │ 10s cadence across pools       │
 │ • News Ingestion & Multi-RAG   │ Multi-Source Stream (5 Venues)│ Verified source RSS citations  │
-│ • Dual Debate Engine           │ Gemini / Groq LLM Gateways    │ Strict Zod schema, <1.5s delay │
+│ • Dual Debate Engine           │ Gemini / Meta LLaMA 3.3 (OR)   │ Strict Zod schema, <1.5s delay │
 │ • Quantitative Pricing Core    │ Chebyshev Rational Approx     │ Rational error |ε| < 1.5×10⁻⁷  │
 │ • Settlement Sweeper Engine    │ Batch Scanning Worker         │ Recovers claimable winnings    │
 │ • Dual-Layer Persistence       │ Supabase + Local JSON Ledger  │ Persistent state on restart    │

@@ -3,7 +3,7 @@
  * 
  * Provides:
  * 1. Dual AI Perspective: Alpha Bull vs Macro Bear with RAG News Evidence
- *    - Supports Live LLM Generation (Google Gemini / Groq API) when keys are provided
+ *    - Supports Live LLM Generation (Google Gemini 2.5 Flash / OpenRouter Meta LLaMA 3.3 70B) when keys are provided
  *    - Instant 0ms Heuristic Fallback Engine for offline / zero-latency environments
  * 2. Deterministic Scenario Math: Exact ROI, PnL, Breakeven & Take-Profit curves
  */
