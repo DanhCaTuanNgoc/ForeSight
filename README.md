@@ -50,6 +50,7 @@
    - [Closed-Form Black-Scholes Binary Option Pricing & Half-Kelly](#2-closed-form-black-scholes-binary-option-pricing--model-edge)
    - [Discrete Binary Payoff Matrix & Early Exit](#3-discrete-binary-payoff-matrix--early-exit-formulation)
 5. [Hackathon Judging Criteria Alignment (Executive Matrix)](#-5-hackathon-judging-criteria-alignment)
+5. [Hackathon Judging Criteria Alignment](#-5-hackathon-judging-criteria-alignment)
 6. [Proof-of-Thesis Alpha Card Studio (1200×675 HD 1:1 Terminal Window)](#-6-proof-of-thesis-alpha-card-studio)
 7. [Automated Strategy Bot Suite & Personas](#-7-automated-strategy-bot-suite--personas)
 8. [Full System Architecture & Multi-Tier Data Flow](#-8-full-system-architecture--multi-tier-data-flow)
@@ -63,6 +64,7 @@
 11. [Somnia & DreamDEX Developer Feedback Report](#-11-somnia--dreamdex-developer-feedback-report)
 12. [Local Installation & Development Guide](#-12-local-installation--development-guide)
 13. [Future Roadmap Beyond Hackathon (Strategic Matrix)](#-13-future-roadmap-beyond-hackathon)
+13. [Future Roadmap Beyond Hackathon](#-13-future-roadmap-beyond-hackathon)
 14. [License & Acknowledgements](#-14-license--acknowledgements)
 
 ---
@@ -704,8 +706,11 @@ npm run agent:copilot     # Launch Autonomous AI Copilot Bot
 | Phase & Milestone | Target Timeline | Strategic Focus | Core Technical Deliverables | Ecosystem Impact on Somnia | Status |
 | :--- | :---: | :--- | :--- | :--- | :---: |
 | **Phase 1: Testnet & Swarm Launch** | **Q3 2026**<br/>*(Current)* | • Shannon Testnet MVP<br/>• Core Decision Loop<br/>• Swarm Personas | • Single-Screen Bento Trading Terminal<br/>• Dual AI Adversarial Debate Arena with RAG<br/>• Deterministic Velocity Coverage ($VC$) Modeling<br/>• 4 Strategy Bot Runners (Volt, Oracle, Titan, Sweeper)<br/>• 1200×675 HD Proof-of-Thesis Alpha Card Studio | • Proves sub-second trading viability on Somnia<br/>• Ingests 500+ DreamDEX event contracts<br/>• Eliminates stranded capital via Settlement Sweeper | **🟢 Complete & Live** |
-| **Phase 2: Somnia Mainnet & Reactive Agents** | **Q4 2026** | • Mainnet Deployment<br/>• Native Reactive VM<br/>• Institutional API | • Deployment on Somnia Mainnet with full SOMI token support<br/>• Integration with **Somnia Native Reactive Agents** for on-chain trigger execution without off-chain keepers<br/>• Institutional REST API & typed WebSocket SDK<br/>• Mobile-optimized Progressive Web App (PWA) | • Drives continuous on-chain transaction volume<br/>• First prediction terminal leveraging Somnia Native Reactivity | **🟡 In Development** |
+| **Phase 2: Somnia Mainnet & Reactive Agents** | **Q4 2026** | • Mainnet Deployment<br/>• Native Reactive VM<br/>• Institutional API | • Deployment on Somnia Mainnet with full SOMI token support<br/>• Integration with **Somnia Native Reactive Agents** for on-chain trigger execution without off-chain keepers<br/>• Institutional REST API & typed WebSocket SDK<br/>• Mobile-optimized Progressive Web App (PWA) | • Drives continuous on-chain transaction volume<br/>• First prediction terminal leveraging Somnia Native Reactivity | **🔵 Planned** |
 | **Phase 3: Cross-Venue Prediction Aggregator** | **2027+** | • Prediction Aggregation<br/>• Social Copy-Trading<br/>• Decentralized Swarms | • Smart Order Routing (SOR) across multi-venue prediction pools<br/>• Non-custodial Social Copy-Trading Vaults with verifiable Proof-of-Alpha<br/>• Community-staked Autonomous Agent Swarm Arenas<br/>• Multi-asset index and basket event contracts | • Establishes ForeSight as the primary liquidity and intelligence router for the Somnia ecosystem | **🔵 Planned** |
+* **Somnia Mainnet Deployment:** Transition contracts and indexing infrastructure from Shannon Testnet to Somnia Mainnet upon launch.
+* **Mobile-Optimized PWA:** Streamlined mobile interface for monitoring active positions and receiving real-time spike alerts.
+* **Advanced Order Routing:** Expand execution capabilities to support automated limit orders and stop-loss triggers.
 
 ---
 
