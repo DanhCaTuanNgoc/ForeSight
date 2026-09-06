@@ -2,10 +2,12 @@
 
 **Project Name:** ForeSight — Precision Trading & Cognitive Intelligence Terminal  
 **Target Network:** Somnia Shannon Testnet (`Chain ID: 50312`)  
+**Target Protocol:** DreamDEX Event Contracts CLOB  
 **SDK Under Evaluation:** `@somnia-chain/markets-sdk` (v0.28.1+)  
 **Indexer Endpoint:** DreamDEX GraphQL Indexer (`dev.smk.somnia.host`)  
 **Documentation Evaluated:** [DreamDEX Developer Docs](https://docs.dreamdex.io/developers/event-contracts) & [DreamDEX Bot Kit](https://github.com/somnia-chain/dreamdex-bot-kit)  
 **Submission Category:** *Feedback Report regarding SDK and Documentation (Optional Hackathon Deliverable)*  
+**Submission Category:** *A Feedback Report regarding SDK and Documentation (Official Hackathon Deliverable)*  
 
 ---
 
@@ -16,6 +18,7 @@ During the development and testing of **ForeSight** for the **Somnia × DreamDEX
 Overall, the Somnia Layer 1 blockchain and the DreamDEX CLOB architecture provide an **exceptional, ultra-low-latency foundation** for high-cadence on-chain prediction markets. Block confirmations on Somnia Shannon consistently settle in **sub-second speeds**, enabling real-time algorithmic quoting and rapid state updates.
 
 To support the Somnia and DreamDEX core engineering teams in their mission to build world-class developer tooling, this report offers **constructive, structured, and actionable technical feedback** based on our real-world development experience.
+To support the Somnia and DreamDEX core engineering teams in their mission to build world-class developer tooling, this report offers **constructive, structured, and actionable technical feedback** based directly on our real-world development roadblocks and implementations.
 
 ---
 
@@ -38,6 +41,9 @@ To support the Somnia and DreamDEX core engineering teams in their mission to bu
 * **Current Friction:**  
   When multiple short-horizon contracts mature simultaneously, developers must iterate through individual settled markets to execute sequential redemption calls. For traders holding positions in 10+ pools, this causes unnecessary gas overhead and transaction signing friction.
 * **Our Workaround:**  
+* **Real-World Friction:**  
+  When multiple short-horizon contracts (e.g. 5m BTC pools) mature simultaneously, developers must iterate through individual settled markets to execute sequential redemption calls. For traders holding positions in 10+ pools, this causes unnecessary gas overhead, RPC rate-limiting, and transaction signing friction.
+* **Our Tested Solution:**  
   We built and deployed [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) on Somnia Shannon, which batches multi-pool settlements into a single atomic transaction.
 * **SDK Proposal:**  
   Add an official batch redemption helper directly in `@somnia-chain/markets-sdk`:
@@ -55,6 +61,8 @@ To support the Somnia and DreamDEX core engineering teams in their mission to bu
 #### 2. First-Class Typed WebSocket Streaming for Orderbook Depth
 * **Current Friction:**  
   Currently, tracking granular orderbook depth and price drift relies on periodic HTTP/GraphQL polling (`fetchOrderBook`). During rapid momentum spikes ($\Delta P \ge 10\%$), 3–5 second polling introduces noticeable staleness for high-frequency agents.
+* **Real-World Friction:**  
+  Currently, tracking granular orderbook depth and price drift relies on periodic HTTP/GraphQL polling (`fetchOrderBook`). During rapid momentum spikes ($\Delta P \ge 10\%$), 3–5 second polling introduces noticeable staleness for high-frequency agents and unnecessarily burdens RPC endpoints.
 * **SDK Proposal:**  
   Provide native WebSocket event subscriptions:
   ```typescript
@@ -72,6 +80,7 @@ To support the Somnia and DreamDEX core engineering teams in their mission to bu
 
 #### 3. Strict Compile-Time TypeScript Schemas for Binary Event Markets
 * **Current Friction:**  
+* **Real-World Friction:**  
   In the raw indexer response, contract metadata (`strikePrice`, `expiry`, `underlyingAsset`) is sometimes nested inside dynamic `info` JSON objects with varying string/number representations (`status: 3` vs `status: "Finalized"`).
 * **SDK Proposal:**  
   Export strongly-typed TypeScript interfaces and Zod schemas:
@@ -95,6 +104,7 @@ To support the Somnia and DreamDEX core engineering teams in their mission to bu
 
 #### 4. Internal Optimistic Nonce Management for High-Frequency Bot Swarms
 * **Current Friction:**  
+* **Real-World Friction:**  
   Because Somnia confirms blocks in sub-second intervals, autonomous strategy bots dispatching multiple orders across different markets in rapid succession occasionally trigger `replacement transaction underpriced` or `nonce too low` errors if the RPC provider lags by 100ms.
 * **SDK Proposal:**  
   Incorporate an optimistic in-memory `NonceTracker` within the SDK that automatically handles nonce increments and transient RPC retries.
