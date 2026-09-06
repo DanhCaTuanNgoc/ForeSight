@@ -50,9 +50,7 @@
    - [Velocity Coverage ($VC$) Trajectory Feasibility](#1-velocity-coverage-vc--trajectory-feasibility)
    - [Closed-Form Black-Scholes Binary Option Pricing & Half-Kelly](#2-closed-form-black-scholes-binary-option-pricing--model-edge)
    - [Discrete Binary Payoff Matrix & Early Exit](#3-discrete-binary-payoff-matrix--early-exit-formulation)
-5. [Hackathon Judging Criteria Alignment (Executive Matrix)](#-5-hackathon-judging-criteria-alignment)
 5. [Hackathon Judging Criteria Alignment](#-5-hackathon-judging-criteria-alignment)
-6. [Proof-of-Thesis Alpha Card Studio (1200×675 HD 1:1 Terminal Window)](#-6-proof-of-thesis-alpha-card-studio)
    - [Verified On-Chain Proof Matrix](#-verified-on-chain-proof-matrix-somnia-shannon-testnet--chain-id-50312)
    - [Systemic Value & Ecosystem Acceleration](#-51-systemic-value--ecosystem-acceleration-grounded-impact)
 6. [Proof-of-Thesis Alpha Card Studio (1200×675 HD 1:1 Terminal Window)](#-6-proof-of-thesis-alpha-card-studio-1200675-hd-11-terminal-window)
@@ -67,7 +65,6 @@
 10. [Repository Structure](#-10-repository-structure)
 11. [Somnia & DreamDEX Developer Feedback Report](#-11-somnia--dreamdex-developer-feedback-report)
 12. [Local Installation & Development Guide](#-12-local-installation--development-guide)
-13. [Future Roadmap Beyond Hackathon (Strategic Matrix)](#-13-future-roadmap-beyond-hackathon)
 13. [Future Roadmap Beyond Hackathon](#-13-future-roadmap-beyond-hackathon)
 14. [License & Acknowledgements](#-14-license--acknowledgements)
 
