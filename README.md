@@ -42,19 +42,22 @@
 3. [The 4-Stage Decision Architecture & Execution Pipeline](#-3-the-4-stage-decision-architecture--execution-pipeline)
    - [The 4-Stage Architecture Matrix](#the-4-stage-architecture-matrix)
    - [Dual AI Adversarial Debate Pipeline](#dual-ai-adversarial-debate-pipeline)
+   - [Truth-Grounded Multi-Source RAG Engine](#truth-grounded-multi-source-rag-engine)
+   - [Voice Synthesis Audio Briefing Engine](#voice-synthesis-audio-briefing-engine)
    - [Dynamic Context & Output Schema Architecture](#dynamic-context--output-schema-architecture)
 4. [Mathematical Formulations & Quantitative Foundation](#-4-mathematical-formulations--quantitative-foundation)
    - [Velocity Coverage ($VC$) Trajectory Feasibility](#1-velocity-coverage-vc--trajectory-feasibility)
    - [Closed-Form Black-Scholes Binary Option Pricing & Half-Kelly](#2-closed-form-black-scholes-binary-option-pricing--model-edge)
    - [Discrete Binary Payoff Matrix & Early Exit](#3-discrete-binary-payoff-matrix--early-exit-formulation)
 5. [Hackathon Judging Criteria Alignment (Executive Matrix)](#-5-hackathon-judging-criteria-alignment)
-6. [Proof-of-Thesis Alpha Card Studio (1200×675 HD)](#-6-proof-of-thesis-alpha-card-studio)
+6. [Proof-of-Thesis Alpha Card Studio (1200×675 HD 1:1 Terminal Window)](#-6-proof-of-thesis-alpha-card-studio)
 7. [Automated Strategy Bot Suite & Personas](#-7-automated-strategy-bot-suite--personas)
 8. [Full System Architecture & Multi-Tier Data Flow](#-8-full-system-architecture--multi-tier-data-flow)
    - [End-to-End Architectural Data Flow](#81-end-to-end-architectural-data-flow)
-   - [End-to-End Decision & Settlement Lifecycle](#82-end-to-end-decision--settlement-lifecycle)
-   - [Multi-Tier System Breakdown & Performance SLAs](#83-multi-tier-system-breakdown--performance-slas)
-   - [Verified Smart Contracts on Somnia Shannon L1](#84-verified-smart-contracts-on-somnia-shannon-l1)
+   - [5 Core Interactive Terminal Workspaces](#82-5-core-interactive-terminal-workspaces)
+   - [End-to-End Decision & Settlement Lifecycle](#83-end-to-end-decision--settlement-lifecycle)
+   - [Multi-Tier System Breakdown & Performance SLAs](#84-multi-tier-system-breakdown--performance-slas)
+   - [Verified Smart Contracts & Dual-Layer Persistence on Somnia L1](#85-verified-smart-contracts--dual-layer-persistence-on-somnia-l1)
 9. [Developer Diagnostics & Test Verification (124/124 Tests)](#-9-developer-diagnostics--test-verification-124124-tests)
 10. [Repository Structure](#-10-repository-structure)
 11. [Somnia & DreamDEX Developer Feedback Report](#-11-somnia--dreamdex-developer-feedback-report)
@@ -85,9 +88,9 @@ However, speed without intelligence breeds reckless speculation. **ForeSight** b
 | :--- | :--- | :--- |
 | **What is ForeSight?** | Institutional-grade Decision Support & Execution Terminal built for DreamDEX Event Contracts on Somnia L1. | [Live App](https://foresightdex.vercel.app/) &nbsp;•&nbsp; [Executive Summary](#-1-executive-summary--product-vision) |
 | **The Core Problem** | Eliminates contextless odds spikes, black-box ungrounded AI predictions, and stranded capital across 500+ expired pools. | [Problem Analysis](#-2-the-core-problem--market-opportunity-on-somnia-l1) |
-| **Technical Core** | Deep `@somnia-chain/markets-sdk` integration, Chebyshev Black-Scholes $\Phi(d2)$ math, and Dual Bull/Bear RAG debate. | [Decision Architecture](#-3-the-4-stage-decision-architecture--execution-pipeline) &nbsp;•&nbsp; [Math](#-4-mathematical-formulations--quantitative-foundation) |
+| **Technical Core** | Deep `@somnia-chain/markets-sdk` integration, Chebyshev Black-Scholes $\Phi(d2)$ math, Dual Bull/Bear RAG debate, and Web Speech Audio Briefings. | [Decision Architecture](#-3-the-4-stage-decision-architecture--execution-pipeline) &nbsp;•&nbsp; [Math](#-4-mathematical-formulations--quantitative-foundation) |
 | **Ecosystem Impact** | **Settlement Sweeper** batch-claims matured pools in 1 click, recirculating 100% of stranded capital back into Somnia L1. | [Settlement Sweeper](#-8-full-system-architecture--multi-tier-data-flow) &nbsp;•&nbsp; [Criteria](#-5-hackathon-judging-criteria-alignment) |
-| **Quality & Reliability** | **11 test suites with 124/124 passing tests (100% pass rate)**, Custom [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9), React 19, TypeScript 5.7. | [Test Verification](#-9-developer-diagnostics--test-verification-120120-tests) &nbsp;•&nbsp; [Explorer Link](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) |
+| **Quality & Reliability** | **11 test suites with 124/124 passing tests (100% pass rate)**, Custom [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9), React 19, TypeScript 5.7. | [Test Verification](#-9-developer-diagnostics--test-verification-124124-tests) &nbsp;•&nbsp; [Explorer Link](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) |
 
 ---
 
@@ -188,6 +191,27 @@ ForeSight organizes raw prediction market data into a structured **4-stage decis
 
 ---
 
+### Truth-Grounded Multi-Source RAG Engine
+
+ForeSight anchors all qualitative agent debates in real-time verified market intelligence across major financial crypto newsrooms (**CoinDesk, CoinTelegraph, Decrypt, The Block, and Somnia Network**):
+
+* **Multi-Layer Semantic Deduplication:** Filters repetitive newsletter templates (e.g. daily roundups) via normalized string distance algorithms, guaranteeing 4+ distinct, high-impact citations per market.
+* **Token-Specific Intelligence Catalog:** Evaluates L1 staking dynamics, options Open Interest skew, ETF net inflows, and high-frequency CLOB arbitrage for BTC, ETH, SOL, and SOMI.
+* **Clickable Provenance URLs:** Every cited source contains verified external links directly into the original article, ensuring zero hallucination and total auditability.
+
+---
+
+### Voice Synthesis Audio Briefing Engine
+
+To replicate an institutional Wall Street trading desk radio experience, ForeSight features a native **Text-to-Speech Financial Radio Briefing Engine (`Audio Brief`)**:
+
+* **Web Speech Synthesis API Integration:** Generates natural, sub-second latency voice briefings without external cloud voice API latency or fees.
+* **Phonetic & Math Notation Sanitizer (`sanitizeForSpeech`):** Automatically transcribes crypto terms (`CLOB` $\rightarrow$ *"orderbook"*, `RAG` $\rightarrow$ *"live data grounding"*, `VC > 1.35x` $\rightarrow$ *"velocity coverage greater than 1.35x"*).
+* **Verbatim Screen Alignment:** The synthesized script accurately broadcasts the active token, round pricing (`% YES`), Gemini 2.5 Flash long thesis, Meta LLaMA 3.3 risk skew, and executive consensus verdict.
+* **Auto-Sync & Mute Safety:** Automatically resets speech and button states upon switching tokens or toggling system mute.
+
+---
+
 ### Dynamic Context & Output Schema Architecture
 
 Every debate execution generates a strictly typed JSON payload guaranteeing determinism:
@@ -275,29 +299,24 @@ Given user collateral $C$ and entry price $P_{\text{entry}} \in (0.01, 0.99)$:
 | Hackathon Criterion & Weight | Official Hackathon Questions (from `hackathon.md`) | How ForeSight Exceeds Expectations & Delivers Proof |
 | :--- | :--- | :--- |
 | **1. Innovation & Originality**<br/>`20% Weight` | • *How novel is the idea?*<br/>• *Does the project use Event Contracts creatively to solve a real-world problem?* | • **Adversarial Dual AI Arena:** Replaces ungrounded single-number predictions with an evidence-grounded Bull vs Bear cross-examination.<br/>• **Physical Momentum Modeling ($VC$):** Introduces real-time Velocity Coverage to distinguish between feasible price runs and theta-decay volatility traps.<br/>• **Truth-Grounded RAG:** Ingests live RSS streams with clickable `[View Evidence]` links to eliminate hallucinations. |
-| **2. Technical Implementation**<br/>`25% Weight` | • *How effectively does the project use DreamDEX Event Contracts and available APIs/SDKs?*<br/>• *How strong and functional is the technical implementation?* | • **Complete Protocol SDK Integration:** Deep integration with `@somnia-chain/markets-sdk` and Viem for on-chain CLOB order dispatch, depth checks, and balance tracking on Somnia Shannon (`50312`).<br/>• **Autonomous Worker Telemetry:** Background `MarketSnapshotWorker` scanning 500+ contracts every 10s for $\ge 10\%$ anomaly shifts.<br/>• **Strategy Bot Suite:** 4 distinct bot runners (`starter-bot`, `market-maker`, `oracle-follower`, `ai-copilot`).<br/>• **100% Test Coverage:** **120/120 passing Vitest tests** verifying financial math, invariants, and network resilience. |
+| **2. Technical Implementation**<br/>`25% Weight` | • *How effectively does the project use DreamDEX Event Contracts and available APIs/SDKs?*<br/>• *How strong and functional is the technical implementation?* | • **Complete Protocol SDK Integration:** Deep integration with `@somnia-chain/markets-sdk` and Viem for on-chain CLOB order dispatch, depth checks, and balance tracking on Somnia Shannon (`50312`).<br/>• **Autonomous Worker Telemetry:** Background `MarketSnapshotWorker` scanning 500+ contracts every 10s for $\ge 10\%$ anomaly shifts.<br/>• **Strategy Bot Suite:** 4 distinct bot runners (`starter-bot`, `market-maker`, `oracle-follower`, `ai-copilot`).<br/>• **100% Test Coverage:** **124/124 passing Vitest tests** verifying financial math, invariants, and network resilience. |
 | **3. User Experience & Design**<br/>`20% Weight` | • *How intuitive, accessible, and usable is the product?*<br/>• *Does it provide a compelling overall user experience?* | • **Institutional Cyberpunk Bento Terminal:** Single-screen layout with zero page reloads, dark surfaces, and high-legibility monospace financial tables.<br/>• **Zero-Latency Client-Side Math:** Sliders update PnL, ROI, and break conditions in the browser with 0ms network lag.<br/>• **Instant Simulation Sandbox:** Full terminal exploration with virtual funds without requiring wallet connection or testnet faucet tokens. |
 | **4. Business & Ecosystem Impact**<br/>`20% Weight` | • *Does the project have the potential to: Attract new users, Generate trading activity, Increase Event Contracts adoption, Expand the DreamDEX ecosystem, Create a sustainable product?* | • **Solving Stranded Capital:** The **Settlement Sweeper** batch-claims matured payouts across 500+ expired rounds in 1 click, recirculating capital back into active trading.<br/>• **Retail & Quant Bridge:** Converts retail gamblers into disciplined traders while giving quants automated trading templates.<br/>• **Viral Social Engine:** 1200×675 HD **Alpha Card Studio** drives organic on-chain sharing across X/Twitter and Telegram. |
 | **5. Presentation & Demo**<br/>`15% Weight` | • *How clearly does the team communicate: The problem, The solution, The product, The demonstration, The future vision?* | • **Live Production Terminal:** Instantly accessible and verifiable on Vercel at [foresightdex.vercel.app](https://foresightdex.vercel.app/).<br/>• **Institutional Documentation:** Complete mathematical formulations, full architecture diagrams, and a dedicated Developer Feedback Report for Somnia core engineers. |
 
 ---
 
-## 📸 6. Proof-of-Thesis Alpha Card Studio
+## 📸 6. Proof-of-Thesis Alpha Card Studio (1200×675 HD 1:1 Terminal Window)
 
-To support viral social prediction sharing across the Somnia ecosystem, ForeSight provides an in-terminal **Alpha Card Studio**:
+To support viral social prediction sharing across the Somnia ecosystem, ForeSight features a 1:1 **Terminal Window Canvas Studio**:
 
-<p align="center">
-  <img src="./src/assets/ForeSight-BTC-Thesis.png" width="800" alt="ForeSight BTC Alpha Card" />
-</p>
-
-<p align="center">
-  <img src="./src/assets/ForeSight-ETH-15M-UP-Settled.png" width="800" alt="ForeSight ETH Alpha Card" />
-</p>
-
-* **1200×675 HD Canvas Export:** Generates high-resolution cybernetic trading cards formatted for X / Twitter (16:9) and Telegram.
-* **Dual Evidence Stamps:** Displays quantitative metrics (VC momentum ratio, Model Edge in bps) alongside Dual AI consensus excerpts.
-* **Network Verification Seal:** Certified watermark referencing Somnia Shannon Testnet (`Chain ID: 50312`) and DreamDEX CLOB.
-* **1-Click Social Sharing:** 1-click copy raw image to clipboard, download PNG, or open a pre-populated tweet intent on X.
+* **1:1 Authentic Terminal Window Export:** Renders an ultra-high-definition 1200×675 canvas faithfully mirroring the ForeSight Terminal UI (macOS titlebar controls, ForeSight eye branding, Somnia Shannon network pill badge).
+* **Live Real-Time Ticker Matrix:** Top subheader displays real-time price quotes (BTC, ETH, SOL, SOMI), network gas (6 Gwei), and CLOB matching status.
+* **Two-Column Institutional Layout:**
+  - **Left Telemetry Panel:** Asset coin emblem, prediction side (`BUY YES @ 45.1% ODDS`), 2×2 KPI execution grid (`Position Size`, `Entry Invested`, `Settled Payout`, `Execution Speed`), and Net Profit readout.
+  - **Right Visualizer Panel:** Dynamic candlestick & neon trajectory curve with glowing area gradient, strike price reference, and floating victory ROI hero panel (`+122.2% ROI`, `Return Multiplier: 2.22x`).
+* **Cryptographic On-Chain Audit Footer:** Stamps the verifiable TxHash, `ForeSightBatchSweeper.sol` contract address, and Somnia Explorer verification link.
+* **1-Click Viral Sharing:** Instant 1-click clipboard copy (`COPY IMAGE`), lossless PNG export (`DOWNLOAD PNG`), and pre-formatted tweet intents (`SHARE ON X`).
 
 ---
 
@@ -354,16 +373,32 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 8.2 End-to-End Decision & Settlement Lifecycle
+### 8.2 5 Core Interactive Terminal Workspaces
+
+ForeSight organizes all trading and quantitative operations into **5 specialized, high-density workspaces**:
+
+| Workspace Tab | Core Architecture | Interactive Capabilities & Features |
+| :--- | :--- | :--- |
+| **1. Overview**<br/>`LandingPage.tsx` | Protocol presentation & telemetry | Institutional product overview, real-time live ticker bar, 4-stage pipeline showcase, and 1-click terminal launch. |
+| **2. Terminal**<br/>`PriceChart.tsx` + `ContextPanel.tsx` | High-frequency CLOB trading | Interactive candlestick chart with implied probability overlays, live DreamDEX CLOB orderbook depth, spot vs strike indicator, and 1-click limit/market order entry. |
+| **3. Analytics**<br/>`AnalyticsView.tsx` | Quantitative valuation & Greeks | High-density 3-KPI valuation panel ($VC$, Model Fair Value $\Phi(d2)$, Edge bps), interactive scenario slider simulator, and anti-pin risk guardrails. |
+| **4. AI Insights**<br/>`InsightsView.tsx` | Dual AI Arena & Audio Synthesis | Adversarial debate (Gemini 2.5 Flash vs Meta LLaMA 3.3 70B), **Text-to-Speech Financial Radio Briefing (`Audio Brief`)**, **Truth-Grounded Multi-Source RAG**, and autonomous Copilot Signals Feed. |
+| **5. Portfolio**<br/>`ActivityView.tsx` | On-chain ledger & Alpha Card Studio | Real-time position monitor, Early Exit on CLOB, **1-Click MultiCall Batch Sweeper**, execution history audit, and exportable **1200×675 HD Alpha Cards**. |
+
+---
+
+### 8.3 End-to-End Decision & Settlement Lifecycle
 
 | Stage | Phase Name | Execution Latency | Data Processing & Protocol Actions |
 | :---: | :--- | :---: | :--- |
 | **1** | **Sensing & Ingestion** | `~100 ms` | Background worker polls Somnia GraphQL (`dev.smk.somnia.host`) for 500+ active event contracts and streams Binance spot feeds. Detects sudden $\Delta P \ge 10\%$ surges. |
 | **2** | **Quantitative & AI Reasoning** | `0 ms (Math) / <2 s (AI)` | Client-side Chebyshev core calculates Black-Scholes fair probability $\Phi(d2)$ and Velocity Coverage ($VC$). Dual AI conducts adversarial Bull vs. Bear debate to establish consensus alpha score. |
-| **3** | **Execution & Order Placement** | `< 1 sec` | User triggers 1-click execution or autonomous bots (Volt, Oracle, Titan) route limit/market orders to DreamDEX CLOB via `@somnia-chain/markets-sdk` and `viem`. |
-| **4** | **Settlement & Capital Sweeping** | `< 1 sec (1-Click)` | Once market oracle reports final settlement, Settlement Sweeper indexes claimable balances and batches redemptions into a single transaction, recirculating 100% of stranded capital. |
+| **3** | **Execution & Order Placement** | `< 1 sec` | User triggers on-chain client-side signing in MetaMask (ERC-20 `approve` & order dispatch) to DreamDEX CLOB on Somnia Shannon (`50312`). |
+| **4** | **Settlement & Capital Sweeping** | `< 1 sec (1-Click)` | Once market oracle reports final settlement, Settlement Sweeper indexes claimable balances and batches redemptions via `ForeSightBatchSweeper.sol`, recirculating 100% of stranded capital. |
 
-### 8.3 Multi-Tier System Breakdown & Performance SLAs
+---
+
+### 8.4 Multi-Tier System Breakdown & Performance SLAs
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -371,10 +406,11 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 ├────────────────────────────────┬───────────────────────────────┬────────────────────────────────┤
 │ Subsystem / Component          │ Technology Stack              │ Guaranteed SLA & Invariants    │
 ├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
-│ • Bento Trading Cockpit        │ React 19, Vite 6, Tailwind    │ 0 page reloads, dark contrast  │
+│ • 5-Tab Bento Trading Cockpit  │ React 19, Vite 6, Tailwind    │ 0 page reloads, dark contrast  │
 │ • Real-Time Probability Canvas │ Recharts, SVG Sparklines      │ Sub-second timeline rendering  │
 │ • Simulation Lab Sliders       │ Client TypeScript Math Core   │ 0ms network latency on PnL     │
-│ • Alpha Card Studio            │ HTML5 Canvas, Web Share APIs  │ 1200×675 HD on-chain export    │
+│ • Audio Briefing Engine        │ Web Speech Synthesis API      │ Native radio voice briefing    │
+│ • Alpha Card Studio (1:1 UI)   │ HTML5 Canvas, Web Share APIs  │ 1200×675 HD on-chain export    │
 └────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -383,10 +419,11 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 │ Subsystem / Component          │ Technology Stack              │ Guaranteed SLA & Invariants    │
 ├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
 │ • Snapshot Polling Worker      │ Node.js, Express, TypeScript  │ 10s cadence across 500+ pools  │
-│ • News Ingestion & RAG         │ RSS Ingestion Stream          │ 100% verified source citations │
+│ • News Ingestion & Multi-RAG   │ Multi-Source Stream (5 Venues)│ 100% verified source citations │
 │ • Dual Debate Engine           │ Gemini / Groq LLM Gateways    │ Strict Zod schema, <1.5s delay │
 │ • Quantitative Pricing Core    │ Chebyshev Rational Approx     │ Rational error |ε| < 1.5×10⁻⁷  │
 │ • Settlement Sweeper Engine    │ Batch Scanning Worker         │ Recovers 100% stranded capital │
+│ • Dual-Layer Persistence       │ Supabase + Local JSON Ledger  │ 0% state loss on server reload │
 └────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -412,7 +449,9 @@ For algorithmic traders and automated market operations, ForeSight includes modu
 └────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
 ```
 
-### 8.4 Verified Smart Contracts on Somnia Shannon L1
+---
+
+### 8.5 Verified Smart Contracts & Dual-Layer Persistence on Somnia L1
 
 ForeSight combines the core non-custodial CLOB contracts of **DreamDEX** with custom institutional infrastructure contracts developed and deployed natively on **Somnia Shannon L1**:
 
@@ -421,6 +460,11 @@ ForeSight combines the core non-custodial CLOB contracts of **DreamDEX** with cu
 | **`ForeSightBatchSweeper.sol`** | Somnia Shannon (`50312`) | [`0x0df05851d944bfd01e6bc772e27738c23b6e30f9`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) | [View on Somnia Explorer ↗](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) | **1-Click Atomic Settlement Sweeper**: Executes multi-pool redemptions (`batchSweep`), batch token approvals (`batchApprove`), and non-custodial bot operator delegation. |
 | **`DreamDEX Settlement Router`** | Somnia Shannon (`50312`) | [`0x5Ce69567dB39C8fBAd7e048bEfdbcCdfE67B44e6`](https://shannon-explorer.somnia.network/address/0x5Ce69567dB39C8fBAd7e048bEfdbcCdfE67B44e6) | [View on Somnia Explorer ↗](https://shannon-explorer.somnia.network/address/0x5Ce69567dB39C8fBAd7e048bEfdbcCdfE67B44e6) | **Binary Pool Router & Settlement**: Manages on-chain YES/NO token minting, order matching, and oracle outcome determination. |
 | **`Testnet Collateral (tUSDC)`** | Somnia Shannon (`50312`) | [`0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E`](https://shannon-explorer.somnia.network/address/0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E) | [View on Somnia Explorer ↗](https://shannon-explorer.somnia.network/address/0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E) | **ERC-20 Trading Collateral**: Standard settlement currency across all binary event pools. |
+
+#### 🛡️ Dual-Layer Position & Order Persistence Architecture
+To guarantee zero data loss across client reloads and server restarts:
+1. **Primary Layer (Supabase PostgreSQL):** Asynchronously records all signed on-chain positions, transaction hashes, realized PnL, and settlement timestamps to the `user_positions` table.
+2. **Local Failover Cache (`data/positions.json`):** Synchronously writes every position to atomic local disk storage, providing seamless offline persistence even without cloud database access.
 
 #### 📜 On-Chain Deployment Audit Receipt
 * **Deployment TxHash:** [`0x0042f7f304e036493b529d2cd6e77e359f0952db358e33799912d9e0a19cf275`](https://shannon-explorer.somnia.network/tx/0x0042f7f304e036493b529d2cd6e77e359f0952db358e33799912d9e0a19cf275)
