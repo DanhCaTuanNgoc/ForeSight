@@ -352,12 +352,12 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     if (isTP) {
       if (onSetTargetExitPrice) onSetTargetExitPrice(roundedPrice);
       if (showToast) {
-        showToast(`🎯 Set Target Exit (TP) $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%)`, "success");
+        showToast(`Target Exit (TP) synced: $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%)`, "success");
       }
     } else {
       if (onSetEntryPrice) onSetEntryPrice(roundedPrice);
       if (showToast) {
-        showToast(`⚡ Set Entry Price $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%)`, "success");
+        showToast(`Entry Price synced: $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%)`, "success");
       }
     }
   };
@@ -1094,7 +1094,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 onClick={() => {
                   sound.playClick();
                   if (onSetEntryPrice) onSetEntryPrice(Number(selectedSpike.price.toFixed(2)));
-                  if (showToast) showToast(`⚡ Synced Spike Entry $${selectedSpike.price.toFixed(2)} to Simulator!`, "success");
+                  if (showToast) showToast(`Synced Spike Entry: $${selectedSpike.price.toFixed(2)} to Simulator`, "success");
                   setSelectedSpike(null);
                 }}
                 className="py-1.5 rounded-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center justify-center gap-1 transition cursor-pointer"

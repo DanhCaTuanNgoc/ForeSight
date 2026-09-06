@@ -581,10 +581,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[9px] text-gray-400">Round: <b className="text-violet-300">{roundId}</b></span>
-              <span className="flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-950/50 border border-emerald-500/30 px-1.5 py-0.2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live 3s
-              </span>
             </div>
           </div>
 

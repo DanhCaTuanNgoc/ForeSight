@@ -77,9 +77,6 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
               <Brain className="w-3.5 h-3.5 text-violet-400" />
               <span>RESEARCH & SIGNALS</span>
             </div>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/50 text-violet-300 font-mono border border-violet-500/30 font-bold">
-              DEBATE
-            </span>
           </div>
 
           <p className="text-[11px] text-gray-400 font-sans leading-relaxed">
@@ -97,7 +94,7 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
             }}
             className="w-full py-2 bg-[#12121C] hover:bg-[#161624] text-violet-300 hover:text-white rounded-none font-mono font-bold text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/[0.07] cursor-pointer"
           >
-            <span>VIEW RESEARCH</span>
+            <span>VIEW DUAL AREA</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>

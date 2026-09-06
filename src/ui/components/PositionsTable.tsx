@@ -47,9 +47,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
             <h3 className="font-bold text-white text-xs tracking-wider uppercase">
               POSITIONS & SETTLEMENT RECORD
             </h3>
-            <span className="text-[10px] text-gray-400">
-              Verified Event Contracts on Somnia Shannon L1 CLOB ({positions.length} entries)
-            </span>
           </div>
         </div>
       </div>

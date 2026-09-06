@@ -16,7 +16,7 @@ import { WalletProvider, useWallet } from "./context/WalletContext.js";
 import { CryptoIcon } from "./components/CryptoIcon.js";
 import { sound } from "./utils/sound-fx.js";
 import { apiUrl } from "./utils/api.js";
-import { Search, ArrowUpDown } from "lucide-react";
+import { Search, ArrowUpDown, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 export interface Market {
@@ -337,7 +337,7 @@ function ForeSightTerminalApp() {
       if (data.success) {
         sound.playSuccessChime();
         const shortHash = txResult.txHash ? `${txResult.txHash.slice(0, 6)}...${txResult.txHash.slice(-4)}` : "";
-        showToast(`🎉 1-Click MultiCall Sweeper Claimed on Somnia L1! [${shortHash}]`, "success");
+        showToast(`Batch Sweeper Claimed on Somnia L1 [${shortHash}]`, "success");
         await fetchPositions();
         await wallet.refreshBalance();
       } else {
@@ -420,7 +420,7 @@ function ForeSightTerminalApp() {
         sound.playSuccessChime();
         const shortHash = txResult.txHash ? `${txResult.txHash.slice(0, 6)}...${txResult.txHash.slice(-4)}` : "";
         showToast(
-          `✅ Order Confirmed on Somnia L1 [${shortHash}]: ${amount.toFixed(1)} ${outcome} contracts on ${symbol}`,
+          `Order Confirmed on Somnia L1 [${shortHash}]: ${amount.toFixed(1)} ${outcome} contracts on ${symbol}`,
           "success"
         );
         await fetchPositions();
@@ -795,15 +795,24 @@ function ForeSightTerminalApp() {
       {toastMessage && (
         <div className="fixed bottom-12 right-6 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200 pointer-events-none">
           <div
-            className={`px-4 py-2.5 rounded-none font-mono text-xs border shadow-2xl backdrop-blur-md flex items-center gap-2 ${
+            className={`px-4 py-2.5 rounded-none font-mono text-xs border shadow-2xl backdrop-blur-md flex items-center gap-2.5 ${
               toastMessage.type === "success"
-                ? "bg-emerald-950/90 text-emerald-300 border-emerald-500/50"
+                ? "bg-[#07130F]/95 text-emerald-300 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                 : toastMessage.type === "error"
-                ? "bg-rose-950/90 text-rose-300 border-rose-500/50"
-                : "bg-cyan-950/90 text-cyan-300 border-cyan-500/50"
+                ? "bg-[#16080B]/95 text-rose-300 border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.2)]"
+                : "bg-[#07111A]/95 text-cyan-300 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)]"
             }`}
           >
-            <span>{toastMessage.msg}</span>
+            {toastMessage.type === "success" && (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            )}
+            {toastMessage.type === "error" && (
+              <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+            )}
+            {toastMessage.type === "info" && (
+              <Info className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+            )}
+            <span className="font-semibold tracking-wide">{toastMessage.msg}</span>
           </div>
         </div>
       )}

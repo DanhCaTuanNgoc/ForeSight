@@ -519,7 +519,6 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
             );
           })}
         </div>
-        <span className="text-gray-500">1 Event Focused</span>
       </div>
     </div>
   );
