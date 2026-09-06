@@ -290,6 +290,10 @@ To support viral social prediction sharing across the Somnia ecosystem, ForeSigh
   <img src="./src/assets/ForeSight-BTC-Thesis.png" width="800" alt="ForeSight BTC Alpha Card" />
 </p>
 
+<p align="center">
+  <img src="./src/assets/ForeSight-ETH-15M-UP-Settled.png" width="800" alt="ForeSight ETH Alpha Card" />
+</p>
+
 * **1200×675 HD Canvas Export:** Generates high-resolution cybernetic trading cards formatted for X / Twitter (16:9) and Telegram.
 * **Dual Evidence Stamps:** Displays quantitative metrics (VC momentum ratio, Model Edge in bps) alongside Dual AI consensus excerpts.
 * **Network Verification Seal:** Certified watermark referencing Somnia Shannon Testnet (`Chain ID: 50312`) and DreamDEX CLOB.
