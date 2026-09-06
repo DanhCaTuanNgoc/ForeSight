@@ -9,6 +9,7 @@
  */
 
 import { getNewsByTimeWindow, getLatestNews } from "../../db/repository.js";
+import { getVerifiedNewsForAsset } from "../news/verified-rag-catalog.js";
 import type { EventContractMarket } from "../../core/market-watcher.js";
 import { calculateBlackScholesBinaryFairValue } from "../../core/quantitative-pricing.js";
 
@@ -541,7 +542,7 @@ export async function generateDualDebate(params: {
         publishedAt: n.published_at || new Date().toISOString(),
       }));
     } else {
-      const latest = await getLatestNews(4);
+      const latest = await getLatestNews(6, asset);
       sources = latest.map((n) => ({
         id: n.id,
         title: n.title,
@@ -551,23 +552,24 @@ export async function generateDualDebate(params: {
       }));
     }
   } catch {
-    // Fallback source seeds if DB is not configured
-    sources = [
-      {
-        id: "news-fallback-1",
-        title: `${asset} Spot ETF Inflows & On-Chain Liquidity Spike on Major Venues`,
-        url: "https://www.coindesk.com",
-        source: "CoinDesk Feed",
-        publishedAt: new Date().toISOString(),
-      },
-      {
-        id: "news-fallback-2",
-        title: `Macro Fed Liquidity Sentiment & Derivatives Implied Volatility Shift`,
-        url: "https://cointelegraph.com",
-        source: "CoinTelegraph",
-        publishedAt: new Date(Date.now() - 1800_000).toISOString(),
-      },
-    ];
+    // Fallback handled below
+  }
+
+  // Backfill with verified high-quality asset articles if fewer than 4 sources exist
+  if (sources.length < 4) {
+    const catalog = getVerifiedNewsForAsset(cleanAsset, 4);
+    for (const item of catalog) {
+      if (!sources.some((s) => s.title.toLowerCase().slice(0, 20) === item.title.toLowerCase().slice(0, 20))) {
+        sources.push({
+          id: item.id,
+          title: item.title,
+          url: item.url,
+          source: item.source,
+          publishedAt: item.published_at,
+        });
+      }
+      if (sources.length >= 4) break;
+    }
   }
 
   // Attempt Live LLM Generation first

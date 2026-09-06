@@ -27,6 +27,7 @@ import { AICopilotFeed } from "./AICopilotFeed.js";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { sound } from "../utils/sound-fx.js";
 import { apiUrl } from "../utils/api.js";
+import { getFallbackGroundedNews } from "../utils/verified-news.js";
 
 interface InsightsViewProps {
   markets: any[];
@@ -256,13 +257,39 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     );
   };
 
-  // Real RAG citations from debate response or news feed
+  // Real RAG citations from debate response or news feed with strict deduplication & catalog backfill
   const ragSources = useMemo(() => {
-    if (debate?.sources && Array.isArray(debate.sources) && debate.sources.length > 0) {
-      return debate.sources;
+    // Combine all incoming candidate streams to ensure rich multi-source proof
+    const candidateList = [
+      ...(Array.isArray(debate?.sources) ? debate.sources : []),
+      ...(Array.isArray(news) ? news : []),
+      ...getFallbackGroundedNews(selectedSymbol),
+    ];
+
+    const seenKeys = new Set<string>();
+    const deduplicated: any[] = [];
+
+    for (const item of candidateList) {
+      if (!item || !item.title) continue;
+
+      // Clean and normalize title to detect repetitive roundups or duplicates
+      const cleanTitle = item.title.trim();
+      const normKey = cleanTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 24); // e.g. "hereswhathappenedincrypto"
+
+      if (seenKeys.has(normKey)) {
+        continue;
+      }
+      seenKeys.add(normKey);
+      deduplicated.push(item);
+
+      if (deduplicated.length >= 4) break;
     }
-    return news.slice(0, 4);
-  }, [debate, news]);
+
+    return deduplicated;
+  }, [debate, news, selectedSymbol]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#07070A] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 font-mono">

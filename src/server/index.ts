@@ -24,6 +24,7 @@ import {
 import path from "path";
 import fs from "fs";
 import { generateDualDebate, calculateScenario } from "../agents/strategies/dual-debate-engine.js";
+import { getVerifiedNewsForAsset, VERIFIED_RAG_CATALOG } from "../agents/news/verified-rag-catalog.js";
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
@@ -513,9 +514,27 @@ async function getNewsData(limit: number = 20, asset?: string): Promise<any[]> {
     return u;
   };
 
+  const deduplicateArticles = (items: any[]): any[] => {
+    const seen = new Set<string>();
+    const out: any[] = [];
+    for (const item of items) {
+      if (!item || !item.title) continue;
+      const norm = item.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 28);
+      if (seen.has(norm)) continue;
+      seen.add(norm);
+      out.push(item);
+    }
+    return out;
+  };
+
+  let results: any[] = [];
+
   if (isSupabaseConfigured()) {
     try {
-      const dbNews = await getLatestNews(limit * 3, asset);
+      const dbNews = await getLatestNews(limit * 4, asset);
       if (dbNews && dbNews.length > 0) {
         if (asset && asset !== "ALL") {
           const target = asset.toUpperCase();
@@ -523,108 +542,31 @@ async function getNewsData(limit: number = 20, asset?: string): Promise<any[]> {
             (n.asset_tags || []).some((t: string) => t.toUpperCase() === target) ||
             n.title?.toUpperCase().includes(target)
           );
-          if (matched.length > 0) {
-            return matched.slice(0, limit).map((n: any) => ({
-              ...n,
-              url: sanitizeUrl(n.url, n.title),
-            }));
-          }
+          results = deduplicateArticles(matched);
         } else {
-          return dbNews.slice(0, limit).map((n: any) => ({
-            ...n,
-            url: sanitizeUrl(n.url, n.title),
-          }));
+          results = deduplicateArticles(dbNews);
         }
       }
     } catch {
-      // Fallback to live public streams
+      // Fallback
     }
   }
 
-  const now = Date.now();
-  if (inMemoryLiveNews.length > 0 && now - lastLiveNewsFetch < 60000) {
-    return inMemoryLiveNews.slice(0, limit);
-  }
-
-  // 1. Fetch live from CryptoPanic public aggregator (if token provided)
-  const cpToken = process.env.CRYPTOPANIC_TOKEN;
-  if (cpToken) {
-    try {
-      const cpRes = await fetch(`https://cryptopanic.com/api/v1/posts/?auth_token=${cpToken}&currencies=BTC,ETH&kind=news&public=true`, {
-        signal: AbortSignal.timeout(5000),
-      });
-      if (cpRes.ok) {
-        const json = (await cpRes.json()) as any;
-        if (json?.results && json.results.length > 0) {
-          inMemoryLiveNews = json.results.map((p: any) => ({
-            id: String(p.id),
-            title: p.title,
-            summary: p.metadata?.description || `Live intelligence feed covering ${p.currencies?.map((c: any) => c.code).join(", ") || "crypto market movement"}.`,
-            url: sanitizeUrl(p.url || `https://cryptopanic.com/news/${p.id}`, p.title),
-            source: p.source?.title || "CryptoPanic",
-            asset_tags: (p.currencies || []).map((c: any) => c.code),
-            published_at: p.published_at || new Date().toISOString(),
-          }));
-          lastLiveNewsFetch = now;
-          return inMemoryLiveNews.slice(0, limit);
-        }
+  // If DB results are fewer than desired limit (e.g. fewer than 4), backfill with verified RAG articles
+  if (results.length < limit) {
+    const verifiedFallback = getVerifiedNewsForAsset(asset, limit);
+    for (const v of verifiedFallback) {
+      if (!results.some((r) => r.title.toLowerCase().slice(0, 20) === v.title.toLowerCase().slice(0, 20))) {
+        results.push(v);
       }
-    } catch {
-      // Ignore and proceed to fallback
+      if (results.length >= limit) break;
     }
   }
 
-  // 2. High-precision dynamic news feed with verified direct article links
-  inMemoryLiveNews = [
-    {
-      id: "live-somnia-100k-tps",
-      title: "Somnia Shannon Testnet Sustains Sub-Second Finality with 100K+ TPS Event Execution",
-      summary: "DreamDEX CLOB high-frequency binary contracts achieve sub-15ms fast path execution on reactive EVM.",
-      url: "https://somnia.network",
-      source: "Somnia Network",
-      asset_tags: ["SOMI", "CRYPTO"],
-      published_at: new Date(Date.now() - 8 * 60_000).toISOString(),
-    },
-    {
-      id: "live-btc-institutional-bids",
-      title: "Bitcoin Volatility Index Adjusts as Institutional Orderbook Density Tests Strike Bound",
-      summary: "Derivatives orderbook liquidity indicates tight clustering around short-tenor strike bounds on decentralized prediction venues.",
-      url: "https://www.coindesk.com/markets/2026/08/30/bitcoin-volatility-index-adjusts-institutional-flows/",
-      source: "CoinDesk",
-      asset_tags: ["BTC"],
-      published_at: new Date(Date.now() - 21 * 60_000).toISOString(),
-    },
-    {
-      id: "live-eth-layer1-inflows",
-      title: "Ethereum L1 & L2 Settlement Throughput Advances Amid Increased Derivatives Trading",
-      summary: "On-chain transaction throughput and active liquidity pool deployments accelerate across next-generation L1 architectures.",
-      url: "https://cointelegraph.com/news/ethereum-layer1-and-layer2-settlement-surges",
-      source: "CoinTelegraph",
-      asset_tags: ["ETH"],
-      published_at: new Date(Date.now() - 36 * 60_000).toISOString(),
-    },
-    {
-      id: "live-sol-clob-arbitrage",
-      title: "Decentralized Prediction Market Orderbooks Expand Automated Delta-Neutral Arbitrage",
-      summary: "High-frequency prediction algorithms adapt to low-latency chain architectures for sub-second binary settlement.",
-      url: "https://decrypt.co/news/crypto-prediction-markets-arbitrage",
-      source: "Decrypt",
-      asset_tags: ["SOL", "CRYPTO"],
-      published_at: new Date(Date.now() - 52 * 60_000).toISOString(),
-    },
-  ];
-  lastLiveNewsFetch = now;
-  
-  if (asset && asset !== "ALL") {
-    const target = asset.toUpperCase();
-    const filtered = inMemoryLiveNews.filter((n) =>
-      (n.asset_tags || []).some((t: string) => t.toUpperCase() === target) ||
-      n.title?.toUpperCase().includes(target)
-    );
-    if (filtered.length > 0) return filtered.slice(0, limit);
-  }
-
-  return inMemoryLiveNews.slice(0, limit);
+  return results.slice(0, limit).map((n: any) => ({
+    ...n,
+    url: sanitizeUrl(n.url, n.title),
+  }));
 }
 
 async function getSpikesData(params: { asset?: string; symbol?: string; limit?: number }): Promise<any[]> {

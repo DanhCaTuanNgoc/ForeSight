@@ -193,7 +193,7 @@ export async function getLatestNews(limit = 20, asset?: string): Promise<NewsEve
     .from("news_events")
     .select("*")
     .order("published_at", { ascending: false })
-    .limit(limit * 3);
+    .limit(limit * 5);
 
   if (error) {
     console.error("[repo] getLatestNews error:", error.message);
@@ -201,17 +201,29 @@ export async function getLatestNews(limit = 20, asset?: string): Promise<NewsEve
   }
 
   const rows = (data ?? []) as unknown as NewsEventRow[];
+  
+  // Deduplicate recurring titles
+  const seen = new Set<string>();
+  const uniqueRows: NewsEventRow[] = [];
+  for (const r of rows) {
+    if (!r.title) continue;
+    const norm = r.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 28);
+    if (seen.has(norm)) continue;
+    seen.add(norm);
+    uniqueRows.push(r);
+  }
+
   if (!asset || asset === "ALL") {
-    return rows.slice(0, limit);
+    return uniqueRows.slice(0, limit);
   }
 
   const target = asset.toUpperCase();
   // Filter & prioritize articles directly mentioning the asset in tags or title
-  const assetMatched = rows.filter((r) =>
+  const assetMatched = uniqueRows.filter((r) =>
     (r.asset_tags || []).some((t: string) => t.toUpperCase() === target) ||
     r.title.toUpperCase().includes(target)
   );
-  const others = rows.filter((r) => !assetMatched.includes(r));
+  const others = uniqueRows.filter((r) => !assetMatched.includes(r));
 
   return [...assetMatched, ...others].slice(0, limit);
 }

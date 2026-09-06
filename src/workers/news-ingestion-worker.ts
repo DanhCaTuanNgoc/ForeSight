@@ -180,9 +180,8 @@ export class NewsIngestionWorker {
 
     const xml = await res.text();
     const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
-    const results: NewsEventInsert[] = [];
-
-    for (const item of items.slice(0, 15)) {
+    const seen = new Set<string>();
+    for (const item of items.slice(0, 25)) {
       const content = item[1];
       const titleMatch = content.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || content.match(/<title>(.*?)<\/title>/);
       const linkMatch = content.match(/<link>(.*?)<\/link>/);
@@ -191,6 +190,10 @@ export class NewsIngestionWorker {
 
       const title = titleMatch ? titleMatch[1].trim() : "";
       if (!title) continue;
+
+      const normTitle = title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 28);
+      if (seen.has(normTitle)) continue;
+      seen.add(normTitle);
 
       const cleanDesc = descMatch ? descMatch[1].replace(/<[^>]+>/g, "").trim() : "";
       const dateStr = pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString();
@@ -207,6 +210,7 @@ export class NewsIngestionWorker {
         sentiment: "neutral" as const,
         published_at: dateStr,
       });
+      if (results.length >= 15) break;
     }
 
     return results;
