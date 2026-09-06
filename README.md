@@ -1,4 +1,4 @@
-
+<div align="center">
 <p align="center">
   <img src="./public/foresight-logo.svg" width="120" height="120" alt="ForeSight Logo" />
 </p>
@@ -26,6 +26,7 @@
 🌐 **Live Production Terminal:** [foresightdex.vercel.app](https://foresightdex.vercel.app/) &nbsp;•&nbsp; ⚡ **Somnia Shannon Testnet:** `Chain ID: 50312` &nbsp;•&nbsp; 📜 **Sweeper Contract:** [`0x0df05851d944bfd01e6bc772e27738c23b6e30f9`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) &nbsp;•&nbsp; 🎯 **Target Protocol:** `DreamDEX CLOB`
 
 <br/>
+</div>
 
 > **Core Philosophy:** *"Understand the market before you trade it"*  
 > ForeSight is **not a black-box predictive chatbot**. It is an **institutional-grade decision support and execution terminal** built specifically for DreamDEX Event Contracts on Somnia L1. ForeSight transforms volatile, sub-second prediction market noise into an actionable, verifiable 4-step decision loop: **DETECT $\rightarrow$ CHALLENGE $\rightarrow$ SIMULATE $\rightarrow$ EXECUTE**.
