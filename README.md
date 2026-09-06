@@ -50,7 +50,6 @@
    - [Closed-Form Black-Scholes Binary Option Pricing & Half-Kelly](#2-closed-form-black-scholes-binary-option-pricing--model-edge)
    - [Discrete Binary Payoff Matrix & Early Exit](#3-discrete-binary-payoff-matrix--early-exit-formulation)
 5. [Hackathon Judging Criteria Alignment (Executive Matrix)](#-5-hackathon-judging-criteria-alignment)
-   - [Deep-Dive: Market Transformation & Ecosystem Flywheel](#-51-deep-dive-market-transformation--ecosystem-flywheel-how-foresight-scales-somnia-l1)
 6. [Proof-of-Thesis Alpha Card Studio (1200×675 HD 1:1 Terminal Window)](#-6-proof-of-thesis-alpha-card-studio)
 7. [Automated Strategy Bot Suite & Personas](#-7-automated-strategy-bot-suite--personas)
 8. [Full System Architecture & Multi-Tier Data Flow](#-8-full-system-architecture--multi-tier-data-flow)
@@ -373,13 +372,11 @@ To support viral social prediction sharing across the Somnia ecosystem, ForeSigh
 
 <div align="center">
 
-| 🏆 Settled Round Alpha Card (`+122.2% ROI`) | 📈 Live Thesis & Trajectory Alpha Card |
+| 🏆 Settled Round Alpha Card | 📈 Live Thesis & Trajectory Alpha Card |
 | :---: | :---: |
 | <img src="src/assets/ForeSight-ETH-15M-UP-Settled.png" alt="ForeSight Alpha Card - ETH 15M Settled Victory" width="100%" /> | <img src="src/assets/ForeSight-BTC-Thesis.png" alt="ForeSight Alpha Card - BTC Quantitative Thesis" width="100%" /> |
 
 *Figure 6.1: Real-time 1200×675 HD 1:1 ForeSight Terminal Window Alpha Cards generated directly from on-chain Somnia L1 settlements and live quantitative trajectories.*
-
-</div>
 
 * **1:1 Authentic Terminal Window Export:** Renders an ultra-high-definition 1200×675 canvas faithfully mirroring the ForeSight Terminal UI (macOS titlebar controls, ForeSight eye branding, Somnia Shannon network pill badge).
 * **Live Real-Time Ticker Matrix:** Top subheader displays real-time price quotes (BTC, ETH, SOL, SOMI), network gas (6 Gwei), and CLOB matching status.
