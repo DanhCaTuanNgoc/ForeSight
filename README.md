@@ -124,15 +124,37 @@ Across **active rolling event contracts** on DreamDEX (1m, 5m, 15m, 1h BTC/ETH/S
 
 | Feature Dimension | Traditional Prediction / Basic DEX UI | ForeSight Institutional Terminal |
 | :--- | :--- | :--- |
+| **Core Mentality** | **"Casino Mode":** Blind FOMO, gut feeling, reactive gambling | **"Informed Mode":** *Understand the market before you trade it* |
+| **Cognitive Loop** | Speculate blindly $\rightarrow$ Lose on theta decay $\rightarrow$ Churn | **What Changed? $\rightarrow$ What Happened? $\rightarrow$ What If? $\rightarrow$ What Do I Do?** |
 | **Market Intelligence** | Raw odds chart with 0 contextual explanation | **Automated $\Delta P \ge 10\%$ Spike Radar** + historical timeseries database |
 | **AI Decision Support** | Black-box "prediction" bot with ungrounded outputs | **Adversarial Dual Bull/Bear Debate** with verified clickable `[View Evidence]` URLs |
 | **Quantitative Risk** | Guesswork and basic payout display | **Closed-form Black-Scholes $\Phi(d2)$**, Half-Kelly sizing, and Velocity Coverage ($VC$) |
 | **Capital Efficiency** | Manual 1-by-1 claim; winnings get stranded in pools | **Settlement Sweeper**: 1-click batch redemption across all expired rounds |
-| **Algorithmic Trading** | Manual user clicking only | **4 Modular Swarm Bots** (Titan, Oracle, Volt, Sweeper) via `@somnia-chain/markets-sdk` |
-| **Social Virality** | Plain text links and screenshots | **1200×675 HD Alpha Card Studio** with certified testnet watermark stamps |
+| **Algorithmic Trading** | Manual user clicking only | **4 Modular Strategy Bots** (Titan, Oracle, Volt, Sweeper) via `@somnia-chain/markets-sdk` |
+| **Social Proof** | Plain text links and screenshots | **1200×675 HD Alpha Card Studio** with certified testnet watermark stamps |
+
+### 🧠 The Cognitive Journey: Casino Speculation vs. Structured Decision Loop
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ TRADITIONAL CASINO SPECULATION (High Churn & Capital Loss)                                              │
+│                                                                                                        │
+│   [ Odds Spike to 75% ] ──► [ Emotional FOMO ] ──► [ Buy Peak Odds ] ──► [ Theta Decay Loss ($0.00) ]  │
+│   "Why did it jump?"         "Everyone is buying!"    "Zero risk math"      "Market was rigged..."     │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ FORESIGHT INFORMED TRADING LOOP ("Understand the market before you trade it")                          │
+│                                                                                                        │
+│   1. WHAT CHANGED?   ──► Anomaly Radar detects ΔP ≥ 10% surge on BTC 5m pool.                          │
+│   2. WHAT HAPPENED?  ──► Dual AI (Gemini + LLaMA) parses orderbook imbalance & live RSS evidence.      │
+│   3. WHAT IF?        ──► Quant Core calculates VC = 0.35x (decay trap) & Black-Scholes Fair P = 52%.   │
+│   4. WHAT DO I DO?   ──► Terminal rejects FOMO, advises Half-Kelly sizing or counter-trade on edge.    │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ### Why a "Decision Terminal" Instead of Another DEX?
-DreamDEX already provides an exceptional CLOB orderbook and liquidity infrastructure. Building another basic trading UI adds little value. **ForeSight acts as the "Bloomberg Terminal + Quant Simulator" layer for Somnia Event Contracts**, elevating prediction markets from blind casinos into structured, professional trading environments.
+DreamDEX already provides an exceptional CLOB orderbook and liquidity infrastructure. Building another basic trading UI adds little value. **ForeSight acts as the "Bloomberg Terminal + Quant Simulator" layer for Somnia Event Contracts**, transforming prediction markets from blind casinos into structured, verifiable trading environments.
 
 ---
 
@@ -304,13 +326,13 @@ Given user collateral $C$ and entry price $P_{\text{entry}} \in (0.01, 0.99)$:
 
 ## 🎯 5. Hackathon Judging Criteria Alignment
 
-| Hackathon Criterion & Weight | Official Hackathon Questions (from `hackathon.md`) | How ForeSight Exceeds Expectations & Delivers Proof |
+| Hackathon Criterion & Weight | Official Hackathon Focus (from `hackathon.md`) | ForeSight Technical Implementation & Verified Proof |
 | :--- | :--- | :--- |
-| **1. Innovation & Originality**<br/>`20% Weight` | • *How novel is the idea?*<br/>• *Does the project use Event Contracts creatively to solve a real-world problem?* | • **Adversarial Dual AI Arena:** Replaces ungrounded single-number predictions with an evidence-grounded Bull vs Bear cross-examination.<br/>• **Physical Momentum Modeling ($VC$):** Introduces real-time Velocity Coverage to distinguish between feasible price runs and theta-decay volatility traps.<br/>• **Truth-Grounded RAG:** Ingests live RSS streams with clickable `[View Evidence]` links to eliminate hallucinations. |
-| **2. Technical Implementation**<br/>`25% Weight` | • *How effectively does the project use DreamDEX Event Contracts and available APIs/SDKs?*<br/>• *How strong and functional is the technical implementation?* | • **Complete Protocol SDK Integration:** Deep integration with `@somnia-chain/markets-sdk` and Viem for on-chain CLOB order dispatch, depth checks, and balance tracking on Somnia Shannon (`50312`).<br/>• **Autonomous Worker Telemetry:** Background `MarketSnapshotWorker` scanning 500+ contracts every 10s for $\ge 10\%$ anomaly shifts.<br/>• **Strategy Bot Suite:** 4 distinct bot runners (`starter-bot`, `market-maker`, `oracle-follower`, `ai-copilot`).<br/>• **100% Test Coverage:** **124/124 passing Vitest tests** verifying financial math, invariants, and network resilience. |
-| **3. User Experience & Design**<br/>`20% Weight` | • *How intuitive, accessible, and usable is the product?*<br/>• *Does it provide a compelling overall user experience?* | • **Institutional Cyberpunk Bento Terminal:** Single-screen layout with zero page reloads, dark surfaces, and high-legibility monospace financial tables.<br/>• **Zero-Latency Client-Side Math:** Sliders update PnL, ROI, and break conditions in the browser with 0ms network lag.<br/>• **Instant Simulation Sandbox:** Full terminal exploration with virtual funds without requiring wallet connection or testnet faucet tokens. |
-| **4. Business & Ecosystem Impact**<br/>`20% Weight` | • *Does the project have the potential to: Attract new users, Generate trading activity, Increase Event Contracts adoption, Expand the DreamDEX ecosystem, Create a sustainable product?* | • **100% Capital Recirculation & Velocity ($V$):** Custom [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) unlocks stranded capital across 500+ expired pools in 1 atomic click, preventing liquidity stagnation and continuously recycling funds into active CLOB volume.<br/>• **From Casino Churn to Institutional Retention (LTV):** Replaces emotional gambling with deterministic Black-Scholes $\Phi(d2)$, Physical Momentum ($VC$), and Dual-AI debate—drastically reducing retail churn and increasing monthly active trading frequency.<br/>• **Bootstrapping 24/7 DreamDEX Liquidity:** 4 open-source autonomous agent runners (`Titan`, `Oracle`, `Volt`, `Sweeper`) continuously maintain $<40$ bps bid-ask spreads and arbitrage off-chain spot drift.<br/>• **Frictionless Web3 Onboarding & Viral Social Loop:** Instant zero-wallet Simulation Sandbox captures top-of-funnel users; 1200×675 HD **Alpha Card Studio** embeds verifiable Somnia L1 TxHashes for organic viral acquisition across X and Telegram.<br/>• **Self-Sustaining Protocol Economics:** Architected with clear monetization vectors (batch sweep micro-rebates, VIP quant telemetry feeds, and shared MM vault fee splits). |
-| **5. Presentation & Demo**<br/>`15% Weight` | • *How clearly does the team communicate: The problem, The solution, The product, The demonstration, The future vision?* | • **Live Production Terminal:** Instantly accessible and verifiable on Vercel at [foresightdex.vercel.app](https://foresightdex.vercel.app/).<br/>• **Institutional Documentation:** Complete mathematical formulations, full architecture diagrams, and a dedicated Developer Feedback Report for Somnia core engineers.<br/>• **Machine-Readable Evidence Artifact:** [`evidence.json`](./evidence.json) with verified on-chain proof trails and explorer transaction anchors. |
+| **1. Innovation & Originality**<br/>`20% Weight` | • *How novel is the idea?*<br/>• *Does the project use Event Contracts creatively to solve a real-world problem?* | • **"Understand Before You Trade" Decision Engine:** Replaces black-box predictive AI with an evidence-grounded adversarial Bull vs. Bear debate (Gemini + Meta LLaMA).<br/>• **Physical Momentum Modeling ($VC$):** Introduces real-time Velocity Coverage ($VC = v_{\text{obs}} / v_{\text{req}}$) to mathematically identify theta-decay volatility traps before entry.<br/>• **Truth-Grounded RAG:** Ingests live RSS streams with clickable `[View Evidence]` source URLs to eliminate AI hallucinations. |
+| **2. Technical Implementation**<br/>`25% Weight` | • *How effectively does the project use DreamDEX Event Contracts and available APIs/SDKs?*<br/>• *How strong and functional is the technical implementation?* | • **Complete Protocol SDK Integration:** Deep integration with `@somnia-chain/markets-sdk` and Viem for on-chain CLOB orderbook dispatch, depth checks, and balance tracking on Somnia Shannon (`50312`).<br/>• **Custom Deployed Smart Contract:** [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) enables atomic MultiCall batch settlements in a single transaction.<br/>• **Autonomous Worker Telemetry:** Background `MarketSnapshotWorker` scanning contracts every 10s for $\ge 10\%$ anomaly shifts.<br/>• **Open-Source Strategy Bot Suite:** 4 distinct bot runners (`starter-bot`, `market-maker`, `oracle-follower`, `ai-copilot`).<br/>• **100% Test Coverage:** **124/124 passing Vitest tests** verifying financial math, invariants, and network resilience. |
+| **3. User Experience & Design**<br/>`20% Weight` | • *How intuitive, accessible, and usable is the product?*<br/>• *Does it provide a compelling overall user experience?* | • **Institutional Cyberpunk Bento Terminal:** Single-screen layout with zero page reloads, dark surfaces, and high-legibility monospace financial telemetry.<br/>• **Zero-Latency Client-Side Math:** Sliders calculate Black-Scholes $\Phi(d2)$, PnL, ROI, and break-even thresholds locally in the browser with 0ms lag.<br/>• **Zero-Barrier Simulation Sandbox:** Instant terminal exploration with virtual funds without requiring wallet connection or testnet faucet tokens.<br/>• **Voice Synthesis Radio Briefing:** Native Web Speech API integration translating terminal signals into Wall Street radio broadcasts. |
+| **4. Business & Ecosystem Impact**<br/>`20% Weight` | • *Does the project have the potential to: Attract new users, Generate trading activity, Increase Event Contracts adoption, Expand the DreamDEX ecosystem, Create a sustainable product?* | • **Eliminating Capital Stagnation:** `ForeSightBatchSweeper.sol` reduces settlement overhead from $O(N)$ repetitive manual transactions to $O(1)$ atomic execution, returning idle capital back into circulation.<br/>• **Converting Casino Churn to Informed Trading:** Giving traders institutional risk metrics ($VC$, Kelly Criterion, Black-Scholes Edge) prevents rapid retail wipeout and fosters sustainable, disciplined trading volume.<br/>• **Bootstrapping CLOB Liquidity:** 4 open-source bot templates allow builders to deploy automated market-making and arbitrage strategies against DreamDEX orderbooks.<br/>• **Frictionless Top-of-Funnel Onboarding:** 0-wallet Sandbox lowers Web3 entry barriers; 1200×675 HD **Alpha Card Studio** enables verifiable cryptographic sharing on X and Telegram. |
+| **5. Presentation & Demo**<br/>`15% Weight` | • *How clearly does the team communicate: The problem, The solution, The product, The demonstration, The future vision?* | • **Live Production Terminal:** Instantly accessible and verifiable on Vercel at [foresightdex.vercel.app](https://foresightdex.vercel.app/).<br/>• **Engineering Documentation:** Complete mathematical derivations, full architectural diagrams, and a dedicated Developer Feedback Report for Somnia core engineers.<br/>• **Machine-Readable Evidence Artifact:** [`evidence.json`](./evidence.json) with verified on-chain proof trails and explorer transaction anchors. |
 
 ---
 
@@ -320,70 +342,46 @@ ForeSight provides an auditable, machine-readable evidence trail located in [`ev
 
 | Proof Dimension | Target / Contract | On-Chain Verification / Explorer Anchor | Status | Proof Significance |
 | :--- | :--- | :--- | :---: | :--- |
-| **Custom Sweeper Contract** | [`ForeSightBatchSweeper.sol`](contracts/ForeSightBatchSweeper.sol) | [`0x0df05851d944bfd01e6bc772e27738c23b6e30f9`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) | `VERIFIED` | Custom batch settlement smart contract deployed on Somnia L1. Recovers 100% of stranded capital across expired binary pools. |
+| **Custom Sweeper Contract** | [`ForeSightBatchSweeper.sol`](contracts/ForeSightBatchSweeper.sol) | [`0x0df05851d944bfd01e6bc772e27738c23b6e30f9`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) | `VERIFIED` | Custom batch settlement smart contract deployed on Somnia Shannon. Consolidates multiple claim calls into one atomic transaction. |
 | **Batch MultiCall Claim** | 3 Matured Event Pools | [`0x0df058...ef12`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) | `CONFIRMED` | 1-Click atomic MultiCall claiming 75.50 tUSDC across multiple matured rounds in a single block. |
-| **Anti-Black-Box Quant Guard** | BTC/USD 5m Binary Pool | [Deterministic Simulation & Rejection Engine](src/core/quantitative-pricing.ts) | `VERIFIED` | When market FOMO pushes odds to 72% and AI Bull is enthusiastic, Quant Engine computes $VC = 0.27x$ and Edge $= -1,800\text{ bps}$, automatically rejecting the trade to protect capital. |
+| **Anti-Black-Box Quant Guard** | BTC/USD 5m Binary Pool | [Deterministic Simulation & Rejection Engine](src/core/quantitative-pricing.ts) | `VERIFIED` | When market FOMO pushes odds to 72% and AI Bull is enthusiastic, Quant Engine computes $VC = 0.27x$ and Edge $= -1,800\text{ bps}$, rejecting the trade to protect capital. |
 | **High-Frequency CLOB Limit** | BTC/USD 5m CLOB Pool | [`0x8afc4dbfb7dd19b4315d6e2e7adacfc9b45338e72d25ab113c8ee2a0aa7270fd`](https://shannon-explorer.somnia.network/tx/0x8afc4dbfb7dd19b4315d6e2e7adacfc9b45338e72d25ab113c8ee2a0aa7270fd) | `FILLED` | Autonomous Titan MM quoting tight two-sided limit orders on DreamDEX CLOB. |
 
 ---
 
-### 🌐 5.1 Deep-Dive: Market Transformation & Ecosystem Flywheel (How ForeSight Scales Somnia L1)
+### 🌐 5.1 Systemic Value & Ecosystem Acceleration (Grounded Impact)
 
-ForeSight is not merely a trading interface—it is a **catalytic liquidity and adoption infrastructure** built to solve the structural economic bottlenecks of high-cadence binary event markets:
+ForeSight is designed as a **cognitive and execution infrastructure layer** solving the structural economic friction points in high-cadence binary event markets:
 
 ```mermaid
 graph TD
-    A["🚀 Frictionless Sandbox & Viral Alpha Cards"] -->|"Attracts Web2 & Retail Traders"| B["👥 Active User Growth & TVL Deposit"]
-    B -->|"Trade with Conviction (VC + Dual AI RAG)"| C["📊 High-Frequency CLOB Order Flow"]
-    C -->|"Bootstrapped by Titan & Oracle Swarm Bots"| D["🌊 Deep Liquidity & Sub-40 bps Spreads"]
-    D -->|"Markets Expire & Settle on Somnia L1"| E["🧹 1-Click ForeSight Batch Sweeper"]
-    E -->|"100% Stranded Capital Recycled Instantly"| B
-    E -->|"Generates Protocol Rebates & Network Gas"| F["💎 Sustainable Ecosystem Economy"]
+    A["🚀 0-Barrier Sandbox & Verifiable Alpha Cards"] -->|"Onboards New Traders"| B["👥 Active User Participation"]
+    B -->|"Understand Market First (VC + Dual AI RAG)"| C["📊 Disciplined CLOB Order Flow"]
+    C -->|"Bootstrapped by Titan MM & Oracle Bots"| D["🌊 Deeper Liquidity & Tighter Spreads"]
+    D -->|"Markets Mature & Settle on Somnia L1"| E["🧹 1-Click ForeSight Batch Sweeper"]
+    E -->|"Recovers Stranded Capital (O(1) Gas)"| B
 ```
 
-#### 🏛️ The 5 Pillars of ForeSight's Market Impact:
+#### 🏛️ The 5 Pillars of ForeSight's Ecosystem Value:
 
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 5 PILLARS OF ECOSYSTEM ACCELERATION                                    │
-├────────────────────────────────┬────────────────────────────────┬──────────────────────────────────────┤
-│ 1. CAPITAL VELOCITY MULTIPLIER │ 2. INSTITUTIONAL RETENTION     │ 3. 24/7 OPEN SWARM LIQUIDITY         │
-│ Unlocks millions in stranded   │ Transforms retail churn into   │ 4 Autonomous bots maintain tight     │
-│ micro-payouts via 1-click      │ disciplined, high-frequency    │ bid-ask spreads (<40 bps) across     │
-│ atomic batch claiming.         │ systematic volume.             │ 500+ DreamDEX CLOB orderbooks.       │
-├────────────────────────────────┴────────────────────────────────┴──────────────────────────────────────┤
-│ 4. ZERO-FRICTION VIRAL ONBOARDING                               5. PROTOCOL REVENUE & SUSTAINABILITY   │
-│ Instant 0-wallet Sandbox + 1200×675 HD Alpha Cards with         Self-funding through batch sweep micro-│
-│ verifiable TxHashes drive organic Crypto Twitter & TG loops.    rebates and VIP copilot analytics.     │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
+1. **💸 Pillar 1: Capital Efficiency via Atomic Batch Settlements:**
+   * *The Bottleneck:* In rapid binary markets (3m, 5m, 15m, 1h), winning payouts become scattered across dozens of individual pools. Manual pool-by-pool claiming introduces severe friction and unnecessary gas overhead.
+   * *ForeSight Solution:* [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) executes **atomic batch redemptions in a single click**, transforming an $O(N)$ multi-transaction burden into an efficient $O(1)$ claim, recycling idle capital back into the ecosystem.
 
-1. **💸 Pillar 1: Eliminating the "Stranded Capital Graveyard" (Multiplying Money Velocity $V$):**
-   * *The Problem:* In high-speed binary prediction markets (3m, 5m, 15m, 1h), users accumulate dozens of small winning payouts ($5, $20, $50) scattered across hundreds of finished contracts. Due to the manual friction and repetitive gas overhead of claiming pool-by-pool, millions of dollars in capital become effectively "stranded" and dead to the ecosystem.
-   * *ForeSight Impact:* Through [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9), ForeSight scans all 500+ pools and executes **atomic batch redemptions in a single click**. By instantly recovering 100% of stranded winnings, ForeSight multiplies the velocity of money ($V$) on Somnia L1, ensuring capital is immediately re-deployed into new trades rather than sitting dormant.
+2. **🧠 Pillar 2: Disciplined Decision Support vs. Emotional Speculation:**
+   * *The Bottleneck:* Retail prediction market participants frequently suffer from emotional FOMO and mispriced volatility, leading to rapid capital depletion and high platform churn.
+   * *ForeSight Solution:* ForeSight equips users with **Velocity Coverage ($VC$)**, **Black-Scholes $\Phi(d2)$ fair probability**, **Half-Kelly sizing**, and **Dual AI RAG cross-examination**. Traders evaluate statistical edge before executing, fostering informed, sustainable participation.
 
-2. **🧠 Pillar 2: The "Bloomberg for Binary Markets" (Converting Gamblers into Retained Quants):**
-   * *The Problem:* 90%+ of retail users on traditional prediction sites (Polymarket, PredX) lose money due to emotional trading, theta-decay volatility traps, and ungrounded "black box" hype, leading to rapid churn and declining platform stickiness.
-   * *ForeSight Impact:* ForeSight arms users with hedge-fund grade tools—**Deterministic Velocity Coverage ($VC$)**, **Chebyshev-approximated Black-Scholes $\Phi(d2)$**, **Half-Kelly Position Sizing**, and **Adversarial Dual AI Cross-Examination**. Traders enter positions based on statistical edge rather than gut feeling, dramatically extending trader lifetime value (LTV) and boosting monthly active trading volume.
+3. **🌊 Pillar 3: Open-Source Liquidity & Strategy Framework:**
+   * *The Bottleneck:* CLOB prediction markets require active market makers to maintain narrow spreads and sufficient depth.
+   * *ForeSight Solution:* ForeSight provides 4 modular, open-source strategy bots (`Titan` market maker, `Oracle` arbitrageur, `Volt` momentum tracker, `Sweeper` automated claimer) ready to run directly with `@somnia-chain/markets-sdk`.
 
-3. **🌊 Pillar 3: Bootstrapping 24/7 Deep Liquidity for DreamDEX & Somnia L1:**
-   * *The Problem:* Decentralized orderbooks (CLOBs) often struggle with thin liquidity and wide spreads (>100 bps) during off-peak hours or for fast-expiring asset pairs.
-   * *ForeSight Impact:* ForeSight includes 4 modular open-source strategy bots:
-     * **🛡️ Titan (Market Maker):** Quotes continuous two-sided liquidity, maintaining spreads under 40 bps.
-     * **🔮 Oracle (Arbitrageur):** Bridges Binance spot feeds with DreamDEX prices to eliminate mispricings.
-     * **⚡ Volt (Momentum Hunter):** Ingests $VC$ velocity signals to provide immediate orderbook depth during breakout events.
-     * **🧹 Sweeper (Claim Bot):** Automates round settlement and payout distributions around the clock.
+4. **⚡ Pillar 4: Zero-Friction Web3 Onboarding & Organic Social Proof:**
+   * *The Bottleneck:* Faucet configurations and wallet friction cause drop-offs for new users exploring prediction markets.
+   * *ForeSight Solution:* An **Instant Simulation Sandbox** allows immediate strategy testing with virtual collateral. Upon profitable outcomes, the **1200×675 HD Alpha Card Studio** generates verifiable proof-of-thesis cards with transaction anchors for transparent social sharing.
 
-4. **⚡ Pillar 4: Zero-Friction Web3 Onboarding & Viral Social Growth Engine:**
-   * *The Problem:* Wallet connection friction, testnet faucet setup, and RPC configurations cause 80%+ drop-offs for curious new users.
-   * *ForeSight Impact:* ForeSight provides an **Instant 0-Barrier Simulation Sandbox** allowing new users to immediately trade, test quantitative models, and experience the lightning speed of Somnia L1 with $10,000 in virtual collateral without connecting a wallet. Once users win, the **1200×675 HD Alpha Card Studio** generates cryptographic, high-res proof-of-thesis cards with verified Somnia Explorer TxHashes, triggering organic viral loops across X (Twitter) and Telegram.
-
-5. **💎 Pillar 5: Long-Term Protocol Viability & Economic Sustainability:**
-   * *The Problem:* Most hackathon projects lack a viable path to economic sustainability once grant or prize funding ends.
-   * *ForeSight Impact:* ForeSight is designed with 3 clear value capture mechanisms:
-     1. *Batch Sweeping Protocol Micro-Rebates:* A tiny sub-basis-point convenience fee on batch claim volume creates sustainable protocol revenue without penalizing users.
-     2. *Institutional Quant & Copilot API Feeds:* Ultra-low-latency real-time RAG news streams and anomaly detection webhooks for quant funds.
-     3. *Automated Vault Asset Management:* Future integration with automated LP vaults provisioning liquidity to top-performing Swarm personas with automated performance fee splits.
+5. **💎 Pillar 5: Long-Term Architecture & Sustainable Roadmap:**
+   * *Design Philosophy:* Built to be self-sustaining beyond the hackathon through potential batch-sweep convenience fee splits, institutional quant telemetry feeds, and shared liquidity vault integrations.
 
 ---
 
