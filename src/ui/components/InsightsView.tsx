@@ -58,6 +58,10 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
 
   const handleSelectSymbol = (sym: string) => {
     sound.playClick();
+    if (isPlayingAudio) {
+      sound.stopSpeech();
+      setIsPlayingAudio(false);
+    }
     setInternalSymbol(sym);
     if (onSelectSymbol) onSelectSymbol(sym);
     if (debateCache[sym]) {
@@ -67,6 +71,10 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
 
   useEffect(() => {
     if (propSymbol) {
+      if (isPlayingAudio) {
+        sound.stopSpeech();
+        setIsPlayingAudio(false);
+      }
       setInternalSymbol(propSymbol);
       if (debateCache[propSymbol]) {
         setDebate(debateCache[propSymbol]);
@@ -205,6 +213,20 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   const targetBullOdds = debate?.bullCase?.targetProbability ?? Math.min(0.95, (currentTokenProb / 100) + 0.15);
   const targetBearOdds = debate?.bearCase?.targetProbability ?? Math.max(0.05, (1 - (currentTokenProb / 100)) - 0.15);
 
+  const sanitizeForSpeech = (str: string) => {
+    return str
+      .replace(/[$]/g, "")
+      .replace(/<[^>]*>/g, "")
+      .replace(/&gt;|>+/g, " greater than ")
+      .replace(/&lt;|<+/g, " less than ")
+      .replace(/&amp;/g, " and ")
+      .replace(/%/g, " percent ")
+      .replace(/\bCLOB\b/gi, "orderbook")
+      .replace(/\bRAG\b/gi, "live data grounding")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
   const handleVoiceBriefing = () => {
     sound.playClick();
     if (isPlayingAudio) {
@@ -213,16 +235,22 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
       return;
     }
 
-    const summaryText = debate?.summary
-      ? `ForeSight AI Briefing for ${selectedSymbol}. ${debate.summary}`
-      : `ForeSight AI Arena for ${selectedSymbol}. Alpha Bull thesis: ${
-          debate?.bullCase?.headline || "Orderbook depth expanding on Somnia L1."
-        }. Macro Bear warns: ${
-          debate?.bearCase?.headline || "Resistance and binary time decay risk."
-        }.`;
+    const bullHl = debate?.bullCase?.headline || `Aggressive buying pressure on ${selectedSymbol} with expanding bid support on CLOB.`;
+    const bearHl = debate?.bearCase?.headline || `Overextended probability on ${selectedSymbol} with overhead resistance and time decay.`;
+    const executiveSummary = debate?.summary || (bullConfidence >= 50
+      ? `Consensus tilts Bullish at ${bullConfidence}% confidence.`
+      : `Consensus favors Contrarian Bear at ${bearConfidence}% risk skew.`);
+
+    const fullScript = sanitizeForSpeech(
+      `ForeSight AI Market Briefing for ${selectedSymbol} on Somnia L1. ` +
+      `Current market pricing stands at ${currentTokenProb.toFixed(1)} percent YES. ` +
+      `Long thesis from Gemini 2.5 Flash with ${bullConfidence} percent conviction: ${bullHl}. ` +
+      `Short thesis from Meta LLaMA 3.3 with ${bearConfidence} percent risk skew: ${bearHl}. ` +
+      `Executive Verdict: ${executiveSummary}`
+    );
 
     sound.speakBriefing(
-      summaryText,
+      fullScript,
       () => setIsPlayingAudio(true),
       () => setIsPlayingAudio(false)
     );
