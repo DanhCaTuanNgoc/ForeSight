@@ -362,12 +362,13 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       {/* ─── 2-Column Grid: Feasibility & Invalidation Left | Sliders & Trade Right ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 font-mono text-xs">
         {/* Left 5 Cols: Path to Settlement & Invalidation Checks */}
-        <div className="lg:col-span-5 bg-[#0B0B12] p-2.5 rounded-none border border-white/[0.07] flex flex-col justify-between space-y-2">
+        <div className="lg:col-span-5 bg-[#0B0B12] p-2.5 rounded-none border border-white/[0.07] flex flex-col justify-between space-y-2 font-mono">
           <div className="space-y-2">
+            {/* Target Strike Banner */}
             <div className="flex items-center justify-between text-[10px] text-gray-400 border-b border-white/[0.05] pb-1.5">
               <span className="text-gray-300 font-bold uppercase flex items-center gap-1.5">
                 <CryptoIcon symbol={assetName} size={14} />
-                <span>{assetName} Settlement Target</span>
+                <span>{assetName} Target</span>
               </span>
               <span>
                 Spot: <b className="text-white">${trajectory.currentSpot.toLocaleString()}</b> → Strike:{" "}
@@ -387,16 +388,47 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
               </span>
             </div>
 
-            {/* Velocity Coverage Visual Meter */}
-            <div className="bg-[#0E0E17] p-2 rounded-none border border-white/[0.05] space-y-1">
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-gray-400">Velocity Coverage:</span>
+            {/* Model Valuation & Edge Strip */}
+            <div className="grid grid-cols-3 gap-1.5 text-center p-2 rounded-none bg-[#0E0E17] border border-white/[0.05]">
+              <div>
+                <span className="text-[8px] text-gray-500 uppercase block">Model Value</span>
+                <span className="text-xs font-bold text-violet-300">{quantModel.fairProbabilityPercent}%</span>
+              </div>
+              <div>
+                <span className="text-[8px] text-gray-500 uppercase block">Orderbook</span>
+                <span className="text-xs font-bold text-white">{(entryPrice * 100).toFixed(0)}%</span>
+              </div>
+              <div>
+                <span className="text-[8px] text-gray-500 uppercase block">Model Edge</span>
                 <span
-                  className={`font-bold ${
-                    trajectory.isCoverageSufficient ? "text-emerald-400" : "text-rose-400"
+                  className={`text-xs font-bold ${
+                    quantModel.edgeBps !== undefined && quantModel.edgeBps >= 0
+                      ? "text-emerald-400"
+                      : "text-rose-400"
                   }`}
                 >
-                  {trajectory.velocityCoverage}× Required Pace
+                  {quantModel.edgeBps !== undefined
+                    ? `${quantModel.edgeBps >= 0 ? "+" : ""}${quantModel.edgeBps} bps`
+                    : "0 bps"}
+                </span>
+              </div>
+            </div>
+
+            {/* Velocity Coverage Visual Meter */}
+            <div className="bg-[#0E0E17] p-2 rounded-none border border-white/[0.05] space-y-1.5">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-gray-400 font-bold flex items-center gap-1">
+                  <Gauge className="w-3 h-3 text-violet-400" />
+                  Velocity Coverage
+                </span>
+                <span
+                  className={`font-bold text-[9px] px-1.5 py-0.2 rounded-none border ${
+                    trajectory.isCoverageSufficient
+                      ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
+                      : "text-rose-300 bg-rose-950/60 border-rose-500/40"
+                  }`}
+                >
+                  {trajectory.velocityCoverage}× {trajectory.isCoverageSufficient ? "Sufficient" : "Lagging"}
                 </span>
               </div>
               <div className="w-full bg-[#07070A] h-1.5 rounded-none overflow-hidden border border-white/[0.04]">
@@ -404,69 +436,30 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                   className={`h-full rounded-none transition-all duration-300 ${
                     trajectory.isCoverageSufficient ? "bg-emerald-500" : "bg-rose-500"
                   }`}
-                  style={{ width: `${Math.min(100, Math.max(10, trajectory.velocityCoverage * 70))}%` }}
+                  style={{ width: `${Math.min(100, Math.max(8, trajectory.velocityCoverage * 70))}%` }}
                 />
               </div>
+              <div className="flex items-center justify-between text-[9px] text-gray-400 pt-0.5">
+                <span>Required: <b className="text-white">{trajectory.isCurrentlyITM ? "ITM (0%)" : `${trajectory.reqMovePct}%`}</b> in {trajectory.timeRemainingMin}m</span>
+                <span>Pace: <b className={trajectory.observedVelocity >= 0 ? "text-emerald-400" : "text-rose-400"}>{trajectory.observedVelocity >= 0 ? `+${trajectory.observedVelocity}` : trajectory.observedVelocity}%/m</b></span>
+              </div>
             </div>
 
-            {/* Invalidation Trigger Box */}
-            <div className="p-2 rounded-none bg-[#120D12] border border-rose-500/25 text-[10px] space-y-1">
-              <div className="flex items-center gap-1 text-rose-300 font-bold">
-                <AlertTriangle className="w-3 h-3 text-rose-400" />
-                <span>Stop Level / Invalidation:</span>
+            {/* Invalidation & Sizing Guardrails */}
+            <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+              <div className="p-1.5 rounded-none bg-[#0E0E17] border border-rose-500/20">
+                <span className="text-[8px] text-gray-500 uppercase block">Stop Level</span>
+                <span className="text-[11px] font-bold text-rose-400">${trajectory.breakPrice.toLocaleString()}</span>
               </div>
-              <p className="text-gray-300 font-sans text-[11px] leading-tight">
-                Spot {outcome === "YES" ? "<" : ">"} <b className="text-rose-300 font-mono">${trajectory.breakPrice.toLocaleString()}</b> or momentum decelerates before expiry.
-              </p>
-            </div>
-
-            {/* Quantitative Black-Scholes Model Fair Value & Edge */}
-            <div className="p-2 rounded-none bg-[#0E0E17] border border-violet-500/25 text-[10px] space-y-1">
-              <div className="flex items-center justify-between font-mono">
-                <span className="text-violet-300 font-bold flex items-center gap-1">
-                  <Gauge className="w-3 h-3 text-violet-400" />
-                  Model Fair Value:
-                </span>
-                <span className="text-white font-bold">{quantModel.fairProbabilityPercent}%</span>
-              </div>
-              <div className="flex items-center justify-between text-gray-400 text-[9px]">
-                <span>Orderbook Implied: {(entryPrice * 100).toFixed(0)}%</span>
-                <span
-                  className={`font-bold ${
-                    quantModel.edgeBps !== undefined && quantModel.edgeBps > 0
-                      ? "text-emerald-400"
-                      : quantModel.edgeBps !== undefined && quantModel.edgeBps < 0
-                      ? "text-rose-400"
-                      : "text-gray-400"
-                  }`}
-                >
-                  {quantModel.edgeBps !== undefined
-                    ? `${quantModel.edgeBps > 0 ? "+" : ""}${quantModel.edgeBps} bps Edge`
-                    : ""}
+              <div className="p-1.5 rounded-none bg-[#0E0E17] border border-violet-500/20">
+                <span className="text-[8px] text-gray-500 uppercase block">Half-Kelly Sizing</span>
+                <span className="text-[11px] font-bold text-violet-300">
+                  {quantModel.halfKellyFraction && quantModel.halfKellyFraction > 0
+                    ? `${(quantModel.halfKellyFraction * 100).toFixed(1)}%`
+                    : "5.0%"} Bankroll
                 </span>
               </div>
-              {quantModel.halfKellyFraction && quantModel.halfKellyFraction > 0 ? (
-                <div className="text-[9px] text-gray-400 border-t border-white/[0.05] pt-0.5 flex justify-between">
-                  <span>Half-Kelly Sizing:</span>
-                  <span className="text-violet-300 font-bold">
-                    {(quantModel.halfKellyFraction * 100).toFixed(1)}% bankroll
-                  </span>
-                </div>
-              ) : null}
             </div>
-          </div>
-
-          <div className="flex items-center justify-between text-[9px] text-gray-500 pt-1 border-t border-white/[0.05]">
-            <span>
-              Required: {trajectory.isCurrentlyITM ? "0.00% (In-The-Money)" : `${outcome === "YES" ? "+" : "-"}${trajectory.reqMovePct}%`} in {trajectory.timeRemainingMin}m
-            </span>
-            <span
-              className={`font-bold ${
-                trajectory.observedVelocity >= 0 ? "text-emerald-400" : "text-rose-400"
-              }`}
-            >
-              Pace: {trajectory.observedVelocity >= 0 ? `+${trajectory.observedVelocity}` : trajectory.observedVelocity}%/m
-            </span>
           </div>
         </div>
 

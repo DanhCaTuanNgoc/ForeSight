@@ -89,6 +89,16 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     );
   }, [markets, selectedSymbol]);
 
+  // Round ID extraction (consistent with AnalyticsView)
+  const roundId = useMemo(() => {
+    if (!activeMarket?.symbol) return `${selectedSymbol}-35M`;
+    const parts = activeMarket.symbol.split("-");
+    if (parts.length >= 4) {
+      return `${parts[0]}-${parts[parts.length - 2]}`;
+    }
+    return activeMarket.symbol.split("/")[0];
+  }, [activeMarket, selectedSymbol]);
+
   // Fetch Signals from /api/signals
   const fetchSignals = useCallback(async () => {
     try {
@@ -230,28 +240,24 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     <div className="flex-1 flex flex-col min-h-0 bg-[#07070A] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 font-mono">
       {/* ─── 1. INSTITUTIONAL ASSET CONTROL & REAL-TIME QUOTE BAR ─── */}
       <div className="w-full flex-shrink-0 p-3 sm:p-3.5 bg-[#08080E] border border-white/[0.08] rounded-none flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 shadow-lg">
-        {/* Left: Token Identity & Settlement Context */}
+        {/* Left: Token Identity & Active Contract Context */}
         <div className="flex items-center gap-3">
-          <div className="p-1.5 bg-[#0E0E17] border border-white/[0.08] rounded-none flex-shrink-0">
+          <div className="p-1.5 bg-[#0E0E17] border border-white/[0.07] rounded-none flex-shrink-0">
             <CryptoIcon symbol={selectedSymbol} size={32} />
           </div>
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-white tracking-wide font-mono">
-                {selectedSymbol}<span className="text-gray-400 font-normal text-xs">/tUSDC</span>
+              <h2 className="text-lg font-bold text-white tracking-wide font-mono">
+                {selectedSymbol} <span className="text-gray-400 font-normal text-sm">/ tUSDC</span>
               </h2>
-              <span className="text-[9px] px-1.5 py-0.2 bg-violet-950/40 text-violet-300 border border-violet-500/30 font-bold uppercase tracking-wider font-mono">
-                DUAL ARENA
-              </span>
             </div>
-            <div className="flex items-center gap-2 text-[10px] text-gray-400 font-mono">
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.2 bg-[#0E0E17] border border-white/[0.07] text-gray-300 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
                 Somnia L1
               </span>
-              <span className="text-gray-600">|</span>
-              <span className="text-gray-300">
-                {debate?.engineUsed === "dual_frontier_llm" ? "Gemini 2.5 Flash vs LLaMA 3.3 70B" : "Dual Intelligence Pipeline"}
+              <span className="text-[9px] px-1.5 py-0.2 bg-violet-950/40 text-violet-300 border border-violet-500/30 font-mono font-bold">
+                Round: {roundId}
               </span>
             </div>
           </div>

@@ -570,148 +570,101 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
 
         {/* ── Card B: Quantitative Valuation & Settlement Trajectory ─────── */}
-        <div className="lg:col-span-6 rounded-none border border-white/[0.07] bg-[#08080E] overflow-hidden flex flex-col">
+        <div className="lg:col-span-6 rounded-none border border-white/[0.07] bg-[#08080E] overflow-hidden flex flex-col font-mono">
+          {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.07] bg-[#0E0E17]">
             <div className="flex items-center gap-2">
               <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
                 <Scale className="w-3 h-3" />
               </div>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">QUANTITATIVE PRICING & TRAJECTORY</span>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">QUANTITATIVE VALUATION & TRAJECTORY</span>
             </div>
-            <span className="text-[9px] text-violet-300 font-bold font-mono">Round: {roundId}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] text-gray-400">Round: <b className="text-violet-300">{roundId}</b></span>
+              <span className="flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-950/50 border border-emerald-500/30 px-1.5 py-0.2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live 3s
+              </span>
+            </div>
           </div>
 
-          <div className="p-3 space-y-3">
-
-            {/* Final 60-Second Pin-Risk Settlement Notice */}
-            {isSettlingPhase && (
-              <div className="px-2.5 py-1.5 rounded-none bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2 font-mono">
-                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
-                <div>
-                  <span className="font-bold text-rose-300 block text-[11px]">
-                    SETTLEMENT EXPIRY (&lt;60s)
-                  </span>
-                  <span className="text-[10px] text-rose-200/80">
-                    High pin-risk compression: Time decay forces probability toward binary outcome.
-                  </span>
-                </div>
+          <div className="p-3 space-y-2.5">
+            {/* 1. Three Core Financial KPIs */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="p-2 rounded-none bg-[#0B0B14] border border-white/[0.06]">
+                <span className="text-[9px] text-gray-400 uppercase block">MARKET ODDS</span>
+                <span className="text-sm font-bold text-white">{prob.toFixed(1)}%</span>
+                <span className="text-[9px] text-gray-500 block">${(prob / 100).toFixed(2)} Implied</span>
               </div>
-            )}
-
-            {/* 1. Market vs Quant Valuation Comparison Table with Verdict Banner */}
-            <div className="rounded-none bg-[#0B0B14] border border-white/[0.06] p-2.5 space-y-2">
-              {/* Plain-Language Verdict Banner */}
-              <div className={`px-2.5 py-1.5 rounded-none text-xs flex items-center justify-between font-mono border ${
-                isFavorable
-                  ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
-                  : quantEdgeBps < -50
-                  ? "bg-rose-950/60 border-rose-500/40 text-rose-300"
-                  : "bg-[#0E0E17] border-white/[0.06] text-gray-300"
-              }`}>
-                <span className="font-bold text-[11px] flex items-center gap-1.5">
-                  {isFavorable ? "VALUATION: YES contract traded at a discount to theoretical fair value" : quantEdgeBps < -50 ? "VALUATION: YES contract trading at a premium" : "VALUATION: Market odds in equilibrium with model"}
-                </span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-black/40 border border-white/10 font-bold flex-shrink-0">
-                  {quantEdgeBps > 0 ? `+${(quantEdgeBps / 100).toFixed(1)}% Edge (+${quantEdgeBps} bps)` : `${quantEdgeBps} bps`}
-                </span>
+              <div className="p-2 rounded-none bg-[#0B0B14] border border-violet-500/30">
+                <span className="text-[9px] text-violet-300 uppercase font-bold block">MODEL FAIR VALUE</span>
+                <span className="text-sm font-bold text-violet-200">{fairProb.toFixed(1)}%</span>
+                <span className="text-[9px] text-violet-400/80 block">Black-Scholes Φ(d2)</span>
               </div>
-
-              {/* 3-Column Valuation Matrix */}
-              <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
-                <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
-                  <span className="text-[9px] text-gray-400 block uppercase">Orderbook Odds</span>
-                  <span className="text-xs font-bold text-white">{prob.toFixed(1)}% YES</span>
-                  <span className="text-[9px] text-gray-500 block">(${(prob / 100).toFixed(2)})</span>
-                </div>
-                <div className="p-1.5 rounded-none bg-[#0E0E17] border border-violet-500/30">
-                  <span className="text-[9px] text-violet-300 block uppercase font-bold">Model Fair Value</span>
-                  <span className="text-xs font-bold text-violet-200">{fairProb.toFixed(1)}% YES</span>
-                  <span className="text-[9px] text-gray-500 block">(Black-Scholes Φ)</span>
-                </div>
-                <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
-                  <span className="text-[9px] text-gray-400 block uppercase">Model Discrepancy</span>
-                  <span className={`text-xs font-bold ${quantEdgeBps > 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                    {quantEdgeBps > 0 ? `+${(quantEdgeBps / 100).toFixed(1)}%` : `${(quantEdgeBps / 100).toFixed(1)}%`}
-                  </span>
-                  <span className="text-[9px] text-gray-500 block">({quantEdgeBps > 0 ? "+" : ""}{quantEdgeBps} bps)</span>
-                </div>
+              <div className="p-2 rounded-none bg-[#0B0B14] border border-white/[0.06]">
+                <span className="text-[9px] text-gray-400 uppercase block">THEORETICAL EDGE</span>
+                <span className={`text-sm font-bold ${quantEdgeBps >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  {quantEdgeBps >= 0 ? `+${quantEdgeBps} bps` : `${quantEdgeBps} bps`}
+                </span>
+                <span className="text-[9px] text-gray-500 block">
+                  {quantEdgeBps > 0 ? `+${(quantEdgeBps / 100).toFixed(1)}% Model Edge` : `${(quantEdgeBps / 100).toFixed(1)}% Discount`}
+                </span>
               </div>
             </div>
 
-            {/* 2. Trajectory & Velocity Coverage (VC) */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs flex-wrap gap-1 font-mono">
-                <span className="text-gray-300 font-bold flex items-center gap-1.5">
+            {/* 2. Trajectory & Velocity Feasibility */}
+            <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.06] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-300 font-bold flex items-center gap-1.5 text-[11px]">
                   <Gauge className="w-3.5 h-3.5 text-violet-400" />
-                  Velocity Coverage
+                  VELOCITY COVERAGE (VC)
                 </span>
-                <span className={`text-[10px] px-2 py-0.2 rounded-none font-bold border ${
+                <span className={`text-[10px] px-2 py-0.5 rounded-none font-bold border ${
                   isVcSufficient
                     ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
                     : "text-rose-300 bg-rose-950/60 border-rose-500/40"
                 }`}>
-                  {isVcSufficient ? `SUFFICIENT PACE (VC: ${velocityCoverage}×)` : `LAGGING PACE (VC: ${velocityCoverage}×)`}
+                  {velocityCoverage}× {isVcSufficient ? "Sufficient Pace" : "Lagging Pace"}
                 </span>
               </div>
 
               {/* Progress Bar */}
-              <div className="h-1.5 w-full bg-[#0E0E17] rounded-none overflow-hidden border border-white/[0.06]">
+              <div className="h-1.5 w-full bg-[#07070A] rounded-none overflow-hidden border border-white/[0.06]">
                 <div
-                  className={`h-full rounded-none transition-all duration-500 ${
-                    isVcSufficient ? "bg-emerald-500" : "bg-rose-500"
-                  }`}
-                  style={{ width: `${Math.min(100, Math.max(10, velocityCoverage * 60))}%` }}
+                  className={`h-full transition-all duration-300 ${isVcSufficient ? "bg-emerald-500" : "bg-rose-500"}`}
+                  style={{ width: `${Math.min(100, Math.max(8, velocityCoverage * 60))}%` }}
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono">
-                <span>Distance to Strike: <b className="text-white">${distDollar > 10 ? distDollar.toFixed(1) : distDollar.toFixed(4)} ({distPercent.toFixed(2)}%)</b></span>
-                <span className="flex items-center gap-1">
-                  Time Remaining: <b className="text-violet-300 font-mono">{formatCountdown(countdownSec)}</b>
-                </span>
+              <div className="grid grid-cols-2 gap-2 text-[10px] text-gray-400 pt-0.5 border-t border-white/[0.04]">
+                <div>
+                  Strike Distance: <b className="text-white">${distDollar > 10 ? distDollar.toFixed(1) : distDollar.toFixed(4)}</b> <span className="text-gray-500">({distPercent.toFixed(2)}%)</span>
+                </div>
+                <div className="text-right">
+                  Window: <b className="text-violet-300">{formatCountdown(countdownSec)}</b>
+                </div>
               </div>
             </div>
 
-            {/* 3. Actionable Risk Management & Capital Allocation */}
-            <div className="grid grid-cols-2 gap-2 font-mono">
-              <div className="p-2 rounded-none bg-[#0B0B14] border border-white/[0.06] space-y-0.5">
-                <span className="text-[9px] text-gray-400 uppercase font-bold block flex items-center gap-1">
-                  Optimal Sizing (Half-Kelly)
-                  <HelpCircle className="w-2.5 h-2.5 text-gray-500" />
-                </span>
-                <span className="text-sm font-bold text-violet-300">Max {kellyPercent}% Bankroll</span>
-                <span className="text-[9px] text-gray-500 block">Statistical capital cap</span>
+            {/* 3. Execution Guardrails (Half-Kelly & Invalidation) */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2 rounded-none bg-[#0B0B14] border border-white/[0.06] flex items-center justify-between">
+                <div>
+                  <span className="text-[9px] text-gray-400 uppercase block">OPTIMAL SIZING</span>
+                  <span className="text-xs font-bold text-violet-300">Max {kellyPercent}% Bankroll</span>
+                </div>
+                <span className="text-[9px] text-gray-500 border border-white/[0.06] px-1.5 py-0.5">Half-Kelly</span>
               </div>
 
-              <div className="p-2 rounded-none bg-[#0B0B14] border border-white/[0.06] space-y-0.5">
-                <span className="text-[9px] text-gray-400 uppercase font-bold block">
-                  Invalidation Stop Level
-                </span>
-                <span className="text-sm font-bold text-rose-400">
-                  ${invalidationPrice > 10 ? invalidationPrice.toLocaleString() : invalidationPrice.toFixed(4)}
-                </span>
-                <span className="text-[9px] text-gray-500 block">Exit early if spot crosses level</span>
+              <div className="p-2 rounded-none bg-[#0B0B14] border border-rose-500/20 flex items-center justify-between">
+                <div>
+                  <span className="text-[9px] text-gray-400 uppercase block">INVALIDATION LEVEL</span>
+                  <span className="text-xs font-bold text-rose-400">
+                    ${invalidationPrice > 10 ? invalidationPrice.toLocaleString() : invalidationPrice.toFixed(4)}
+                  </span>
+                </div>
+                <span className="text-[9px] text-rose-400/80 bg-rose-950/40 border border-rose-500/30 px-1.5 py-0.5 font-bold">Stop</span>
               </div>
-            </div>
-
-            {/* Invalidation Trigger Context */}
-            <div className="p-2 rounded-none bg-[#140C10] border border-rose-500/25 text-[10px] text-gray-300 leading-tight flex items-start gap-1.5 font-sans">
-              <AlertTriangle className="w-3 h-3 text-rose-400 flex-shrink-0 mt-0.5" />
-              <span>
-                <b>Early Exit Protocol:</b> If spot crosses <b className="text-rose-300 font-mono">${invalidationPrice > 10 ? invalidationPrice.toLocaleString() : invalidationPrice.toFixed(4)}</b> before expiry, momentum velocity is broken. Recommend early exit.
-              </span>
-            </div>
-
-            {/* Time Expiry & Oracle Status Footer */}
-            <div className="flex items-center justify-between text-[9px] text-gray-400 pt-0.5 font-mono">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3 text-violet-400" />
-                <span>Expiry Window: <b className="text-white font-mono">{formatCountdown(countdownSec)}</b></span>
-              </span>
-              <span className="flex items-center gap-1 text-emerald-400 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                Live 3s Polling
-              </span>
             </div>
           </div>
         </div>
