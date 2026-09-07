@@ -98,15 +98,37 @@ CREATE INDEX IF NOT EXISTS idx_news_asset_tags
 CREATE INDEX IF NOT EXISTS idx_strategies_wallet
   ON user_strategies(wallet_address);
 
--- ============================================================
--- ROW LEVEL SECURITY (optional, enable for Supabase Auth)
--- ============================================================
--- ALTER TABLE market_snapshots ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE spikes ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE news_events ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE user_strategies ENABLE ROW LEVEL SECURITY;
+-- 5. user_positions: On-chain & CLOB trade orders and settlement tracking
+CREATE TABLE IF NOT EXISTS user_positions (
+  id                    TEXT          PRIMARY KEY,
+  symbol                TEXT          NOT NULL,
+  outcome               TEXT          NOT NULL,        -- YES, NO
+  amount                NUMERIC(18,4) NOT NULL,
+  entry_price           NUMERIC(10,4) NOT NULL,
+  timestamp             BIGINT        NOT NULL,
+  status                TEXT          NOT NULL DEFAULT 'OPEN', -- OPEN, SETTLED, RESOLVED, CLAIMED, CLOSED
+  wallet_address        TEXT,
+  order_id              TEXT,
+  tx_hash               TEXT,
+  is_live_on_chain      BOOLEAN       DEFAULT true,
+  exit_price            NUMERIC(10,4),
+  realized_pnl          NUMERIC(18,4),
+  realized_roi_percent  NUMERIC(10,2),
+  closed_at             BIGINT,
+  close_tx_hash         TEXT,
+  created_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
 
--- Public read for market data (anyone can view)
--- CREATE POLICY "Public read snapshots" ON market_snapshots FOR SELECT USING (true);
--- CREATE POLICY "Public read spikes" ON spikes FOR SELECT USING (true);
--- CREATE POLICY "Public read news" ON news_events FOR SELECT USING (true);
+-- Fast lookup by wallet address for real-time portfolio hydration
+CREATE INDEX IF NOT EXISTS idx_positions_wallet
+  ON user_positions(wallet_address);
+
+CREATE INDEX IF NOT EXISTS idx_positions_symbol
+  ON user_positions(symbol);
+
+CREATE INDEX IF NOT EXISTS idx_positions_status
+  ON user_positions(status);
+
+CREATE INDEX IF NOT EXISTS idx_positions_timestamp
+  ON user_positions(timestamp DESC);
+
