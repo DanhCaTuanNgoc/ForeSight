@@ -19,7 +19,7 @@ import {
   getStrategiesByWallet,
   insertPosition,
   updatePositionInDb,
-  getAllPositionsFromDb,
+  getPositionsByWalletFromDb,
 } from "../db/repository.js";
 import path from "path";
 import fs from "fs";
@@ -744,13 +744,36 @@ app.get("/api/positions", async (req, res) => {
     }
 
     const q = wallet.trim().toLowerCase();
-    const list = recordedPositions.filter(
+    const memoryList = recordedPositions.filter(
       (p) => p.walletAddress && p.walletAddress.toLowerCase() === q
     );
 
+    // Fetch persistent positions from Supabase Cloud PostgreSQL
+    let dbList: any[] = [];
+    if (isSupabaseConfigured()) {
+      try {
+        dbList = await getPositionsByWalletFromDb(q);
+      } catch (err: any) {
+        console.warn("[Positions] Supabase query notice:", err?.message);
+      }
+    }
+
+    // Merge in-memory and database records (priority to latest in-memory updates)
+    const mergedMap = new Map<string, any>();
+    for (const item of dbList) {
+      if (item && item.id) mergedMap.set(item.id, item);
+    }
+    for (const item of memoryList) {
+      if (item && item.id) mergedMap.set(item.id, item);
+    }
+
+    const finalPositions = Array.from(mergedMap.values()).sort(
+      (a, b) => (b.timestamp || 0) - (a.timestamp || 0)
+    );
+
     res.json({
-      count: list.length,
-      positions: list,
+      count: finalPositions.length,
+      positions: finalPositions,
     });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || String(err) });
@@ -879,6 +902,15 @@ app.post("/api/claim", async (req, res) => {
 
     savePersistedPositions(recordedPositions);
 
+    // Sync claimed status to Supabase Cloud Database
+    if (isSupabaseConfigured() && targetWallet) {
+      for (const pos of recordedPositions) {
+        if (pos.walletAddress && pos.walletAddress.toLowerCase() === targetWallet && pos.status === "CLAIMED") {
+          updatePositionInDb(pos.id, { status: "CLAIMED" }).catch(() => {});
+        }
+      }
+    }
+
     // Call on-chain sweeper if exchange is connected and client didn't sign
     let onChainTx: string | undefined = clientTxHash;
     if (!onChainTx && sweeper && ctx?.canTrade) {
@@ -943,6 +975,18 @@ app.post("/api/positions/:id/close", async (req, res) => {
     (pos as any).closeTxHash = closeTxHash;
 
     savePersistedPositions(recordedPositions);
+
+    // Sync closed status to Supabase
+    if (isSupabaseConfigured()) {
+      updatePositionInDb(posId, {
+        status: "CLOSED",
+        exit_price: safeExit,
+        realized_pnl: realizedPnl,
+        realized_roi_percent: realizedRoiPercent,
+        closed_at: Date.now(),
+        close_tx_hash: closeTxHash,
+      }).catch(() => {});
+    }
 
     res.json({
       success: true,

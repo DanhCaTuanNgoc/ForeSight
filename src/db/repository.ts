@@ -323,14 +323,15 @@ export async function updatePositionInDb(id: string, updates: any): Promise<bool
   }
 }
 
-/** Fetch all positions from Supabase */
-export async function getAllPositionsFromDb(): Promise<any[]> {
-  if (!isSupabaseConfigured()) return [];
+/** Fetch positions for a specific wallet from Supabase */
+export async function getPositionsByWalletFromDb(walletAddress: string): Promise<any[]> {
+  if (!isSupabaseConfigured() || !walletAddress) return [];
   try {
     const sb = getSupabase();
     const { data, error } = await (sb as any)
       .from("user_positions")
       .select("*")
+      .eq("wallet_address", walletAddress.toLowerCase())
       .order("timestamp", { ascending: false });
 
     if (error || !data) return [];
@@ -346,10 +347,10 @@ export async function getAllPositionsFromDb(): Promise<any[]> {
       orderId: r.order_id || undefined,
       txHash: r.tx_hash || undefined,
       isLiveOnChain: Boolean(r.is_live_on_chain),
-      exitPrice: r.exit_price !== null ? Number(r.exit_price) : undefined,
-      realizedPnl: r.realized_pnl !== null ? Number(r.realized_pnl) : undefined,
-      realizedRoiPercent: r.realized_roi_percent !== null ? Number(r.realized_roi_percent) : undefined,
-      closedAt: r.closed_at !== null ? Number(r.closed_at) : undefined,
+      exitPrice: r.exit_price !== null && r.exit_price !== undefined ? Number(r.exit_price) : undefined,
+      realizedPnl: r.realized_pnl !== null && r.realized_pnl !== undefined ? Number(r.realized_pnl) : undefined,
+      realizedRoiPercent: r.realized_roi_percent !== null && r.realized_roi_percent !== undefined ? Number(r.realized_roi_percent) : undefined,
+      closedAt: r.closed_at !== null && r.closed_at !== undefined ? Number(r.closed_at) : undefined,
       closeTxHash: r.close_tx_hash || undefined,
     }));
   } catch {

@@ -221,22 +221,64 @@ function ForeSightTerminalApp() {
     }
   }, []);
 
-  // 5. Fetch Positions (Scoped exclusively to connected Web3 wallet)
+  // Client-side localStorage persistence helpers for positions
+  const getLocalPositions = (addr: string): any[] => {
+    if (!addr || typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(`foresight_positions_${addr.toLowerCase()}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveLocalPositions = (addr: string, list: any[]) => {
+    if (!addr || typeof window === "undefined") return;
+    try {
+      localStorage.setItem(`foresight_positions_${addr.toLowerCase()}`, JSON.stringify(list));
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  // 5. Fetch Positions (Scoped exclusively to connected Web3 wallet + local backup merge)
   const fetchPositions = useCallback(async () => {
     try {
       if (!wallet.address) {
         setPositions([]);
         return;
       }
+      const addr = wallet.address.toLowerCase();
+      const cached = getLocalPositions(addr);
+      if (cached.length > 0) {
+        setPositions(cached);
+      }
+
       const url = `/api/positions?wallet=${encodeURIComponent(wallet.address)}`;
       const res = await fetch(apiUrl(url));
       if (res.ok) {
         const data = await res.json();
-        const list = Array.isArray(data) ? data : data.positions || [];
-        setPositions(list);
+        const serverList = Array.isArray(data) ? data : data.positions || [];
+        
+        // Merge cached and server records (favoring server state for settlement status updates)
+        const map = new Map<string, any>();
+        for (const item of cached) {
+          if (item && item.id) map.set(item.id, item);
+        }
+        for (const item of serverList) {
+          if (item && item.id) map.set(item.id, item);
+        }
+        const merged = Array.from(map.values()).sort(
+          (a, b) => (b.timestamp || 0) - (a.timestamp || 0)
+        );
+        setPositions(merged);
+        saveLocalPositions(addr, merged);
       }
     } catch {
-      setPositions([]);
+      if (wallet.address) {
+        const cached = getLocalPositions(wallet.address);
+        if (cached.length > 0) setPositions(cached);
+      }
     }
   }, [wallet.address]);
 
@@ -363,6 +405,15 @@ function ForeSightTerminalApp() {
         sound.playSuccessChime();
         const pnlStr = data.realizedPnl >= 0 ? `+$${data.realizedPnl}` : `-$${Math.abs(data.realizedPnl)}`;
         showToast(`Early exit on CLOB! Realized PnL: ${pnlStr} (${data.realizedRoiPercent > 0 ? "+" : ""}${data.realizedRoiPercent}%)`, "success");
+        if (wallet.address) {
+          setPositions((prev) => {
+            const next = prev.map((p) =>
+              p.id === positionId ? { ...p, status: "CLOSED", realizedPnl: data.realizedPnl } : p
+            );
+            saveLocalPositions(wallet.address, next);
+            return next;
+          });
+        }
         await fetchPositions();
       } else {
         showToast(data.error || "Failed to exit position early", "error");
@@ -423,6 +474,16 @@ function ForeSightTerminalApp() {
           `Order Confirmed on Somnia L1 [${shortHash}]: ${amount.toFixed(1)} ${outcome} contracts on ${symbol}`,
           "success"
         );
+        if (data.position && wallet.address) {
+          setPositions((prev) => {
+            const exists = prev.some((p) => p.id === data.position.id);
+            const next = exists
+              ? prev.map((p) => (p.id === data.position.id ? data.position : p))
+              : [data.position, ...prev];
+            saveLocalPositions(wallet.address, next);
+            return next;
+          });
+        }
         await fetchPositions();
         await wallet.refreshBalance();
       } else {
