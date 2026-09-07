@@ -505,23 +505,6 @@ function ForeSightTerminalApp() {
   // ─── Else Render All-in-One Zero-Scroll Single-Screen Cockpit ───────────────
   return (
     <div className="h-screen w-screen bg-[#07070A] text-[#F1F5F9] flex flex-col font-sans selection:bg-violet-600 selection:text-white overflow-hidden">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div
-          className={`fixed top-14 right-5 z-50 px-3.5 py-2 rounded-none shadow-2xl border font-mono text-xs fade-in flex items-center gap-2.5 backdrop-blur-md ${
-            toastMessage.type === "success"
-              ? "bg-[#0E0E17]/95 text-emerald-300 border-emerald-500/40 shadow-emerald-950/40"
-              : "bg-[#0E0E17]/95 text-rose-300 border-rose-500/40 shadow-rose-950/40"
-          }`}
-        >
-          <span
-            className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              toastMessage.type === "success" ? "bg-emerald-400" : "bg-rose-400"
-            }`}
-          />
-          <span>{toastMessage.msg}</span>
-        </div>
-      )}
 
       {/* 1. Global Header */}
       <Header
