@@ -181,6 +181,7 @@ export class NewsIngestionWorker {
     const xml = await res.text();
     const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
     const seen = new Set<string>();
+    const results: NewsEventInsert[] = [];
     for (const item of items.slice(0, 25)) {
       const content = item[1];
       const titleMatch = content.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || content.match(/<title>(.*?)<\/title>/);

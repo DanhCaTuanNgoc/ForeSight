@@ -501,34 +501,119 @@ app.get("/api/timeline/:symbol", async (req, res) => {
 });
 
 // Live in-memory news cache
+// Live in-memory news cache
 let inMemoryLiveNews: any[] = [];
 let lastLiveNewsFetch = 0;
 
-async function getNewsData(limit: number = 20, asset?: string): Promise<any[]> {
-  const sanitizeUrl = (raw?: string, title?: string): string => {
-    if (!raw) return title ? `https://www.google.com/search?q=${encodeURIComponent(title + " crypto news")}` : "https://cointelegraph.com";
-    let u = raw.replace(/^<!\[CDATA\[/, "").replace(/\]\]>$/, "").trim();
-    if (!u.startsWith("http://") && !u.startsWith("https://")) {
-      u = `https://${u}`;
+async function fetchLiveRssFeeds(): Promise<any[]> {
+  const sources = [
+    { name: "CoinTelegraph", url: "https://cointelegraph.com/rss", domain: "cointelegraph.com" },
+    { name: "Decrypt", url: "https://decrypt.co/feed", domain: "decrypt.co" },
+    { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/", domain: "coindesk.com" },
+  ];
+
+  const extracted: any[] = [];
+  const seenUrls = new Set<string>();
+
+  for (const src of sources) {
+    try {
+      const res = await fetch(src.url, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)" },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!res.ok) continue;
+
+      const xml = await res.text();
+      const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+
+      for (const item of items.slice(0, 15)) {
+        const content = item[1];
+        const titleMatch = content.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || content.match(/<title>(.*?)<\/title>/);
+        const linkMatch =
+          content.match(/<link><!\[CDATA\[(.*?)\]\]><\/link>/) ||
+          content.match(/<link>(.*?)<\/link>/) ||
+          content.match(/<guid[^>]*>(.*?)<\/guid>/);
+        const descMatch =
+          content.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) ||
+          content.match(/<description>(.*?)<\/description>/);
+        const pubDateMatch = content.match(/<pubDate>(.*?)<\/pubDate>/);
+
+        const title = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[/, "").replace(/\]\]>/, "").trim() : "";
+        if (!title) continue;
+
+        let rawUrl = linkMatch ? linkMatch[1].replace(/<!\[CDATA\[/, "").replace(/\]\]>/, "").trim() : "";
+        if (!rawUrl || !rawUrl.startsWith("http")) continue;
+
+        // Clean tracking query params
+        const cleanUrl = rawUrl.split("?utm_")[0].split("?ref=")[0];
+        if (seenUrls.has(cleanUrl)) continue;
+        seenUrls.add(cleanUrl);
+
+        const desc = descMatch ? descMatch[1].replace(/<[^>]+>/g, "").trim() : "";
+        const dateStr = pubDateMatch ? new Date(pubDateMatch[1]).toISOString() : new Date().toISOString();
+
+        const upperText = (title + " " + desc).toUpperCase();
+        const assetTags: string[] = [];
+        if (upperText.includes("BTC") || upperText.includes("BITCOIN")) assetTags.push("BTC");
+        if (upperText.includes("ETH") || upperText.includes("ETHEREUM")) assetTags.push("ETH");
+        if (upperText.includes("SOL") || upperText.includes("SOLANA")) assetTags.push("SOL");
+        if (upperText.includes("SOMI") || upperText.includes("SOMNIA")) assetTags.push("SOMI");
+        if (assetTags.length === 0) assetTags.push("CRYPTO");
+
+        extracted.push({
+          id: `live-${Math.random().toString(36).slice(2, 9)}`,
+          title,
+          summary: desc.slice(0, 200) || "Live crypto market intelligence update.",
+          url: cleanUrl,
+          source: src.name,
+          asset_tags: assetTags,
+          published_at: dateStr,
+          publishedAt: dateStr,
+        });
+      }
+    } catch (e: any) {
+      // Graceful fallback to next source
     }
-    return u;
+  }
+
+  return extracted;
+}
+
+let rssPollerInterval: ReturnType<typeof setInterval> | null = null;
+
+export function startLiveRssPoller() {
+  const refresh = async () => {
+    try {
+      const fresh = await fetchLiveRssFeeds();
+      if (fresh.length > 0) {
+        inMemoryLiveNews = fresh;
+        lastLiveNewsFetch = Date.now();
+        console.log(chalk.gray(`[RSS Engine] Refreshed ${fresh.length} live articles from CoinTelegraph, Decrypt & CoinDesk`));
+      }
+    } catch (err: any) {
+      console.warn(`[RSS Engine] Polling blip: ${err?.message}`);
+    }
   };
 
-  const deduplicateArticles = (items: any[]): any[] => {
-    const seen = new Set<string>();
-    const out: any[] = [];
-    for (const item of items) {
-      if (!item || !item.title) continue;
-      const norm = item.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "")
-        .slice(0, 28);
-      if (seen.has(norm)) continue;
-      seen.add(norm);
-      out.push(item);
+  // Immediate initial load on server boot
+  refresh();
+  // Proactive background cycle every 60 seconds
+  rssPollerInterval = setInterval(refresh, 60_000);
+}
+
+async function getNewsData(limit: number = 20, asset?: string): Promise<any[]> {
+  const now = Date.now();
+  if (inMemoryLiveNews.length === 0 || now - lastLiveNewsFetch > 60_000) {
+    try {
+      const fresh = await fetchLiveRssFeeds();
+      if (fresh.length > 0) {
+        inMemoryLiveNews = fresh;
+        lastLiveNewsFetch = now;
+      }
+    } catch {
+      // Keep existing memory
     }
-    return out;
-  };
+  }
 
   let results: any[] = [];
 
@@ -536,37 +621,56 @@ async function getNewsData(limit: number = 20, asset?: string): Promise<any[]> {
     try {
       const dbNews = await getLatestNews(limit * 4, asset);
       if (dbNews && dbNews.length > 0) {
-        if (asset && asset !== "ALL") {
-          const target = asset.toUpperCase();
-          const matched = dbNews.filter((n: any) =>
-            (n.asset_tags || []).some((t: string) => t.toUpperCase() === target) ||
-            n.title?.toUpperCase().includes(target)
-          );
-          results = deduplicateArticles(matched);
-        } else {
-          results = deduplicateArticles(dbNews);
-        }
+        results.push(...dbNews);
       }
     } catch {
       // Fallback
     }
   }
 
-  // If DB results are fewer than desired limit (e.g. fewer than 4), backfill with verified RAG articles
+  // Combine live RSS feed articles
+  results.push(...inMemoryLiveNews);
+
+  // Filter by requested asset if specified
+  if (asset && asset !== "ALL") {
+    const target = asset.toUpperCase();
+    const matched = results.filter(
+      (n: any) =>
+        (n.asset_tags || []).some((t: string) => t.toUpperCase() === target) ||
+        n.title?.toUpperCase().includes(target)
+    );
+    if (matched.length > 0) {
+      results = matched;
+    }
+  }
+
+  // Backfill with verified RAG catalog if results are fewer than desired limit
   if (results.length < limit) {
-    const verifiedFallback = getVerifiedNewsForAsset(asset, limit);
-    for (const v of verifiedFallback) {
-      if (!results.some((r) => r.title.toLowerCase().slice(0, 20) === v.title.toLowerCase().slice(0, 20))) {
+    const catalog = getVerifiedNewsForAsset(asset, limit);
+    for (const v of catalog) {
+      if (!results.some((r) => r.url === v.url || r.title.toLowerCase().slice(0, 24) === v.title.toLowerCase().slice(0, 24))) {
         results.push(v);
       }
       if (results.length >= limit) break;
     }
   }
 
-  return results.slice(0, limit).map((n: any) => ({
-    ...n,
-    url: sanitizeUrl(n.url, n.title),
-  }));
+  // Deduplicate by URL or normalized title
+  const seenKeys = new Set<string>();
+  const finalNews: any[] = [];
+  for (const item of results) {
+    if (!item || !item.title || !item.url) continue;
+    const norm = item.url.toLowerCase();
+    if (seenKeys.has(norm)) continue;
+    seenKeys.add(norm);
+    finalNews.push({
+      ...item,
+      publishedAt: item.published_at || item.publishedAt || new Date().toISOString(),
+    });
+    if (finalNews.length >= limit) break;
+  }
+
+  return finalNews;
 }
 
 async function getSpikesData(params: { asset?: string; symbol?: string; limit?: number }): Promise<any[]> {
@@ -1142,7 +1246,9 @@ async function startServer() {
     orderEngine = new OrderEngine(ctx);
     sweeper = new SettlementSweeper(ctx);
 
-    // ── 2. Database workers (if Supabase configured) ──────────
+    // ── 2. Data & Intelligence workers ────────────────────────
+    startLiveRssPoller();
+
     if (isSupabaseConfigured()) {
       console.log(chalk.green("✔ Supabase connected — starting data workers"));
 
@@ -1158,7 +1264,7 @@ async function startServer() {
       });
       newsWorker.start();
     } else {
-      console.log(chalk.yellow("⚠ Supabase not configured — running without database (set SUPABASE_URL + SUPABASE_ANON_KEY in .env)"));
+      console.log(chalk.yellow("⚠ Supabase not configured — running in-memory high-speed cache mode"));
     }
 
     // ── 3. Start HTTP listener ────────────────────────────────
@@ -1168,7 +1274,8 @@ async function startServer() {
       console.log(chalk.white(`✔ Indexer: ${ctx.config.indexerUrl}`));
       console.log(chalk.white(`✔ Venue: ${ctx.config.venueId}`));
       console.log(chalk.white(`✔ Trading Mode: ${ctx.canTrade ? "LIVE" : "SIMULATION / READ-ONLY"}`));
-      console.log(chalk.white(`✔ Database: ${isSupabaseConfigured() ? "Supabase Cloud PostgreSQL" : "Not configured"}`));
+      console.log(chalk.white(`✔ Database: ${isSupabaseConfigured() ? "Supabase Cloud PostgreSQL" : "In-Memory High-Speed Cache"}`));
+      console.log(chalk.white(`✔ Real-Time RSS Grounding: CoinTelegraph, Decrypt, CoinDesk (Active 60s Cycle)`));
 
       console.log(chalk.gray("\n── API Endpoints ──────────────────────────────────────"));
       console.log(chalk.gray("  GET  /api/health                 System health & worker stats"));
@@ -1180,7 +1287,7 @@ async function startServer() {
       console.log(chalk.gray("  POST /api/claim                  Sweep settlements"));
       console.log(chalk.gray("  GET  /api/timeline/:sym          Probability timeline (DB)"));
       console.log(chalk.gray("  GET  /api/spikes                 Detected spikes (DB)"));
-      console.log(chalk.gray("  GET  /api/news                   Crypto news feed (DB)"));
+      console.log(chalk.gray("  GET  /api/news                   Crypto news feed (Live RSS)"));
       console.log(chalk.gray("  POST /api/strategies             Save bot strategy (DB)"));
       console.log(chalk.gray("  GET  /api/strategies/:wallet     Get saved strategies (DB)"));
       console.log(chalk.gray("───────────────────────────────────────────────────────\n"));
@@ -1189,6 +1296,7 @@ async function startServer() {
     // ── 4. Graceful shutdown ──────────────────────────────────
     const shutdown = async () => {
       console.log(chalk.yellow("\nShutting down..."));
+      if (rssPollerInterval) clearInterval(rssPollerInterval);
       snapshotWorker?.stop();
       newsWorker?.stop();
       await shutdownExchange(ctx);
