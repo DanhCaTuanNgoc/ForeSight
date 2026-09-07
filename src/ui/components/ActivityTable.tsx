@@ -9,10 +9,14 @@ export interface PositionRecord {
   amount: number;
   entryPrice: number;
   timestamp: number;
-  status: "OPEN" | "SETTLED";
+  status: "OPEN" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | string;
   orderId?: string;
   txHash?: string;
   isLiveOnChain?: boolean;
+  walletAddress?: string;
+  exitPrice?: number;
+  realizedPnl?: number;
+  realizedRoiPercent?: number;
 }
 
 interface ActivityTableProps {

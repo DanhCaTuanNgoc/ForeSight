@@ -222,7 +222,7 @@ function ForeSightTerminalApp() {
   }, []);
 
   // Client-side localStorage persistence helpers for positions
-  const getLocalPositions = (addr: string): any[] => {
+  const getLocalPositions = (addr?: string | null): PositionRecord[] => {
     if (!addr || typeof window === "undefined") return [];
     try {
       const raw = localStorage.getItem(`foresight_positions_${addr.toLowerCase()}`);
@@ -232,7 +232,7 @@ function ForeSightTerminalApp() {
     }
   };
 
-  const saveLocalPositions = (addr: string, list: any[]) => {
+  const saveLocalPositions = (addr: string | null | undefined, list: PositionRecord[]) => {
     if (!addr || typeof window === "undefined") return;
     try {
       localStorage.setItem(`foresight_positions_${addr.toLowerCase()}`, JSON.stringify(list));
@@ -406,11 +406,12 @@ function ForeSightTerminalApp() {
         const pnlStr = data.realizedPnl >= 0 ? `+$${data.realizedPnl}` : `-$${Math.abs(data.realizedPnl)}`;
         showToast(`Early exit on CLOB! Realized PnL: ${pnlStr} (${data.realizedRoiPercent > 0 ? "+" : ""}${data.realizedRoiPercent}%)`, "success");
         if (wallet.address) {
+          const activeAddr = wallet.address;
           setPositions((prev) => {
-            const next = prev.map((p) =>
+            const next: PositionRecord[] = prev.map((p) =>
               p.id === positionId ? { ...p, status: "CLOSED", realizedPnl: data.realizedPnl } : p
             );
-            saveLocalPositions(wallet.address, next);
+            saveLocalPositions(activeAddr, next);
             return next;
           });
         }
@@ -475,12 +476,13 @@ function ForeSightTerminalApp() {
           "success"
         );
         if (data.position && wallet.address) {
+          const activeAddr = wallet.address;
           setPositions((prev) => {
             const exists = prev.some((p) => p.id === data.position.id);
-            const next = exists
+            const next: PositionRecord[] = exists
               ? prev.map((p) => (p.id === data.position.id ? data.position : p))
               : [data.position, ...prev];
-            saveLocalPositions(wallet.address, next);
+            saveLocalPositions(activeAddr, next);
             return next;
           });
         }

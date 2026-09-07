@@ -17,7 +17,14 @@ export interface PositionRecord {
   amount: number;
   entryPrice: number;
   timestamp: number;
-  status: "OPEN" | "SETTLED";
+  status: "OPEN" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | string;
+  walletAddress?: string;
+  orderId?: string;
+  txHash?: string;
+  isLiveOnChain?: boolean;
+  exitPrice?: number;
+  realizedPnl?: number;
+  realizedRoiPercent?: number;
 }
 
 interface ThesisHealthMonitorProps {
