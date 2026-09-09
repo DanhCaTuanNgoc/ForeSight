@@ -342,7 +342,8 @@ async function getLiveSpotTickers(): Promise<any[]> {
     return cachedSpotTickers;
   }
   try {
-    const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "AVAXUSDT", "SUIUSDT", "DOGEUSDT"];
+    // Only query spot prices for assets supported on DreamDEX
+    const symbols = ["BTCUSDT", "ETHUSDT"];
     // Prefer data-api.binance.vision (dedicated public market data cluster, bypasses ISP DPI blocks)
     const primaryUrl = `https://data-api.binance.vision/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`;
     let res: Response;
@@ -359,21 +360,19 @@ async function getLiveSpotTickers(): Promise<any[]> {
         cachedSpotTickers = data.map((t: any) => {
           const base = t.symbol.replace("USDT", "");
           return {
-            symbol: `${base}/USDT`,
+            symbol: `${base}/tUSDC`,
             rawSymbol: base,
             price: parseFloat(t.lastPrice),
-            probability: (parseFloat(t.lastPrice) % 100),
             change: parseFloat(t.priceChangePercent),
             volume: parseFloat(t.quoteVolume),
             status: "TRADING",
           };
         });
-        // Add Somnia token
+        // Add Somnia native token
         cachedSpotTickers.push({
           symbol: "SOMI/USDso",
           rawSymbol: "SOMI",
           price: 0.742,
-          probability: 74.2,
           change: 3.85,
           volume: 185200,
           status: "TRADING",
@@ -387,40 +386,113 @@ async function getLiveSpotTickers(): Promise<any[]> {
     console.warn(`[SpotOracle] Live spot price fetch notice (${e?.code || e?.message || "network blip"}) — using cached/resilient tickers.`);
   }
   return cachedSpotTickers.length > 0 ? cachedSpotTickers : [
-    { symbol: "BTC/USDT", rawSymbol: "BTC", price: 77590.5, probability: 62.4, change: -1.52, volume: 142900000, status: "TRADING" },
-    { symbol: "ETH/USDT", rawSymbol: "ETH", price: 2420.8, probability: 45.1, change: -2.15, volume: 89400000, status: "TRADING" },
-    { symbol: "SOL/USDT", rawSymbol: "SOL", price: 100.2, probability: 54.0, change: -3.8, volume: 48150000, status: "TRADING" },
-    { symbol: "BNB/USDT", rawSymbol: "BNB", price: 685.1, probability: 51.0, change: -0.45, volume: 21240000, status: "TRADING" },
-    { symbol: "SOMI/USDso", rawSymbol: "SOMI", price: 0.742, probability: 74.2, change: 3.85, volume: 185200, status: "TRADING" },
+    { symbol: "BTC/tUSDC", rawSymbol: "BTC", price: 78750.5, change: 0.25, volume: 142900000, status: "TRADING" },
+    { symbol: "ETH/tUSDC", rawSymbol: "ETH", price: 2495.8, change: 0.15, volume: 89400000, status: "TRADING" },
+    { symbol: "SOMI/USDso", rawSymbol: "SOMI", price: 0.742, change: 3.85, volume: 185200, status: "TRADING" },
   ];
 }
 
 /**
  * GET /api/tickers
- * Fetch live market ticker tape data computed from Somnia CLOB markets or live spot prices
+ * Fetch live market ticker tape data computed from DreamDEX contracts and spot prices
  */
 app.get("/api/tickers", async (req, res) => {
   try {
-    const markets = await watcher.getActiveEventContracts();
-    const tickers = markets.map((m) => {
+    const [markets, spotTickers] = await Promise.all([
+      watcher.getActiveEventContracts().catch(() => []),
+      getLiveSpotTickers().catch(() => []),
+    ]);
+
+    const spotMap = new Map<string, { price: number; change: number }>();
+    for (const s of spotTickers) {
+      spotMap.set(s.rawSymbol, { price: s.price, change: s.change });
+    }
+
+    // Filter markets strictly to DreamDEX assets
+    const dreamdexAssets = new Set(["BTC", "ETH", "SOMI", "BOTNAV"]);
+    const validMarkets = markets.filter((m) =>
+      dreamdexAssets.has((m.underlyingAsset || m.symbol.split("-")[0]).toUpperCase())
+    );
+
+    // Derive default pool percentage for major assets
+    const getAssetPoolPct = (asset: string) => {
+      const match = validMarkets.find((m) => m.underlyingAsset?.toUpperCase() === asset.toUpperCase());
+      if (!match) return 50.0;
+      let prob = match.impliedUpProbability ?? (match.midPrice ?? 0.5);
+      if (prob > 1000) prob = prob / 1_000_000;
+      else if (prob > 1) prob = prob / 100;
+      return Number((Math.max(0.01, Math.min(0.99, prob)) * 100).toFixed(1));
+    };
+
+    // 1. Primary spot + pool ratio tickers for DreamDEX assets
+    const primaryTickers = [
+      {
+        symbol: "BTC/tUSDC",
+        rawSymbol: "BTC",
+        underlyingAsset: "BTC",
+        spotPrice: spotMap.get("BTC")?.price || 78750.0,
+        price: spotMap.get("BTC")?.price || 78750.0,
+        poolPercent: getAssetPoolPct("BTC"),
+        change: spotMap.get("BTC")?.change || 0.25,
+        source: "DreamDEX",
+      },
+      {
+        symbol: "ETH/tUSDC",
+        rawSymbol: "ETH",
+        underlyingAsset: "ETH",
+        spotPrice: spotMap.get("ETH")?.price || 2495.0,
+        price: spotMap.get("ETH")?.price || 2495.0,
+        poolPercent: getAssetPoolPct("ETH"),
+        change: spotMap.get("ETH")?.change || 0.15,
+        source: "DreamDEX",
+      },
+      {
+        symbol: "SOMI/USDso",
+        rawSymbol: "SOMI",
+        underlyingAsset: "SOMI",
+        spotPrice: spotMap.get("SOMI")?.price || 0.742,
+        price: spotMap.get("SOMI")?.price || 0.742,
+        poolPercent: getAssetPoolPct("SOMI"),
+        change: spotMap.get("SOMI")?.change || 3.85,
+        source: "DreamDEX",
+      },
+    ];
+
+    // 2. Active DreamDEX prediction pools
+    const poolTickers = validMarkets.slice(0, 12).map((m) => {
       let prob = m.impliedUpProbability ?? (m.midPrice ?? 0.5);
       if (prob > 1000) prob = prob / 1_000_000;
       else if (prob > 1) prob = prob / 100;
       prob = Math.max(0.01, Math.min(0.99, prob));
-      const probPct = Number((prob * 100).toFixed(1));
-      const change = Number(((prob - 0.5) * 10).toFixed(2));
+      const poolPercent = Number((prob * 100).toFixed(1));
+
+      const asset = m.underlyingAsset || "BTC";
+      const spot = spotMap.get(asset) || { price: m.strikePrice || 78750, change: 0 };
+
+      let label = m.symbol;
+      if (m.strikePrice && m.strikePrice > 0) {
+        label = `${asset} ($${m.strikePrice >= 1000 ? Math.round(m.strikePrice).toLocaleString() : m.strikePrice})`;
+      } else if (m.symbol.includes("-")) {
+        const parts = m.symbol.split("-");
+        label = `${parts[0]}-${parts[parts.length - 1].replace("/tUSDC", "")}`;
+      }
+
       return {
-        symbol: `${m.underlyingAsset || m.symbol}/tUSDC`,
+        symbol: label,
         rawSymbol: m.symbol,
-        price: Number(prob.toFixed(3)),
-        probability: probPct,
-        change,
+        underlyingAsset: asset,
+        spotPrice: spot.price,
+        price: spot.price,
+        poolPercent,
+        strikePrice: m.strikePrice,
+        change: spot.change,
         volume: m.minOrderSize ? m.minOrderSize * 1000 : 125000,
         status: m.status,
+        source: "DreamDEX",
       };
     });
 
-    const finalTickers = tickers.length > 0 ? tickers : await getLiveSpotTickers();
+    const finalTickers = [...primaryTickers, ...poolTickers];
 
     res.json({
       count: finalTickers.length,

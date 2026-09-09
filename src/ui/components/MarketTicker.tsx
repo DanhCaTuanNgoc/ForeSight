@@ -4,16 +4,19 @@ import { apiUrl } from "../utils/api.js";
 
 export interface TickerItem {
   symbol: string;
-  price: number;
+  spotPrice?: number;
+  price?: number;
   change: number;
+  poolPercent?: number;
+  probability?: number;
+  strikePrice?: number;
+  underlyingAsset?: string;
+  source?: string;
 }
 
 interface MarketTickerProps {
   markets?: TickerItem[];
 }
-
-// Fallback symbols to query real prices from Binance if local indexer has no contracts
-const FALLBACK_BINANCE_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "AVAXUSDT", "SUIUSDT", "DOGEUSDT"];
 
 export const MarketTicker: React.FC<MarketTickerProps> = ({
   markets: propMarkets,
@@ -30,45 +33,22 @@ export const MarketTicker: React.FC<MarketTickerProps> = ({
 
     const fetchRealData = async () => {
       try {
-        // 1. Try fetching from Somnia backend CLOB/Event contracts
         const res = await fetch(apiUrl("/api/tickers"));
         if (res.ok) {
           const data = await res.json();
           if (data.tickers && data.tickers.length > 0) {
             const mapped: TickerItem[] = data.tickers.map((t: any) => ({
               symbol: t.symbol,
-              price: Number(t.price),
-              change: Number(t.change),
+              spotPrice: Number(t.spotPrice || t.price || 0),
+              price: Number(t.price || t.spotPrice || 0),
+              change: Number(t.change || 0),
+              poolPercent: t.poolPercent !== undefined ? Number(t.poolPercent) : (t.probability !== undefined ? Number(t.probability) : 50.0),
+              strikePrice: t.strikePrice !== undefined ? Number(t.strikePrice) : undefined,
+              underlyingAsset: t.underlyingAsset,
+              source: t.source,
             }));
             if (isMounted) {
               setTickers(mapped);
-              return;
-            }
-          }
-        }
-      } catch {
-        // Fall through to live public crypto spot API
-      }
-
-      // 2. Fetch real live spot prices from Binance API if backend is empty/offline
-      try {
-        const binanceUrl = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(
-          JSON.stringify(FALLBACK_BINANCE_SYMBOLS)
-        )}`;
-        const res = await fetch(binanceUrl);
-        if (res.ok) {
-          const raw = await res.json();
-          if (Array.isArray(raw) && raw.length > 0) {
-            const liveData: TickerItem[] = raw.map((item: any) => {
-              const base = item.symbol.replace("USDT", "");
-              return {
-                symbol: `${base}/USDT`,
-                price: parseFloat(item.lastPrice),
-                change: parseFloat(item.priceChangePercent),
-              };
-            });
-            if (isMounted) {
-              setTickers(liveData);
               return;
             }
           }
@@ -79,7 +59,7 @@ export const MarketTicker: React.FC<MarketTickerProps> = ({
     };
 
     fetchRealData();
-    const interval = setInterval(fetchRealData, 8000);
+    const interval = setInterval(fetchRealData, 4000);
 
     return () => {
       isMounted = false;
@@ -92,21 +72,18 @@ export const MarketTicker: React.FC<MarketTickerProps> = ({
     : tickers.length > 0
     ? tickers
     : [
-        { symbol: "BTC/USDT", price: 80000, change: 1.25 },
-        { symbol: "ETH/USDT", price: 2500, change: -0.45 },
-        { symbol: "SOL/USDT", price: 175, change: 3.8 },
-        { symbol: "BNB/USDT", price: 620, change: 0.9 },
-        { symbol: "SOMI/USDso", price: 0.738, change: 4.15 },
+        { symbol: "BTC/tUSDC", spotPrice: 78750, price: 78750, poolPercent: 50.1, change: 0.25, underlyingAsset: "BTC" },
+        { symbol: "ETH/tUSDC", spotPrice: 2495, price: 2495, poolPercent: 50.1, change: 0.15, underlyingAsset: "ETH" },
+        { symbol: "SOMI/USDso", spotPrice: 0.742, price: 0.742, poolPercent: 52.8, change: 3.85, underlyingAsset: "SOMI" },
       ];
 
   // Repeat enough items so each half fills even 4K screens seamlessly before looping
-  const repeatMultiplier = Math.max(1, Math.ceil(12 / (items.length || 1)));
+  const repeatMultiplier = Math.max(1, Math.ceil(14 / (items.length || 1)));
   const repeatedList = Array(repeatMultiplier).fill(items).flat();
 
-  // Calculate constant smooth velocity: ~25-30 pixels per second (calm terminal tape pace)
-  // Each ticker badge is approx 185px wide
-  const totalStripWidthPx = repeatedList.length * 185;
-  const durationSec = Math.max(60, Math.round(totalStripWidthPx / 25));
+  // Calculate constant smooth velocity: ~25-30 pixels per second
+  const totalStripWidthPx = repeatedList.length * 220;
+  const durationSec = Math.max(60, Math.round(totalStripWidthPx / 26));
 
   return (
     <div className="h-8 border-b border-white/[0.06] bg-[#090910] overflow-hidden flex items-center select-none relative">
@@ -122,21 +99,34 @@ export const MarketTicker: React.FC<MarketTickerProps> = ({
           <div key={stripIdx} className="flex items-center gap-0 flex-shrink-0">
             {repeatedList.map((t, idx) => {
               const isUp = t.change >= 0;
-              const formattedPrice =
-                t.price >= 1000
-                  ? t.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                  : t.price >= 1
-                  ? t.price.toFixed(2)
-                  : t.price.toFixed(4);
+              const assetSym = t.underlyingAsset || t.symbol.split("/")[0].split(" ")[0].split("-")[0];
+              const spot = t.spotPrice || t.price || 0;
+              const poolPct = t.poolPercent !== undefined ? t.poolPercent : (t.probability !== undefined ? t.probability : 50.0);
+
+              const formattedSpotPrice =
+                spot >= 1000
+                  ? spot.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                  : spot >= 1
+                  ? spot.toFixed(2)
+                  : spot.toFixed(4);
 
               return (
                 <div
                   key={`${stripIdx}-${idx}`}
-                  className="flex items-center gap-2 px-3 text-[11px] font-mono whitespace-nowrap border-r border-white/[0.05] transition-colors hover:bg-white/[0.03]"
+                  className="flex items-center gap-2.5 px-3.5 text-[11px] font-mono whitespace-nowrap border-r border-white/[0.05] transition-colors hover:bg-white/[0.03]"
                 >
-                  <CryptoIcon symbol={t.symbol} size={14} />
+                  <CryptoIcon symbol={assetSym} size={14} />
                   <span className="text-gray-300 font-medium">{t.symbol}</span>
-                  <span className="text-gray-100 font-semibold">${formattedPrice}</span>
+                  
+                  {/* Real-time Spot Price */}
+                  <span className="text-gray-100 font-bold">${formattedSpotPrice}</span>
+
+                  {/* Real-time Pool % from DreamDEX */}
+                  <span className="text-violet-300 bg-violet-950/60 border border-violet-500/30 px-1.5 py-0.2 rounded-none text-[10px] font-mono">
+                    Pool: {poolPct.toFixed(1)}%
+                  </span>
+
+                  {/* 24h Trend / Change */}
                   <span
                     className={`text-[10px] font-semibold flex items-center gap-0.5 ${
                       isUp ? "text-emerald-400" : "text-rose-400"
