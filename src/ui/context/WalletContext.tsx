@@ -79,6 +79,7 @@ interface WalletContextType {
     price?: number;
     poolAddress?: string;
     expirationTime?: number;
+    onStep?: (step: "approving" | "signing" | "confirming" | "idle") => void;
   }) => Promise<OnChainTxResult>;
   executeOnChainClaim: (pools?: string[]) => Promise<OnChainTxResult>;
 }
@@ -327,6 +328,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       price?: number;
       poolAddress?: string;
       expirationTime?: number;
+      onStep?: (step: "approving" | "signing" | "confirming" | "idle") => void;
     }): Promise<OnChainTxResult> => {
       const ethereum = (window as any).ethereum;
       if (!ethereum || !address) {
@@ -365,6 +367,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             });
 
             if (currentAllowance < requiredCollateralRaw) {
+              params.onStep?.("approving");
               // Approve standard buffer (e.g. 1,000,000 tUSDC) so subsequent trades don't require repeat approval
               const approveAmount = BigInt("1000000000000"); // 1,000,000 tUSDC
               const approveCalldata = encodeErc20Approve(poolAddr, approveAmount);
@@ -444,6 +447,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         // Prompt MetaMask transaction confirmation popup on Somnia Shannon Testnet
+        params.onStep?.("signing");
         const txHash = await ethereum.request({
           method: "eth_sendTransaction",
           params: [
@@ -465,6 +469,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return { success: false, error: "Order signature rejected by user in MetaMask." };
         }
         return { success: false, error: err?.message || "On-chain trade transaction failed." };
+      } finally {
+        params.onStep?.("idle");
       }
     },
     [address, chainId, switchToSomnia]

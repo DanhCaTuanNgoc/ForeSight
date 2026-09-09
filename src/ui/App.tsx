@@ -117,6 +117,7 @@ function ForeSightTerminalApp() {
   const [debateLoading, setDebateLoading] = useState<boolean>(false);
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState<boolean>(false);
+  const [submitStep, setSubmitStep] = useState<"idle" | "approving" | "signing">("idle");
 
   // Modals & Interactive simulation state
   const [isDebateModalOpen, setIsDebateModalOpen] = useState<boolean>(false);
@@ -179,7 +180,11 @@ function ForeSightTerminalApp() {
           });
 
           setMarkets(parsed);
-          if (!selectedMarket && parsed.length > 0) setSelectedMarket(parsed[0]);
+          setSelectedMarket((prev) => {
+            if (!prev) return parsed[0];
+            const updated = parsed.find((p) => p.id === prev.id || p.symbol === prev.symbol);
+            return updated || prev;
+          });
           return;
         }
       }
@@ -187,8 +192,8 @@ function ForeSightTerminalApp() {
       console.warn("Markets API fetch fallback:", e);
     }
     setMarkets(FALLBACK_MARKETS);
-    if (!selectedMarket) setSelectedMarket(FALLBACK_MARKETS[0]);
-  }, [selectedMarket]);
+    setSelectedMarket((prev) => prev || FALLBACK_MARKETS[0]);
+  }, []);
 
   // 3. Fetch Tickers Tape
   const fetchTickers = useCallback(async () => {
@@ -367,7 +372,7 @@ function ForeSightTerminalApp() {
       fetchMarkets();
       fetchTickers();
       fetchPositions();
-    }, 6000);
+    }, 3500);
 
     const newsPolling = setInterval(() => {
       fetchNews();
@@ -487,6 +492,7 @@ function ForeSightTerminalApp() {
     const targetExpiry = expirationTime || currentMarket?.expirationTime;
 
     setIsSubmittingOrder(true);
+    setSubmitStep("idle");
     try {
       // 1. Request on-chain signature/transaction in MetaMask directly on DreamDEX BinaryPool
       const txResult = await wallet.executeOnChainTrade({
@@ -496,6 +502,7 @@ function ForeSightTerminalApp() {
         price,
         poolAddress: targetPool,
         expirationTime: targetExpiry,
+        onStep: (step) => setSubmitStep(step === "confirming" ? "signing" : step),
       });
 
       if (!txResult.success) {
@@ -547,6 +554,7 @@ function ForeSightTerminalApp() {
       showToast(e.message || "Order network error", "error");
     } finally {
       setIsSubmittingOrder(false);
+      setSubmitStep("idle");
     }
   };
 
@@ -759,15 +767,18 @@ function ForeSightTerminalApp() {
                     >
                       <div className="flex items-center justify-between font-mono">
                         <span
-                          className={`text-xs font-bold flex items-center gap-1.5 ${
+                          className={`text-xs font-bold flex items-center gap-1.5 truncate max-w-[155px] ${
                             isSelected ? "text-violet-200" : "text-gray-200"
                           }`}
+                          title={m.symbol}
                         >
                           <CryptoIcon symbol={m.underlyingAsset || m.symbol} size={15} />
-                          <span>{m.symbol}/tUSDC</span>
+                          <span className="truncate">
+                            {m.symbol.endsWith("/tUSDC") ? m.symbol : `${m.symbol}/tUSDC`}
+                          </span>
                         </span>
                         <span
-                          className={`text-[11px] font-bold font-mono px-1.5 py-0.2 border rounded-none ${
+                          className={`text-[11px] font-bold font-mono px-1.5 py-0.2 border shrink-0 rounded-none ${
                             isYes
                               ? "text-emerald-400 bg-emerald-950/30 border-emerald-500/30"
                               : "text-rose-400 bg-rose-950/30 border-rose-500/30"
@@ -784,7 +795,13 @@ function ForeSightTerminalApp() {
                       <div className="flex items-center justify-between text-[9px] text-gray-500 font-mono pt-0.5">
                         <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</span>
                         <span>Ask: ${m.bestAsk ? m.bestAsk.toFixed(2) : "0.52"}</span>
-                        <span className="text-gray-400 font-bold">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
+                        {m.timeRemainingSec ? (
+                          <span className="text-cyan-400 font-bold">
+                            {Math.floor(m.timeRemainingSec / 60)}:{(m.timeRemainingSec % 60).toString().padStart(2, "0")}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 font-bold">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
+                        )}
                       </div>
                     </button>
                   );
@@ -843,6 +860,7 @@ function ForeSightTerminalApp() {
                     onTargetExitPriceChange={(p) => setPrefillTargetExit(p)}
                     onTrade={handleExecuteTrade}
                     isSubmitting={isSubmittingOrder}
+                    submitStep={submitStep}
                     showToast={showToast}
                   />
                 </div>

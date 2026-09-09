@@ -26,7 +26,7 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode, on
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-white font-mono font-bold text-sm tracking-wide">
-              {market.symbol} / tUSDC
+              {market.symbol}
             </h2>
           </div>
           <p className="text-[11px] text-gray-400 max-w-xl truncate mt-0.5 font-sans">

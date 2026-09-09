@@ -25,6 +25,8 @@ export interface EventContractMarket {
   impliedUpProbability?: number;
   impliedDownProbability?: number;
   spread?: number;
+  probability?: number;
+  volume24h?: number;
   marketAddress?: string;
   poolAddress?: string;
   yesTokenId?: string;
