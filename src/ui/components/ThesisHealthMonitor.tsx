@@ -9,6 +9,7 @@ import {
   Gauge,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
+import { isPositionExpired } from "./ActivityView.js";
 
 export interface PositionRecord {
   id: string;
@@ -21,10 +22,14 @@ export interface PositionRecord {
   walletAddress?: string;
   orderId?: string;
   txHash?: string;
+  poolAddress?: string;
+  expirationTime?: number;
   isLiveOnChain?: boolean;
   exitPrice?: number;
   realizedPnl?: number;
   realizedRoiPercent?: number;
+  winningOutcome?: string;
+  isWinner?: boolean;
 }
 
 interface ThesisHealthMonitorProps {
@@ -42,8 +47,8 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const openPositions = positions.filter((p) => p.status === "OPEN");
-  const settledPositions = positions.filter((p) => p.status === "SETTLED");
+  const openPositions = positions.filter((p) => p.status === "OPEN" && !isPositionExpired(p));
+  const settledPositions = positions.filter((p) => p.status === "SETTLED" || isPositionExpired(p));
   const activePos = openPositions[0] || null;
 
   // Quantitative health metrics dynamically derived from live position & current time
@@ -188,10 +193,10 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
                     <div className="flex items-center gap-2">
                       <span
                         className={`text-[10px] font-bold ${
-                          pos.status === "OPEN" ? "text-violet-400" : "text-emerald-400"
+                          pos.status === "OPEN" && !isPositionExpired(pos) ? "text-violet-400" : "text-emerald-400"
                         }`}
                       >
-                        {pos.status === "OPEN" ? "● In Flight" : "✓ Settled"}
+                        {pos.status === "OPEN" && !isPositionExpired(pos) ? "● In Flight" : "✓ Settled"}
                       </span>
                     </div>
                   </div>

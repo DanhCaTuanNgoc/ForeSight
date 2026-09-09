@@ -410,9 +410,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // expireTimestampNs: Nanoseconds (0 < expireNs <= pool.marketExpiryNs)
         let expireTimestampNs: bigint = 0n;
-        if (params.expirationTime && params.expirationTime > 0) {
-          expireTimestampNs = BigInt(params.expirationTime) * 1_000_000_000n;
-        } else if (params.poolAddress) {
+        if (params.poolAddress) {
           try {
             const marketExpiry = await somniaPublicClient.readContract({
               address: poolAddr,
@@ -420,8 +418,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               functionName: "marketExpiryNs",
             });
             expireTimestampNs = marketExpiry;
-          } catch {
-            expireTimestampNs = BigInt(Math.floor(Date.now() / 1000) + 3600) * 1_000_000_000n;
+            const nowNs = BigInt(Date.now()) * 1_000_000n;
+            if (marketExpiry <= nowNs) {
+              return {
+                success: false,
+                error: "This market round has already expired on DreamDEX. Please select an active market from the list.",
+              };
+            }
+          } catch (expiryErr: any) {
+            console.warn("[DreamDEX] marketExpiryNs check notice:", expiryErr);
+            if (params.expirationTime && params.expirationTime > 0) {
+              const nowSec = Math.floor(Date.now() / 1000);
+              if (params.expirationTime <= nowSec) {
+                return {
+                  success: false,
+                  error: "This market round has already expired. Please select an active market.",
+                };
+              }
+              expireTimestampNs = BigInt(params.expirationTime) * 1_000_000_000n;
+            } else {
+              expireTimestampNs = BigInt(Math.floor(Date.now() / 1000) + 3600) * 1_000_000_000n;
+            }
           }
         } else {
           expireTimestampNs = BigInt(Math.floor(Date.now() / 1000) + 3600) * 1_000_000_000n;
@@ -461,7 +478,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
 
         if (txHash && typeof txHash === "string") {
-          return { success: true, txHash };
+          // Wait for on-chain block receipt confirmation on Somnia L1 (typically <300ms)
+          params.onStep?.("confirming");
+          try {
+            const receipt = await somniaPublicClient.waitForTransactionReceipt({
+              hash: txHash as Address,
+              timeout: 15_000,
+            });
+
+            if (receipt.status === "reverted") {
+              return {
+                success: false,
+                txHash,
+                error: "Transaction reverted on Somnia L1 (TradingNotActive or market closed). Order was not accepted.",
+              };
+            }
+
+            return { success: true, txHash };
+          } catch (waitErr: any) {
+            console.warn("[WalletContext] waitForTransactionReceipt timeout/notice:", waitErr);
+            return { success: true, txHash };
+          }
         }
         return { success: false, error: "No transaction hash returned from wallet provider." };
       } catch (err: any) {

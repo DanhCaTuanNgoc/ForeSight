@@ -6,6 +6,7 @@ import {
   ExternalLink,
   Droplets,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 import { PositionsTable } from "./PositionsTable.js";
 import { ActivityTable } from "./ActivityTable.js";
@@ -21,6 +22,65 @@ interface ActivityViewProps {
   walletAddress?: string;
   walletBalance?: string;
   onEarlyExit?: (positionId: string, exitPrice?: number) => void;
+  onResetPositions?: () => void;
+}
+
+export function parseExpiryFromSymbol(sym?: string, createdAtMs?: number): number | null {
+  if (!sym) return null;
+  // 1. Format: DDMMMYY-HHMM (e.g. 09SEP26-1640)
+  const m1 = sym.match(/(\d{2})([A-Z]{3})(\d{2})-(\d{2})(\d{2})/);
+  if (m1) {
+    const [_, day, mon, yr, hr, min] = m1;
+    const months: Record<string, number> = {
+      JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
+      JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11,
+    };
+    const month = months[mon];
+    if (month !== undefined) {
+      const year = 2000 + parseInt(yr, 10);
+      return Math.floor(Date.UTC(year, month, parseInt(day, 10), parseInt(hr, 10), parseInt(min, 10)) / 1000);
+    }
+  }
+  // 2. Format: DDMMMYY (e.g. 10SEP26)
+  const m2 = sym.match(/(\d{2})([A-Z]{3})(\d{2})/);
+  if (m2) {
+    const [_, day, mon, yr] = m2;
+    const months: Record<string, number> = {
+      JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
+      JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11,
+    };
+    const month = months[mon];
+    if (month !== undefined) {
+      const year = 2000 + parseInt(yr, 10);
+      return Math.floor(Date.UTC(year, month, parseInt(day, 10), 23, 59, 59) / 1000);
+    }
+  }
+  // 3. Cadence format: 15M, 1H
+  if (sym.includes("-15M-") && createdAtMs) {
+    return Math.floor(createdAtMs / 1000) + 900;
+  }
+  if (sym.includes("-1H-") && createdAtMs) {
+    return Math.floor(createdAtMs / 1000) + 3600;
+  }
+  return null;
+}
+
+export function isPositionExpired(pos: any, nowSec = Math.floor(Date.now() / 1000)): boolean {
+  if (!pos) return false;
+  if (pos.status === "SETTLED" || pos.status === "RESOLVED" || pos.status === "CLAIMED" || pos.status === "CLOSED") {
+    return true;
+  }
+  if (pos.expirationTime && pos.expirationTime > 0) {
+    return nowSec >= pos.expirationTime;
+  }
+  const parsed = parseExpiryFromSymbol(pos.symbol, pos.timestamp);
+  if (parsed && parsed > 0) {
+    return nowSec >= parsed;
+  }
+  if (pos.timestamp && (nowSec - Math.floor(pos.timestamp / 1000)) > 900) {
+    return true;
+  }
+  return false;
 }
 
 export const ActivityView: React.FC<ActivityViewProps> = ({
@@ -31,6 +91,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
   walletAddress: propAddress,
   walletBalance: propBalance,
   onEarlyExit,
+  onResetPositions,
 }) => {
   const [filter, setFilter] = useState<"ALL" | "OPEN" | "SETTLED">("ALL");
   const [showAlphaCard, setShowAlphaCard] = useState<boolean>(false);
@@ -48,15 +109,44 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       )
     : [];
 
-  const openPositions = userPositions.filter((p) => p.status === "OPEN");
-  const settledPositions = userPositions.filter((p) => p.status === "SETTLED" || p.status === "RESOLVED");
+  // Dynamic settlement evaluation: Distinguish OPEN, RESOLVING, SETTLED_WIN, and SETTLED_LOSS
+  const nowSec = Math.floor(Date.now() / 1000);
+  const enrichedPositions = userPositions.map((p) => {
+    const expired = isPositionExpired(p, nowSec);
+    let effectiveStatus = p.status;
+    if (p.status === "CLAIMED") {
+      effectiveStatus = "CLAIMED";
+    } else if (p.status === "CLOSED") {
+      effectiveStatus = "CLOSED";
+    } else if (p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "RESOLVING") {
+      effectiveStatus = p.status;
+    } else if (expired) {
+      if (p.isWinner === true) effectiveStatus = "SETTLED_WIN";
+      else if (p.isWinner === false) effectiveStatus = "SETTLED_LOSS";
+      else effectiveStatus = "RESOLVING"; // Awaiting oracle resolution
+    } else {
+      effectiveStatus = "OPEN";
+    }
 
-  const totalInvested = userPositions.reduce(
+    return {
+      ...p,
+      status: effectiveStatus,
+      isExpired: expired,
+    };
+  });
+
+  const openPositions = enrichedPositions.filter((p) => p.status === "OPEN");
+  const claimablePositions = enrichedPositions.filter((p) => p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true));
+  const settledPositions = enrichedPositions.filter(
+    (p) => p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "CLAIMED" || p.status === "RESOLVING" || p.status === "SETTLED" || p.status === "RESOLVED"
+  );
+
+  const totalInvested = enrichedPositions.reduce(
     (acc, p) => acc + (p.amount || 0) * (p.entryPrice || 0.5),
     0
   );
 
-  const totalClaimable = settledPositions.reduce((acc, p) => {
+  const totalClaimable = claimablePositions.reduce((acc, p) => {
     // Settled winning contracts pay $1.00 per share
     return acc + (p.amount || 0);
   }, 0);
@@ -66,7 +156,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       ? openPositions
       : filter === "SETTLED"
       ? settledPositions
-      : userPositions;
+      : enrichedPositions;
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#07070B] text-[#E2E8F0] overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3 font-mono">
@@ -213,14 +303,14 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
         <div className="flex items-center gap-2 text-xs font-mono">
           <button
             onClick={onClaimAll}
-            disabled={isClaiming || settledPositions.length === 0}
+            disabled={isClaiming || claimablePositions.length === 0}
             title={
-              settledPositions.length === 0
-                ? "No settled payouts available yet. Contracts must reach round expiry to be claimed."
-                : `Sweep and redeem ${settledPositions.length} winning contract(s) directly to your wallet`
+              claimablePositions.length === 0
+                ? "No winning payouts ready to claim. Contracts that expired with a loss have $0 payout."
+                : `Sweep and redeem ${claimablePositions.length} winning contract(s) directly to your wallet`
             }
             className={`px-3 py-1.5 rounded-none font-bold text-xs flex items-center gap-1.5 transition-colors border ${
-              settledPositions.length > 0
+              claimablePositions.length > 0
                 ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/40 cursor-pointer"
                 : "bg-[#0E0E17] text-gray-500 border-white/[0.06] cursor-not-allowed opacity-50"
             }`}
@@ -229,11 +319,26 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
             <span>
               {isClaiming
                 ? "CLAIMING ON-CHAIN..."
-                : settledPositions.length > 0
-                ? `CLAIM PAYOUTS (${settledPositions.length})`
-                : "NO SETTLED PAYOUTS"}
+                : claimablePositions.length > 0
+                ? `CLAIM PAYOUTS (${claimablePositions.length})`
+                : "NO CLAIMABLE PAYOUTS"}
             </span>
           </button>
+
+          {onResetPositions && userPositions.length > 0 && (
+            <button
+              onClick={() => {
+                if (window.confirm("Clear all recorded positions from ledger memory?")) {
+                  onResetPositions();
+                }
+              }}
+              title="Clear all recorded test positions from ledger"
+              className="px-2.5 py-1.5 rounded-none font-bold text-xs flex items-center gap-1.5 transition-colors border bg-[#0E0E17] hover:bg-rose-950/40 text-gray-400 hover:text-rose-300 border-white/[0.08] hover:border-rose-500/40 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+              <span>CLEAR LEDGER</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -243,7 +348,6 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           positions={filteredPositions}
           onClaim={onClaimAll}
           isClaiming={isClaiming}
-          onEarlyExit={onEarlyExit}
           onShareAlphaCard={(pos) => {
             sound.playClick();
             setCardPosition(pos);

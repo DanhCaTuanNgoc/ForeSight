@@ -11,7 +11,7 @@ import { WalletModal } from "./components/WalletModal.js";
 import { ThesisHealthMonitor, type PositionRecord } from "./components/ThesisHealthMonitor.js";
 import { AnalyticsView } from "./components/AnalyticsView.js";
 import { InsightsView } from "./components/InsightsView.js";
-import { ActivityView } from "./components/ActivityView.js";
+import { ActivityView, parseExpiryFromSymbol, isPositionExpired } from "./components/ActivityView.js";
 import { WalletProvider, useWallet } from "./context/WalletContext.js";
 import { CryptoIcon } from "./components/CryptoIcon.js";
 import { sound } from "./utils/sound-fx.js";
@@ -270,11 +270,43 @@ function ForeSightTerminalApp() {
   }, []);
 
   // Client-side localStorage persistence helpers for positions
+  // One-time auto-purge of legacy simulated test sessions
+  const TEST_CLEANUP_FLAG = "foresight_clean_slate_v3";
+  if (typeof window !== "undefined" && !localStorage.getItem(TEST_CLEANUP_FLAG)) {
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("foresight_positions_")) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      localStorage.setItem(TEST_CLEANUP_FLAG, "true");
+    } catch {}
+  }
+
   const getLocalPositions = (addr?: string | null): PositionRecord[] => {
     if (!addr || typeof window === "undefined") return [];
     try {
       const raw = localStorage.getItem(`foresight_positions_${addr.toLowerCase()}`);
-      return raw ? JSON.parse(raw) : [];
+      if (!raw) return [];
+      const parsed: PositionRecord[] = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      const filtered = parsed.filter(
+        (p) =>
+          p &&
+          !p.id?.startsWith("pos-demo-") &&
+          p.orderId !== "ord-btc-demo-live" &&
+          p.orderId !== "ord-eth-settled-1" &&
+          p.orderId !== "ord-somi-settled-2" &&
+          p.txHash !== "0x999f033fbddf512b93eb3b480f4b2f37521377c4eb11b77401eadafabb98e1a7" &&
+          (p as any).status !== "FAILED"
+      );
+      if (filtered.length !== parsed.length) {
+        saveLocalPositions(addr, filtered);
+      }
+      return filtered;
     } catch {
       return [];
     }
@@ -289,7 +321,7 @@ function ForeSightTerminalApp() {
     }
   };
 
-  // 5. Fetch Positions (Scoped exclusively to connected Web3 wallet + local backup merge)
+  // 5. Fetch Positions (Scoped exclusively to connected Web3 wallet)
   const fetchPositions = useCallback(async () => {
     try {
       if (!wallet.address) {
@@ -299,7 +331,19 @@ function ForeSightTerminalApp() {
       const addr = wallet.address.toLowerCase();
       const cached = getLocalPositions(addr);
       if (cached.length > 0) {
-        setPositions(cached);
+        const enrichedCached = cached.map((p) => {
+          const expired = isPositionExpired(p);
+          const status =
+            p.status === "CLAIMED"
+              ? "CLAIMED"
+              : p.status === "CLOSED"
+              ? "CLOSED"
+              : expired
+              ? "SETTLED"
+              : (p.status || "OPEN");
+          return { ...p, status };
+        });
+        setPositions(enrichedCached);
       }
 
       const url = `/api/positions?wallet=${encodeURIComponent(wallet.address)}`;
@@ -308,24 +352,54 @@ function ForeSightTerminalApp() {
         const data = await res.json();
         const serverList = Array.isArray(data) ? data : data.positions || [];
         
-        // Merge cached and server records (favoring server state for settlement status updates)
-        const map = new Map<string, any>();
-        for (const item of cached) {
-          if (item && item.id) map.set(item.id, item);
-        }
-        for (const item of serverList) {
-          if (item && item.id) map.set(item.id, item);
-        }
-        const merged = Array.from(map.values()).sort(
-          (a, b) => (b.timestamp || 0) - (a.timestamp || 0)
+        // Clean phantom demo orders & test orders
+        const cleaned = serverList.filter(
+          (p: any) =>
+            p &&
+            !p.id?.startsWith("pos-demo-") &&
+            p.orderId !== "ord-btc-demo-live" &&
+            p.orderId !== "ord-eth-settled-1" &&
+            p.orderId !== "ord-somi-settled-2" &&
+            p.txHash !== "0x999f033fbddf512b93eb3b480f4b2f37521377c4eb11b77401eadafabb98e1a7" &&
+            p.status !== "FAILED"
         );
-        setPositions(merged);
-        saveLocalPositions(addr, merged);
+        
+        const enriched = cleaned.map((p: any) => {
+          const expired = isPositionExpired(p);
+          const status =
+            p.status === "CLAIMED"
+              ? "CLAIMED"
+              : p.status === "CLOSED"
+              ? "CLOSED"
+              : p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "RESOLVING"
+              ? p.status
+              : expired
+              ? (p.isWinner === true ? "SETTLED_WIN" : p.isWinner === false ? "SETTLED_LOSS" : "RESOLVING")
+              : (p.status || "OPEN");
+          return { ...p, status };
+        });
+
+        setPositions(enriched);
+        saveLocalPositions(addr, enriched);
       }
     } catch {
       if (wallet.address) {
         const cached = getLocalPositions(wallet.address);
-        if (cached.length > 0) setPositions(cached);
+        if (cached.length > 0) {
+          const enriched = cached.map((p) => {
+            const expired = isPositionExpired(p);
+            const status =
+              p.status === "CLAIMED"
+                ? "CLAIMED"
+                : p.status === "CLOSED"
+                ? "CLOSED"
+                : expired
+                ? "SETTLED"
+                : (p.status || "OPEN");
+            return { ...p, status };
+          });
+          setPositions(enriched);
+        }
       }
     }
   }, [wallet.address]);
@@ -407,8 +481,19 @@ function ForeSightTerminalApp() {
 
     setIsClaiming(true);
     try {
-      // 1. Request on-chain signing in MetaMask for ForeSightBatchSweeper contract
-      const txResult = await wallet.executeOnChainClaim();
+      // 1. Gather settled winning pool addresses
+      const winningPositions = positions.filter(
+        (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)) && p.poolAddress
+      );
+      if (winningPositions.length === 0) {
+        showToast("No winning claimable payouts available. Note: Losing rounds expire with $0 payout.", "info");
+        setIsClaiming(false);
+        return;
+      }
+      const settledPools = winningPositions.map((p) => p.poolAddress as string);
+
+      // Request on-chain signing in MetaMask for ForeSightBatchSweeper contract
+      const txResult = await wallet.executeOnChainClaim(settledPools);
       if (!txResult.success) {
         showToast(txResult.error || "Claim transaction signing cancelled", "error");
         return;
@@ -469,6 +554,25 @@ function ForeSightTerminalApp() {
       }
     } catch (e: any) {
       showToast(e.message || "Failed to exit position", "error");
+    }
+  };
+
+  // Clear / Reset All Test Positions
+  const handleResetPositions = async () => {
+    try {
+      if (wallet.address) {
+        localStorage.removeItem(`foresight_positions_${wallet.address.toLowerCase()}`);
+      }
+      setPositions([]);
+      await fetch(apiUrl("/api/positions/reset"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress: wallet.address }),
+      });
+      showToast("Positions ledger cleared successfully", "info");
+      await fetchPositions();
+    } catch {
+      showToast("Failed to reset positions", "error");
     }
   };
 
@@ -679,6 +783,7 @@ function ForeSightTerminalApp() {
           walletAddress={wallet.address || undefined}
           walletBalance={wallet.balance || undefined}
           onEarlyExit={handleEarlyExit}
+          onResetPositions={handleResetPositions}
         />
       )}
 

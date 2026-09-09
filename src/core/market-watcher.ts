@@ -85,16 +85,16 @@ export class MarketWatcher {
       if (!isBinary) continue;
 
       const expirationTime = rawInfo?.expiry ? Number(rawInfo.expiry) : (rawInfo?.expirationTime ? Number(rawInfo.expirationTime) : undefined);
-      const timeRemainingSec = expirationTime ? Math.max(0, expirationTime - nowSec) : undefined;
-
-      // Exclude expired markets if finished over 1 hour ago
-      if (timeRemainingSec !== undefined && timeRemainingSec <= -3600) {
+      
+      // Exclude expired markets where trading is no longer active
+      if (expirationTime !== undefined && expirationTime <= nowSec) {
         continue;
       }
 
+      const timeRemainingSec = expirationTime ? Math.max(1, expirationTime - nowSec) : undefined;
       const statusStr = String(rawInfo?.status || "Trading");
       const isTradingStatus = statusStr.toLowerCase() === "trading" || rawInfo?.status === 1 || rawInfo?.status === MarketStatus.Trading;
-      const isTradable = isTradingStatus && (!timeRemainingSec || timeRemainingSec > 0);
+      const isTradable = isTradingStatus && Boolean(timeRemainingSec && timeRemainingSec > 0);
 
       // Parse strike price from DreamDEX raw integer representation
       let strikePrice: number | undefined;
@@ -157,6 +157,7 @@ export class MarketWatcher {
       eventContracts.push(contract);
     }
 
+    eventContracts.sort((a, b) => (a.timeRemainingSec || 999999) - (b.timeRemainingSec || 999999));
     return eventContracts;
   }
 

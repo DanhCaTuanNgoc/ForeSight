@@ -1,8 +1,15 @@
 import { encodeFunctionData, parseAbi, type Address } from "viem";
 
 export const FORESIGHT_BATCH_SWEEPER_ADDRESS: Address = "0x0df05851d944bfd01e6bc772e27738c23b6e30f9";
-export const DREAMDEX_SETTLEMENT_ADDRESS: Address = "0x5Ce69567dB39C8fBAd7e048bEfdbcCdfE67B44e6";
+export const DREAMDEX_SETTLEMENT_ADDRESS: Address = "0xbF4a49e0Dfd092e5FBE8E5761064C49533e6Ed23";
 export const SOMNIA_TUSDC_ADDRESS: Address = "0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E";
+
+export const BINARY_SETTLEMENT_ABI = parseAbi([
+  "function redeem(uint256 outcomeId, uint256 amount, address to) returns (uint256 collateralOut)",
+  "function finalizeAndRedeem(address pool, uint256 outcomeId, uint256 amount, address to) returns (uint256 collateralOut)",
+  "function isFinalized(uint256 outcomeId) view returns (bool)",
+  "function getSettlement(uint256 marketKey) view returns ((address collateralToken, uint128 backing, bool finalized, bool voided, uint256 settlementFeeBpsTimes1k, address feeRecipient, address pool, uint64 nonce, uint256[] payoutNumerators))",
+]);
 
 export const BATCH_SWEEPER_ABI = parseAbi([
   "function batchSweep(address settlement, address[] calldata pools) external returns (uint256 successCount, uint256 totalPayout)",

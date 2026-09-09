@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, Clock, ExternalLink, ShieldCheck, Coins, Zap, Wallet, Share2 } from "lucide-react";
+import { CheckCircle2, Clock, ExternalLink, ShieldCheck, Coins, Wallet, Share2 } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { useWallet } from "../context/WalletContext.js";
 
@@ -10,13 +10,15 @@ interface Position {
   amount: number;
   entryPrice: number;
   timestamp: number;
-  status: "OPEN" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED";
+  status: "OPEN" | "RESOLVING" | "SETTLED_WIN" | "SETTLED_LOSS" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | "REFUNDED" | string;
   orderId?: string;
   txHash?: string;
   isLiveOnChain?: boolean;
   exitPrice?: number;
   realizedPnl?: number;
   realizedRoiPercent?: number;
+  winningOutcome?: string;
+  isWinner?: boolean;
 }
 
 interface PositionsTableProps {
@@ -31,7 +33,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
   positions,
   onClaim,
   isClaiming,
-  onEarlyExit,
   onShareAlphaCard,
 }) => {
   const wallet = useWallet();
@@ -94,7 +95,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                 <th className="py-2 px-2.5">Invested</th>
                 <th className="py-2 px-2.5">Max Payout</th>
                 <th className="py-2 px-2.5">Tx Audit</th>
-                <th className="py-2 px-2.5 text-center">Early Exit</th>
                 <th className="py-2 px-2.5 text-center">Alpha Card</th>
                 <th className="py-2 px-2.5 text-right whitespace-nowrap">Status</th>
               </tr>
@@ -136,7 +136,17 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                     <td className="py-2.5 px-2.5 text-gray-200 whitespace-nowrap">{p.amount}</td>
                     <td className="py-2.5 px-2.5 text-gray-200 whitespace-nowrap">${p.entryPrice.toFixed(3)}</td>
                     <td className="py-2.5 px-2.5 text-gray-300 whitespace-nowrap">${totalCost} USDC</td>
-                    <td className="py-2.5 px-2.5 text-emerald-400 font-bold whitespace-nowrap">${maxPayout} USDC</td>
+                    <td className="py-2.5 px-2.5 whitespace-nowrap">
+                      {p.status === "REFUNDED" ? (
+                        <span className="text-blue-300 text-[11px] font-mono font-bold">${totalCost} (Refunded)</span>
+                      ) : p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false) ? (
+                        <span className="text-gray-500 line-through text-[11px]">$0.00 USDC</span>
+                      ) : p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true) ? (
+                        <span className="text-emerald-400 font-bold text-[11px]">${maxPayout} USDC</span>
+                      ) : (
+                        <span className="text-gray-300 text-[11px]">${maxPayout} USDC</span>
+                      )}
+                    </td>
                     <td className="py-2.5 px-2.5 whitespace-nowrap">
                       {explorerLink ? (
                         <a
@@ -154,24 +164,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                       )}
                     </td>
                     <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
-                      {p.status === "OPEN" ? (
-                        <button
-                          onClick={() => onEarlyExit && onEarlyExit(p.id, p.outcome === "YES" ? Math.min(0.95, p.entryPrice + 0.15) : Math.max(0.05, p.entryPrice - 0.15))}
-                          className="px-2 py-0.5 rounded-none bg-[#12121C] hover:bg-[#161622] text-amber-300 border border-amber-500/30 hover:border-amber-400 font-bold text-[9px] inline-flex items-center gap-1 transition-colors cursor-pointer whitespace-nowrap"
-                          title="Sell contracts back to CLOB immediately"
-                        >
-                          <Zap className="w-2.5 h-2.5 text-amber-400" />
-                          <span>EXIT</span>
-                        </button>
-                      ) : p.status === "CLOSED" ? (
-                        <span className="text-[9px] text-amber-300 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">
-                          Closed {p.realizedRoiPercent !== undefined ? `(${p.realizedRoiPercent > 0 ? "+" : ""}${p.realizedRoiPercent}%)` : ""}
-                        </span>
-                      ) : (
-                        <span className="text-gray-600 text-[10px]">—</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
                       <button
                         onClick={() => onShareAlphaCard && onShareAlphaCard(p)}
                         className="px-2 py-0.5 rounded-none bg-[#12121C] hover:bg-violet-950/90 text-violet-300 hover:text-violet-100 border border-violet-500/30 hover:border-violet-400 font-bold text-[9px] inline-flex items-center gap-1 transition-colors cursor-pointer whitespace-nowrap shadow-sm"
@@ -186,6 +178,14 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                         <span className="inline-flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> In Flight
                         </span>
+                      ) : p.status === "REFUNDED" ? (
+                        <span className="inline-flex items-center gap-1 text-[9px] text-blue-400 bg-blue-950/70 border border-blue-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap" title="Unfilled limit order: 100% collateral was automatically refunded back to your wallet.">
+                          Refunded (Unfilled)
+                        </span>
+                      ) : p.status === "RESOLVING" ? (
+                        <span className="inline-flex items-center gap-1 text-[9px] text-amber-400 bg-amber-950/70 border border-amber-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap" title="Round expired. Awaiting Oracle keeper finalization on DreamDEX.">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" /> Resolving
+                        </span>
                       ) : p.status === "CLAIMED" ? (
                         <span className="inline-flex items-center gap-1 text-[9px] text-gray-400 bg-[#12121C] px-1.5 py-0.2 rounded-none border border-white/[0.06] font-bold whitespace-nowrap">
                           Claimed
@@ -193,6 +193,10 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                       ) : p.status === "CLOSED" ? (
                         <span className="inline-flex items-center gap-1 text-[9px] text-amber-400 bg-amber-950/70 border border-amber-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">
                           Closed
+                        </span>
+                      ) : p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false) ? (
+                        <span className="inline-flex items-center gap-1 text-[9px] text-rose-400 bg-rose-950/70 border border-rose-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap" title="Round finalized. Result did not match your predicted outcome.">
+                          Expired (Loss)
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[9px] text-cyan-400 bg-cyan-950/70 border border-cyan-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">

@@ -2,12 +2,14 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import chalk from "chalk";
+import { createPublicClient, http, parseAbi } from "viem";
+import { marketKey, outcomeId } from "@somnia-chain/markets-sdk";
 import { createExchangeContext, shutdownExchange, type ExchangeContext } from "../core/exchange.js";
 import { MarketWatcher } from "../core/market-watcher.js";
 import { OrderEngine } from "../core/order-engine.js";
 import { SettlementSweeper } from "../core/settlement-sweeper.js";
 import { AICopilotStrategy } from "../agents/strategies/ai-copilot.js";
-import { isSupabaseConfigured } from "../db/supabase.js";
+import { isSupabaseConfigured, getSupabase } from "../db/supabase.js";
 import { MarketSnapshotWorker } from "../workers/market-snapshot-worker.js";
 import { NewsIngestionWorker } from "../workers/news-ingestion-worker.js";
 import {
@@ -58,6 +60,10 @@ let snapshotWorker: MarketSnapshotWorker;
 let newsWorker: NewsIngestionWorker;
 const copilotStrategy = new AICopilotStrategy();
 
+const somniaPublicClient = createPublicClient({
+  transport: http(process.env.SOMNIA_RPC_URL || "https://api.infra.testnet.somnia.network"),
+});
+
 // Disk persistence path for positions ledger
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const POSITIONS_FILE = path.join(DATA_DIR, "positions.json");
@@ -71,8 +77,11 @@ function loadPersistedPositions(): any[] {
       const content = fs.readFileSync(POSITIONS_FILE, "utf-8");
       const parsed = JSON.parse(content);
       if (Array.isArray(parsed)) {
-        console.log(chalk.cyan(`[Storage] Loaded ${parsed.length} persisted positions from ${POSITIONS_FILE}`));
-        return parsed;
+        const cleaned = parsed.filter(
+          (p) => p && p.txHash !== "0x999f033fbddf512b93eb3b480f4b2f37521377c4eb11b77401eadafabb98e1a7" && (p as any).status !== "FAILED"
+        );
+        console.log(chalk.cyan(`[Storage] Loaded ${cleaned.length} persisted positions from ${POSITIONS_FILE}`));
+        return cleaned;
       }
     }
   } catch (err) {
@@ -109,7 +118,8 @@ const recordedPositions: Array<{
   amount: number;
   entryPrice: number;
   timestamp: number;
-  status: "OPEN" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED";
+  status: "OPEN" | "RESOLVING" | "SETTLED_WIN" | "SETTLED_LOSS" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | string;
+  poolAddress?: string;
   walletAddress?: string;
   orderId?: string;
   txHash?: string;
@@ -117,6 +127,8 @@ const recordedPositions: Array<{
   exitPrice?: number;
   realizedPnl?: number;
   realizedRoiPercent?: number;
+  winningOutcome?: string;
+  isWinner?: boolean;
   closedAt?: number;
   closeTxHash?: string;
 }> = loadPersistedPositions();
@@ -779,6 +791,132 @@ async function getSpikesData(params: { asset?: string; symbol?: string; limit?: 
   return result;
 }
 
+export function parseExpiryFromSymbol(sym: string, createdAtMs?: number): number | null {
+  if (!sym) return null;
+  const m1 = sym.match(/(\d{2})([A-Z]{3})(\d{2})-(\d{2})(\d{2})/);
+  if (m1) {
+    const [_, day, mon, yr, hr, min] = m1;
+    const months: Record<string, number> = {
+      JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
+      JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11,
+    };
+    const month = months[mon];
+    if (month !== undefined) {
+      const year = 2000 + parseInt(yr, 10);
+      return Math.floor(Date.UTC(year, month, parseInt(day, 10), parseInt(hr, 10), parseInt(min, 10)) / 1000);
+    }
+  }
+  const m2 = sym.match(/(\d{2})([A-Z]{3})(\d{2})/);
+  if (m2) {
+    const [_, day, mon, yr] = m2;
+    const months: Record<string, number> = {
+      JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
+      JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11,
+    };
+    const month = months[mon];
+    if (month !== undefined) {
+      const year = 2000 + parseInt(yr, 10);
+      return Math.floor(Date.UTC(year, month, parseInt(day, 10), 23, 59, 59) / 1000);
+    }
+  }
+  if (sym.includes("-15M-") && createdAtMs) return Math.floor(createdAtMs / 1000) + 900;
+  if (sym.includes("-1H-") && createdAtMs) return Math.floor(createdAtMs / 1000) + 3600;
+  return null;
+}
+
+export function isPositionExpired(pos: any, nowSec = Math.floor(Date.now() / 1000)): boolean {
+  if (!pos) return false;
+  if (pos.status === "SETTLED" || pos.status === "RESOLVED" || pos.status === "CLAIMED" || pos.status === "CLOSED") {
+    return true;
+  }
+  if (pos.expirationTime && pos.expirationTime > 0) {
+    return nowSec >= pos.expirationTime;
+  }
+  const parsed = parseExpiryFromSymbol(pos.symbol, pos.timestamp);
+  if (parsed && parsed > 0) {
+    return nowSec >= parsed;
+  }
+  if (pos.timestamp && nowSec - Math.floor(pos.timestamp / 1000) > 900) {
+    return true;
+  }
+  return false;
+}
+
+const resolutionCache = new Map<string, { status: string; winningOutcome?: string; isWinner?: boolean; realizedPnl?: number; realizedRoiPercent?: number }>();
+
+export async function resolvePositionOnChain(poolAddress?: string, outcome?: string, amount = 0, entryPrice = 0.5) {
+  if (!poolAddress || !outcome) return { status: "RESOLVING", isWinner: false };
+  const cacheKey = `${poolAddress.toLowerCase()}_${outcome}`;
+  if (resolutionCache.has(cacheKey)) {
+    return resolutionCache.get(cacheKey)!;
+  }
+
+  try {
+    const settlement = "0xbF4a49e0Dfd092e5FBE8E5761064C49533e6Ed23";
+    const rpcClient = createPublicClient({
+      transport: http(process.env.RPC_URL || "https://dream-rpc.somnia.network"),
+    });
+
+    const poolAbi = parseAbi([
+      "function marketNonce() view returns (uint64)",
+      "function finalized() view returns (bool)",
+    ]);
+    const settlementAbi = parseAbi([
+      "function getSettlement(uint256 marketKey) view returns ((address collateralToken, uint128 backing, bool finalized, bool voided, uint256 settlementFeeBpsTimes1k, address feeRecipient, address pool, uint64 nonce, uint256[] payoutNumerators))",
+    ]);
+
+    const [nonce, fin] = await Promise.all([
+      rpcClient.readContract({ address: poolAddress as any, abi: poolAbi, functionName: "marketNonce" }).catch(() => 0n),
+      rpcClient.readContract({ address: poolAddress as any, abi: poolAbi, functionName: "finalized" }).catch(() => false),
+    ]);
+
+    if (!fin) {
+      return { status: "RESOLVING", isWinner: false };
+    }
+
+    // Check settlement for previous round (nonce - 1) or current nonce
+    const targetNonce = nonce > 1n ? nonce - 1n : nonce;
+    let s: any = null;
+    for (const n of [targetNonce, nonce]) {
+      const mKey = marketKey(outcomeId(poolAddress, n, 0));
+      const rec = await rpcClient.readContract({
+        address: settlement as any,
+        abi: settlementAbi,
+        functionName: "getSettlement",
+        args: [mKey],
+      }).catch(() => null);
+      if (rec && rec.finalized) {
+        s = rec;
+        break;
+      }
+    }
+
+    if (!s || !s.finalized) {
+      return { status: "RESOLVING", isWinner: false };
+    }
+
+    const yesPay = BigInt(s.payoutNumerators?.[0] || 0);
+    const noPay = BigInt(s.payoutNumerators?.[1] || 0);
+    const winningOutcome = yesPay > noPay ? "YES" : noPay > yesPay ? "NO" : "TIE";
+    const isWinner = outcome === winningOutcome;
+    const totalCost = amount * entryPrice;
+    const realizedPnl = isWinner ? Number((amount - totalCost).toFixed(2)) : -Number(totalCost.toFixed(2));
+    const realizedRoiPercent = isWinner && totalCost > 0 ? Number(((amount - totalCost) / totalCost * 100).toFixed(1)) : -100;
+
+    const res = {
+      status: isWinner ? "SETTLED_WIN" : "SETTLED_LOSS",
+      winningOutcome,
+      isWinner,
+      realizedPnl,
+      realizedRoiPercent,
+    };
+    resolutionCache.set(cacheKey, res);
+    return res;
+  } catch (err) {
+    return { status: "RESOLVING", isWinner: false };
+  }
+}
+
 /**
  * GET /api/positions
  * Return on-chain and ledger positions for the connected wallet (or empty if wallet not connected).
@@ -795,6 +933,36 @@ app.get("/api/positions", async (req, res) => {
     }
 
     const q = wallet.trim().toLowerCase();
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    // Automatically transition expired market rounds and verify on-chain resolution
+    let stateChanged = false;
+    for (const p of recordedPositions) {
+      if (isPositionExpired(p, nowSec)) {
+        if (p.status === "OPEN" || p.status === "SETTLED" || p.status === "RESOLVING") {
+          const res = await resolvePositionOnChain((p as any).poolAddress, p.outcome, p.amount, p.entryPrice);
+          if (p.status !== res.status) {
+            p.status = res.status as any;
+            (p as any).winningOutcome = res.winningOutcome;
+            (p as any).isWinner = res.isWinner;
+            p.realizedPnl = res.realizedPnl;
+            p.realizedRoiPercent = res.realizedRoiPercent;
+            stateChanged = true;
+            if (isSupabaseConfigured()) {
+              updatePositionInDb(p.id, {
+                status: res.status,
+                realized_pnl: res.realizedPnl,
+                realized_roi_percent: res.realizedRoiPercent,
+              }).catch(() => {});
+            }
+          }
+        }
+      }
+    }
+    if (stateChanged) {
+      savePersistedPositions(recordedPositions);
+    }
+
     const memoryList = recordedPositions.filter(
       (p) => p.walletAddress && p.walletAddress.toLowerCase() === q
     );
@@ -812,7 +980,12 @@ app.get("/api/positions", async (req, res) => {
     // Merge in-memory and database records (priority to latest in-memory updates)
     const mergedMap = new Map<string, any>();
     for (const item of dbList) {
-      if (item && item.id) mergedMap.set(item.id, item);
+      if (item && item.id) {
+        if (item.status === "OPEN" && isPositionExpired(item, nowSec)) {
+          item.status = "SETTLED";
+        }
+        mergedMap.set(item.id, item);
+      }
     }
     for (const item of memoryList) {
       if (item && item.id) mergedMap.set(item.id, item);
@@ -833,12 +1006,41 @@ app.get("/api/positions", async (req, res) => {
 
 /**
  * POST /api/positions/reset
- * Clean and reset positions ledger memory.
+ * Clean and reset positions ledger memory and Supabase database.
  */
-app.post("/api/positions/reset", (req, res) => {
-  recordedPositions.length = 0;
-  savePersistedPositions(recordedPositions);
-  res.json({ success: true, message: "Positions ledger cleared successfully." });
+app.post("/api/positions/reset", async (req, res) => {
+  try {
+    const { walletAddress } = req.body || {};
+    if (walletAddress) {
+      const q = walletAddress.toLowerCase();
+      const remaining = recordedPositions.filter(
+        (p) => !p.walletAddress || p.walletAddress.toLowerCase() !== q
+      );
+      recordedPositions.length = 0;
+      recordedPositions.push(...remaining);
+      savePersistedPositions(recordedPositions);
+
+      if (isSupabaseConfigured()) {
+        try {
+          const sb = getSupabase();
+          await (sb as any).from("user_positions").delete().eq("wallet_address", q);
+        } catch {}
+      }
+    } else {
+      recordedPositions.length = 0;
+      savePersistedPositions(recordedPositions);
+
+      if (isSupabaseConfigured()) {
+        try {
+          const sb = getSupabase();
+          await (sb as any).from("user_positions").delete().neq("id", "none");
+        } catch {}
+      }
+    }
+    res.json({ success: true, message: "Positions ledger cleared successfully." });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || String(err) });
+  }
 });
 
 /**
@@ -847,7 +1049,7 @@ app.post("/api/positions/reset", (req, res) => {
  */
 app.post("/api/orders", async (req, res) => {
   try {
-    const { symbol, outcome, amount, price, poolAddress, walletAddress, signerType, txHash: clientTxHash } = req.body;
+    const { symbol, outcome, amount, price, poolAddress, walletAddress, signerType, txHash: clientTxHash, expirationTime } = req.body;
 
     if (!walletAddress || typeof walletAddress !== "string") {
       return res.status(401).json({
@@ -867,6 +1069,31 @@ app.post("/api/orders", async (req, res) => {
     let txHash: string | undefined = clientTxHash;
     let orderId = `ord-${symbol.slice(0, 4).toLowerCase()}-${now.toString(36)}`;
     let isLiveOnChain = Boolean(clientTxHash);
+
+    // Verify client on-chain transaction receipt if clientTxHash is provided
+    if (clientTxHash) {
+      if (clientTxHash.toLowerCase() === "0x999f033fbddf512b93eb3b480f4b2f37521377c4eb11b77401eadafabb98e1a7") {
+        return res.status(400).json({
+          success: false,
+          error: "Transaction was previously reverted on-chain with TradingNotActive(). Order not placed.",
+        });
+      }
+
+      try {
+        const receipt = await somniaPublicClient.getTransactionReceipt({
+          hash: clientTxHash as `0x${string}`,
+        });
+        if (receipt && receipt.status === "reverted") {
+          return res.status(400).json({
+            success: false,
+            error: "On-chain transaction reverted (TradingNotActive or round expired). Order not placed.",
+            txHash: clientTxHash,
+          });
+        }
+      } catch (receiptErr: any) {
+        console.warn("[Orders] Transaction receipt check notice:", receiptErr?.message || receiptErr);
+      }
+    }
 
     // Attempt real on-chain execution if PRIVATE_KEY is configured on server and client did not sign
     if (!txHash && orderEngine && ctx?.canTrade) {
@@ -896,6 +1123,9 @@ app.post("/api/orders", async (req, res) => {
       isLiveOnChain = Boolean(walletAddress);
     }
 
+    const expirySec = Number(expirationTime) || parseExpiryFromSymbol(symbol, now) || (Math.floor(now / 1000) + 900);
+    const isExpiredNow = isPositionExpired({ symbol, timestamp: now, expirationTime: expirySec });
+
     const newPosition = {
       id: `pos-${now}-${Math.random().toString(36).slice(2, 6)}`,
       symbol,
@@ -904,7 +1134,8 @@ app.post("/api/orders", async (req, res) => {
       amount: safeAmount,
       entryPrice: safePrice,
       timestamp: now,
-      status: "OPEN" as const,
+      expirationTime: expirySec,
+      status: isExpiredNow ? ("SETTLED" as const) : ("OPEN" as const),
       walletAddress: walletAddress || undefined,
       orderId,
       txHash,
@@ -937,8 +1168,9 @@ app.post("/api/claim", async (req, res) => {
     let claimCount = 0;
     const targetWallet = walletAddress ? walletAddress.toLowerCase() : undefined;
 
+    const nowSec = Math.floor(Date.now() / 1000);
     for (const pos of recordedPositions) {
-      if (pos.status === "SETTLED" || (pos as any).status === "RESOLVED") {
+      if (pos.status === "SETTLED_WIN" || (pos.status === "SETTLED" && (pos as any).isWinner === true)) {
         if (!targetWallet || (pos.walletAddress && pos.walletAddress.toLowerCase() === targetWallet)) {
           (pos as any).status = "CLAIMED";
           claimCount++;
@@ -949,7 +1181,7 @@ app.post("/api/claim", async (req, res) => {
     if (claimCount === 0) {
       return res.status(400).json({
         success: false,
-        error: "No claimable settled payouts available yet. Active contracts are still In Flight.",
+        error: "No claimable winning payouts found for this wallet. Note: Contracts that expired with a loss pay $0.00 collateral.",
       });
     }
 
