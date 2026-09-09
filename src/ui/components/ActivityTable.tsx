@@ -1,5 +1,5 @@
 import React from "react";
-import { Coins, Activity } from "lucide-react";
+import { Coins, Activity, CheckCircle2, Clock, RotateCcw, XCircle, CheckCheck } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 
 export interface PositionRecord {
@@ -9,7 +9,7 @@ export interface PositionRecord {
   amount: number;
   entryPrice: number;
   timestamp: number;
-  status: "OPEN" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | string;
+  status: "OPEN" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | "REFUNDED" | "RESTING" | "PENDING" | "SETTLED_WIN" | "SETTLED_LOSS" | "RESOLVING" | string;
   orderId?: string;
   txHash?: string;
   isLiveOnChain?: boolean;
@@ -17,6 +17,7 @@ export interface PositionRecord {
   exitPrice?: number;
   realizedPnl?: number;
   realizedRoiPercent?: number;
+  isWinner?: boolean;
 }
 
 interface ActivityTableProps {
@@ -91,18 +92,46 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
                 ${pos.entryPrice ? pos.entryPrice.toFixed(3) : "0.500"}
               </span>
               <span
-                className={`text-right text-[9px] font-bold whitespace-nowrap flex items-center justify-end gap-1 ${
-                  pos.status === "OPEN" ? "text-emerald-400" : "text-gray-500"
-                }`}
+                className="text-right text-[9px] font-bold whitespace-nowrap flex items-center justify-end gap-1"
                 title={pos.orderId ? `Order: ${pos.orderId}` : undefined}
               >
                 {pos.status === "OPEN" ? (
                   <>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                    <span>IN FLIGHT</span>
+                    <span className="text-emerald-400">IN FLIGHT</span>
+                  </>
+                ) : pos.status === "RESTING" || pos.status === "PENDING" ? (
+                  <>
+                    <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span className="text-amber-400">RESTING</span>
+                  </>
+                ) : pos.status === "RESOLVING" ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" />
+                    <span className="text-amber-400">RESOLVING</span>
+                  </>
+                ) : pos.status === "REFUNDED" ? (
+                  <>
+                    <RotateCcw className="w-3 h-3 text-blue-400 shrink-0" />
+                    <span className="text-blue-400">REFUNDED</span>
+                  </>
+                ) : pos.status === "CLAIMED" ? (
+                  <>
+                    <CheckCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                    <span className="text-gray-400">CLAIMED</span>
+                  </>
+                ) : pos.status === "SETTLED_LOSS" || (pos.status === "SETTLED" && pos.isWinner === false) ? (
+                  <>
+                    <XCircle className="w-3 h-3 text-rose-400 shrink-0" />
+                    <span className="text-rose-400">LOSS</span>
+                  </>
+                ) : pos.status === "SETTLED_WIN" || (pos.status === "SETTLED" && pos.isWinner === true) ? (
+                  <>
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                    <span className="text-emerald-400">WIN</span>
                   </>
                 ) : (
-                  pos.status
+                  <span className="text-gray-400">{pos.status}</span>
                 )}
               </span>
             </div>

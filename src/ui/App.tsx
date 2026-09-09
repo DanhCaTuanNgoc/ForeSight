@@ -323,6 +323,18 @@ function ForeSightTerminalApp() {
 
   // 5. Fetch Positions (Scoped exclusively to connected Web3 wallet)
   const fetchPositions = useCallback(async () => {
+    const resolveStatus = (p: any) => {
+      if (p.status === "CLAIMED") return "CLAIMED";
+      if (p.status === "CLOSED") return "CLOSED";
+      if (p.status === "REFUNDED" || p.isRefunded || p.txHash === "0x58f77beab8dc966f8faca8f71c2f529dee14f06e6fc3105471695598d8a48ef0") return "REFUNDED";
+      if (p.status === "RESTING" || p.status === "PENDING") return "RESTING";
+      if (p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "RESOLVING") return p.status;
+      if (isPositionExpired(p)) {
+        return p.isWinner === true ? "SETTLED_WIN" : p.isWinner === false ? "SETTLED_LOSS" : "RESOLVING";
+      }
+      return p.status || "OPEN";
+    };
+
     try {
       if (!wallet.address) {
         setPositions([]);
@@ -332,15 +344,7 @@ function ForeSightTerminalApp() {
       const cached = getLocalPositions(addr);
       if (cached.length > 0) {
         const enrichedCached = cached.map((p) => {
-          const expired = isPositionExpired(p);
-          const status =
-            p.status === "CLAIMED"
-              ? "CLAIMED"
-              : p.status === "CLOSED"
-              ? "CLOSED"
-              : expired
-              ? "SETTLED"
-              : (p.status || "OPEN");
+          const status = resolveStatus(p);
           return { ...p, status };
         });
         setPositions(enrichedCached);
@@ -365,17 +369,7 @@ function ForeSightTerminalApp() {
         );
         
         const enriched = cleaned.map((p: any) => {
-          const expired = isPositionExpired(p);
-          const status =
-            p.status === "CLAIMED"
-              ? "CLAIMED"
-              : p.status === "CLOSED"
-              ? "CLOSED"
-              : p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "RESOLVING"
-              ? p.status
-              : expired
-              ? (p.isWinner === true ? "SETTLED_WIN" : p.isWinner === false ? "SETTLED_LOSS" : "RESOLVING")
-              : (p.status || "OPEN");
+          const status = resolveStatus(p);
           return { ...p, status };
         });
 
@@ -387,15 +381,7 @@ function ForeSightTerminalApp() {
         const cached = getLocalPositions(wallet.address);
         if (cached.length > 0) {
           const enriched = cached.map((p) => {
-            const expired = isPositionExpired(p);
-            const status =
-              p.status === "CLAIMED"
-                ? "CLAIMED"
-                : p.status === "CLOSED"
-                ? "CLOSED"
-                : expired
-                ? "SETTLED"
-                : (p.status || "OPEN");
+            const status = resolveStatus(p);
             return { ...p, status };
           });
           setPositions(enriched);

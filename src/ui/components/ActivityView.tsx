@@ -67,7 +67,13 @@ export function parseExpiryFromSymbol(sym?: string, createdAtMs?: number): numbe
 
 export function isPositionExpired(pos: any, nowSec = Math.floor(Date.now() / 1000)): boolean {
   if (!pos) return false;
-  if (pos.status === "SETTLED" || pos.status === "RESOLVED" || pos.status === "CLAIMED" || pos.status === "CLOSED") {
+  if (
+    pos.status === "SETTLED" ||
+    pos.status === "RESOLVED" ||
+    pos.status === "CLAIMED" ||
+    pos.status === "CLOSED" ||
+    pos.status === "REFUNDED"
+  ) {
     return true;
   }
   if (pos.expirationTime && pos.expirationTime > 0) {
@@ -109,7 +115,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       )
     : [];
 
-  // Dynamic settlement evaluation: Distinguish OPEN, RESOLVING, SETTLED_WIN, and SETTLED_LOSS
+  // Dynamic settlement evaluation: Distinguish OPEN, RESTING, RESOLVING, SETTLED_WIN, SETTLED_LOSS, and REFUNDED
   const nowSec = Math.floor(Date.now() / 1000);
   const enrichedPositions = userPositions.map((p) => {
     const expired = isPositionExpired(p, nowSec);
@@ -118,6 +124,10 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       effectiveStatus = "CLAIMED";
     } else if (p.status === "CLOSED") {
       effectiveStatus = "CLOSED";
+    } else if (p.status === "REFUNDED") {
+      effectiveStatus = "REFUNDED";
+    } else if (p.status === "RESTING" || p.status === "PENDING") {
+      effectiveStatus = "RESTING";
     } else if (p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "RESOLVING") {
       effectiveStatus = p.status;
     } else if (expired) {
@@ -135,10 +145,18 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
     };
   });
 
-  const openPositions = enrichedPositions.filter((p) => p.status === "OPEN");
+  const openPositions = enrichedPositions.filter((p) => p.status === "OPEN" || p.status === "RESTING");
   const claimablePositions = enrichedPositions.filter((p) => p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true));
   const settledPositions = enrichedPositions.filter(
-    (p) => p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "CLAIMED" || p.status === "RESOLVING" || p.status === "SETTLED" || p.status === "RESOLVED"
+    (p) =>
+      p.status === "SETTLED_WIN" ||
+      p.status === "SETTLED_LOSS" ||
+      p.status === "CLAIMED" ||
+      p.status === "RESOLVING" ||
+      p.status === "SETTLED" ||
+      p.status === "RESOLVED" ||
+      p.status === "REFUNDED" ||
+      p.status === "CLOSED"
   );
 
   const totalInvested = enrichedPositions.reduce(
@@ -359,7 +377,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       {/* ─── 4. RECENT ON-CHAIN EXECUTION LEDGER ───────────────────────────── */}
       <div className="w-full">
         <ActivityTable
-          positions={userPositions.map((p) => ({
+          positions={enrichedPositions.map((p) => ({
             id: p.id,
             symbol: p.symbol,
             outcome: p.outcome,
@@ -370,6 +388,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
             orderId: p.orderId,
             txHash: p.txHash,
             isLiveOnChain: p.isLiveOnChain,
+            isWinner: p.isWinner,
           }))}
         />
       </div>

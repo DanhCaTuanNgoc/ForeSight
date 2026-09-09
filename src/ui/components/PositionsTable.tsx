@@ -1,5 +1,16 @@
 import React from "react";
-import { CheckCircle2, Clock, ExternalLink, ShieldCheck, Coins, Wallet, Share2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  ShieldCheck,
+  Coins,
+  Wallet,
+  Share2,
+  RotateCcw,
+  XCircle,
+  CheckCheck,
+} from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { useWallet } from "../context/WalletContext.js";
 
@@ -10,7 +21,7 @@ interface Position {
   amount: number;
   entryPrice: number;
   timestamp: number;
-  status: "OPEN" | "RESOLVING" | "SETTLED_WIN" | "SETTLED_LOSS" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | "REFUNDED" | string;
+  status: "OPEN" | "RESOLVING" | "SETTLED_WIN" | "SETTLED_LOSS" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | "REFUNDED" | "RESTING" | "PENDING" | string;
   orderId?: string;
   txHash?: string;
   isLiveOnChain?: boolean;
@@ -93,7 +104,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                 <th className="py-2 px-2.5">Shares</th>
                 <th className="py-2 px-2.5">Entry Price</th>
                 <th className="py-2 px-2.5">Invested</th>
-                <th className="py-2 px-2.5">Max Payout</th>
+                <th className="py-2 px-2.5">Payout / PnL</th>
                 <th className="py-2 px-2.5">Tx Audit</th>
                 <th className="py-2 px-2.5 text-center">Alpha Card</th>
                 <th className="py-2 px-2.5 text-right whitespace-nowrap">Status</th>
@@ -102,8 +113,14 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
             <tbody className="divide-y divide-white/[0.04]">
               {positions.map((p) => {
                 const isYes = p.outcome === "YES";
-                const totalCost = (p.amount * p.entryPrice).toFixed(2);
-                const maxPayout = p.amount.toFixed(2);
+                const costNum = p.amount * p.entryPrice;
+                const totalCost = costNum.toFixed(2);
+                const maxPayoutNum = p.amount;
+                const maxPayout = maxPayoutNum.toFixed(2);
+                const profitNum = maxPayoutNum - costNum;
+                const profit = profitNum.toFixed(2);
+                const roiPercent = p.entryPrice > 0 ? (((1 - p.entryPrice) / p.entryPrice) * 100).toFixed(1) : "0.0";
+
                 const explorerLink = p.txHash
                   ? `https://shannon-explorer.somnia.network/tx/${p.txHash}`
                   : null;
@@ -138,13 +155,30 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                     <td className="py-2.5 px-2.5 text-gray-300 whitespace-nowrap">${totalCost} USDC</td>
                     <td className="py-2.5 px-2.5 whitespace-nowrap">
                       {p.status === "REFUNDED" ? (
-                        <span className="text-blue-300 text-[11px] font-mono font-bold">${totalCost} (Refunded)</span>
+                        <div>
+                          <div className="text-blue-300 font-bold text-[11px] font-mono">${totalCost} USDC</div>
+                          <div className="text-blue-400/80 text-[10px] font-mono">100% Refunded ($0 PnL)</div>
+                        </div>
                       ) : p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false) ? (
-                        <span className="text-gray-500 line-through text-[11px]">$0.00 USDC</span>
+                        <div>
+                          <div className="text-gray-500 line-through text-[11px] font-mono">$0.00 USDC</div>
+                          <div className="text-rose-400 text-[10px] font-mono font-medium">-${totalCost} (-100%)</div>
+                        </div>
                       ) : p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true) ? (
-                        <span className="text-emerald-400 font-bold text-[11px]">${maxPayout} USDC</span>
+                        <div>
+                          <div className="text-emerald-400 font-bold text-[11px] font-mono">${maxPayout} USDC</div>
+                          <div className="text-emerald-400/85 text-[10px] font-mono font-semibold">+${profit} (+{roiPercent}%)</div>
+                        </div>
+                      ) : p.status === "CLAIMED" ? (
+                        <div>
+                          <div className="text-gray-300 font-bold text-[11px] font-mono">${maxPayout} USDC</div>
+                          <div className="text-emerald-400 text-[10px] font-mono">Claimed to wallet (+{roiPercent}%)</div>
+                        </div>
                       ) : (
-                        <span className="text-gray-300 text-[11px]">${maxPayout} USDC</span>
+                        <div>
+                          <div className="text-gray-200 text-[11px] font-mono">${maxPayout} USDC</div>
+                          <div className="text-gray-400 text-[10px] font-mono">Max: +${profit} (+{roiPercent}%)</div>
+                        </div>
                       )}
                     </td>
                     <td className="py-2.5 px-2.5 whitespace-nowrap">
@@ -174,33 +208,45 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                       </button>
                     </td>
                     <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
-                      {p.status === "OPEN" ? (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> In Flight
+                      {p.status === "RESTING" || p.status === "PENDING" ? (
+                        <span className="inline-flex items-center gap-1 text-[9px] text-amber-300 bg-amber-950/70 border border-amber-500/40 px-2 py-0.5 rounded-none font-bold whitespace-nowrap">
+                          <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                          <span>RESTING</span>
+                        </span>
+                      ) : p.status === "OPEN" ? (
+                        <span className="inline-flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 rounded-none font-bold whitespace-nowrap shadow-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                          <span>IN FLIGHT</span>
                         </span>
                       ) : p.status === "REFUNDED" ? (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-blue-400 bg-blue-950/70 border border-blue-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap" title="Unfilled limit order: 100% collateral was automatically refunded back to your wallet.">
-                          Refunded (Unfilled)
+                        <span className="inline-flex items-center gap-1 text-[9px] text-blue-300 bg-blue-950/70 border border-blue-500/40 px-2 py-0.5 rounded-none font-bold whitespace-nowrap">
+                          <RotateCcw className="w-3 h-3 text-blue-400 shrink-0" />
+                          <span>REFUNDED</span>
                         </span>
                       ) : p.status === "RESOLVING" ? (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-amber-400 bg-amber-950/70 border border-amber-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap" title="Round expired. Awaiting Oracle keeper finalization on DreamDEX.">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" /> Resolving
+                        <span className="inline-flex items-center gap-1 text-[9px] text-amber-300 bg-amber-950/70 border border-amber-500/40 px-2 py-0.5 rounded-none font-bold whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" />
+                          <span>RESOLVING</span>
                         </span>
                       ) : p.status === "CLAIMED" ? (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-gray-400 bg-[#12121C] px-1.5 py-0.2 rounded-none border border-white/[0.06] font-bold whitespace-nowrap">
-                          Claimed
+                        <span className="inline-flex items-center gap-1 text-[9px] text-gray-300 bg-[#12121C] px-2 py-0.5 rounded-none border border-white/[0.1] font-bold whitespace-nowrap">
+                          <CheckCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                          <span>CLAIMED</span>
                         </span>
                       ) : p.status === "CLOSED" ? (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-amber-400 bg-amber-950/70 border border-amber-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">
-                          Closed
+                        <span className="inline-flex items-center gap-1 text-[9px] text-amber-400 bg-amber-950/70 border border-amber-500/30 px-2 py-0.5 rounded-none font-bold whitespace-nowrap">
+                          <span>CLOSED</span>
                         </span>
                       ) : p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false) ? (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-rose-400 bg-rose-950/70 border border-rose-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap" title="Round finalized. Result did not match your predicted outcome.">
-                          Expired (Loss)
+                        <span className="inline-flex items-center gap-1 text-[9px] text-rose-300 bg-rose-950/70 border border-rose-500/40 px-2 py-0.5 rounded-none font-bold whitespace-nowrap">
+                          <XCircle className="w-3 h-3 text-rose-400 shrink-0" />
+                          <span>EXPIRED LOSS</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-cyan-400 bg-cyan-950/70 border border-cyan-500/30 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">
-                          <CheckCircle2 className="w-3 h-3" /> Settled Win
+                        <span className="inline-flex items-center gap-1 text-[9px] text-emerald-300 bg-emerald-950/80 border border-emerald-500/50 px-2 py-0.5 rounded-none font-bold whitespace-nowrap shadow-sm">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                          <span>SETTLED WIN</span>
+                          <span className="text-[8px] text-emerald-200/90 font-normal ml-0.5">(+{roiPercent}%)</span>
                         </span>
                       )}
                     </td>

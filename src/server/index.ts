@@ -826,7 +826,13 @@ export function parseExpiryFromSymbol(sym: string, createdAtMs?: number): number
 
 export function isPositionExpired(pos: any, nowSec = Math.floor(Date.now() / 1000)): boolean {
   if (!pos) return false;
-  if (pos.status === "SETTLED" || pos.status === "RESOLVED" || pos.status === "CLAIMED" || pos.status === "CLOSED") {
+  if (
+    pos.status === "SETTLED" ||
+    pos.status === "RESOLVED" ||
+    pos.status === "CLAIMED" ||
+    pos.status === "CLOSED" ||
+    pos.status === "REFUNDED"
+  ) {
     return true;
   }
   if (pos.expirationTime && pos.expirationTime > 0) {

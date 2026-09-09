@@ -13,8 +13,7 @@
     "orderId": "ord-btc--mtuct0kl",
     "txHash": "0x58f77beab8dc966f8faca8f71c2f529dee14f06e6fc3105471695598d8a48ef0",
     "isLiveOnChain": true,
-    "winningOutcome": "YES",
-    "isWinner": false,
+    "isRefunded": true,
     "realizedPnl": 0,
     "realizedRoiPercent": 0,
     "note": "Unfilled resting limit order — 100% collateral refunded back to wallet"
