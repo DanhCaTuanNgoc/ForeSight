@@ -83,6 +83,26 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode, on
           </span>
         </div>
 
+        {/* Strike Target Price */}
+        <div className="flex flex-col pl-3 xl:pl-4">
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
+            Strike Target
+          </span>
+          <span className="text-xs font-mono font-bold text-cyan-300">
+            {market.strikePrice && market.strikePrice > 0 ? `$${market.strikePrice.toLocaleString()}` : "Open Price"}
+          </span>
+        </div>
+
+        {/* Cadence / Round */}
+        <div className="flex flex-col pl-3 xl:pl-4">
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
+            Round
+          </span>
+          <span className="text-xs font-mono font-bold text-amber-300">
+            {market.interval || "5m"}
+          </span>
+        </div>
+
         {/* 24h Vol */}
         <div className="flex flex-col pl-3 xl:pl-4">
           <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">

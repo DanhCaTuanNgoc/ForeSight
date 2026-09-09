@@ -54,6 +54,7 @@ interface PriceChartProps {
   timeRange: TimeRange;
   onTimeRangeChange: (r: TimeRange) => void;
   currentPrice?: number;
+  strikePrice?: number;
   activeVisualMode?: CanvasVisualMode;
   onVisualModeChange?: (mode: CanvasVisualMode) => void;
   entryPrice?: number;
@@ -145,6 +146,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   timeRange,
   onTimeRangeChange,
   currentPrice = 60,
+  strikePrice,
   activeVisualMode: externalMode,
   onVisualModeChange,
   entryPrice = 0.55,
@@ -273,7 +275,31 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       ? (((targetExitPrice - entryPrice) / entryPrice) * 100).toFixed(1)
       : null;
 
-  const formatY = (v: number) => `${(v * 100).toFixed(0)}%`;
+  const isSpotMode = useMemo(() => {
+    return data.some((d) => (d.close ?? d.price) > 1.5);
+  }, [data]);
+
+  const yDomain = useMemo(() => {
+    if (isSpotMode) {
+      const prices = data.map((d) => d.close ?? d.price);
+      if (strikePrice && strikePrice > 0) prices.push(strikePrice);
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      const pad = (max - min) * 0.08 || min * 0.02;
+      return [Math.max(0, Number((min - pad).toFixed(2))), Number((max + pad).toFixed(2))];
+    }
+    return [0, 1];
+  }, [isSpotMode, data, strikePrice]);
+
+  const formatY = (v: number) => {
+    if (isSpotMode) {
+      if (v >= 1000) return `$${Math.round(v).toLocaleString()}`;
+      if (v >= 1) return `$${v.toFixed(2)}`;
+      return `$${v.toFixed(4)}`;
+    }
+    return `${(v * 100).toFixed(0)}%`;
+  };
+
   const step = Math.max(1, Math.ceil(data.length / 6));
   const formatX = (_: any, idx: number) => (idx % step === 0 ? data[idx]?.time ?? "" : "");
 
@@ -425,10 +451,22 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
           {/* Live Price Readout with Bar Countdown Timer */}
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-white font-black text-sm">{(last * 100).toFixed(1)}%</span>
+            <span className="text-white font-black text-sm">
+              {isSpotMode
+                ? (last >= 1000
+                    ? `$${last.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : `$${last.toFixed(3)}`)
+                : `${(last * 100).toFixed(1)}%`}
+            </span>
             <span className={`text-[10px] font-bold ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
               {isUp ? "+" : ""}{change.toFixed(1)}%
             </span>
+
+            {strikePrice && strikePrice > 0 && (
+              <span className="text-cyan-300 text-[10px] hidden sm:inline border border-cyan-500/30 px-1 py-0.2 bg-cyan-950/30">
+                Strike: ${strikePrice.toLocaleString()}
+              </span>
+            )}
 
             {/* Countdown Badge */}
             <div
@@ -439,7 +477,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               <span>{countdown}</span>
             </div>
 
-            {curveMode === "dual" && visualMode === "probability" && (
+            {!isSpotMode && curveMode === "dual" && visualMode === "probability" && (
               <span className="text-rose-400/80 text-[10px] hidden sm:inline">NO {(lastNo * 100).toFixed(0)}%</span>
             )}
           </div>
@@ -583,11 +621,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               </span>
             )}
           </div>
-
-          <div className="text-[9px] text-gray-500 hidden xl:flex items-center gap-1.5">
-            <Crosshair className="w-3 h-3 text-violet-400" />
-            <span>Click chart to set Entry · Ctrl+Scroll to zoom</span>
-          </div>
         </div>
       )}
 
@@ -669,26 +702,33 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                     interval={step - 1}
                   />
                   <YAxis
-                    domain={[0, 1]}
+                    domain={yDomain}
                     tickFormatter={formatY}
                     tick={{ fill: "#6B7280", fontSize: 9 }}
                     axisLine={false}
                     tickLine={false}
-                    width={36}
+                    width={isSpotMode ? 55 : 36}
                     orientation="right"
                   />
 
-                  {/* 50% Fair Odds Battleground Line */}
-                  <ReferenceLine
-                    y={0.5}
-                    stroke="#4B5563"
-                    strokeDasharray="2 4"
-                    strokeWidth={1}
-                    strokeOpacity={0.5}
-                    label={{ value: "50% Fair", fill: "#6B7280", fontSize: 8, position: "insideTopLeft" }}
-                  />
+                  {/* Strike Price Target Line */}
+                  {strikePrice && strikePrice > 0 && (
+                    <ReferenceLine
+                      y={isSpotMode ? strikePrice : 0.5}
+                      stroke="#06B6D4"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      strokeOpacity={0.9}
+                      label={{
+                        value: `STRIKE: $${strikePrice.toLocaleString()}`,
+                        fill: "#06B6D4",
+                        fontSize: 9,
+                        position: "insideTopLeft",
+                      }}
+                    />
+                  )}
 
-                  {/* Live Last Price Horizontal Ray */}
+                  {/* Live Current Price Horizontal Ray */}
                   <ReferenceLine
                     y={last}
                     stroke={isUp ? "#10B981" : "#F43F5E"}
@@ -696,39 +736,11 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                     strokeWidth={1.2}
                     strokeOpacity={0.85}
                     label={{
-                      value: `LIVE $${last.toFixed(2)} (${(last * 100).toFixed(1)}%)`,
+                      value: isSpotMode
+                        ? `SPOT: $${last >= 1000 ? Math.round(last).toLocaleString() : last.toFixed(2)}`
+                        : `LIVE: $${last.toFixed(2)} (${(last * 100).toFixed(1)}%)`,
                       fill: isUp ? "#34D399" : "#FB7185",
                       fontSize: 8.5,
-                      position: "insideTopRight",
-                    }}
-                  />
-
-                  {/* Target Exit Price (TP) Reference Line - Amber Gold */}
-                  <ReferenceLine
-                    y={targetExitPrice}
-                    stroke="#F59E0B"
-                    strokeDasharray="6 3"
-                    strokeWidth={1.5}
-                    strokeOpacity={0.9}
-                    label={{
-                      value: `TP $${targetExitPrice.toFixed(2)} (${Math.round(targetExitPrice * 100)}%)`,
-                      fill: "#F59E0B",
-                      fontSize: 9,
-                      position: "insideTopRight",
-                    }}
-                  />
-
-                  {/* Entry Price Reference Line - Electric Cyan */}
-                  <ReferenceLine
-                    y={entryPrice}
-                    stroke="#06B6D4"
-                    strokeDasharray="4 4"
-                    strokeWidth={1.5}
-                    strokeOpacity={0.9}
-                    label={{
-                      value: `ENTRY $${entryPrice.toFixed(2)} (${Math.round(entryPrice * 100)}%)`,
-                      fill: "#06B6D4",
-                      fontSize: 9,
                       position: "insideTopRight",
                     }}
                   />

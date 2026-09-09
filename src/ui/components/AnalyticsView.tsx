@@ -336,6 +336,28 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const maxBidSize = Math.max(...displayBids.map(([, s]) => s), 1);
   const maxAskSize = Math.max(...displayAsks.map(([, s]) => s), 1);
 
+  // J. CLOB Orderbook Microstructure Imbalance (Pure Quantitative Signal)
+  const microstructure = useMemo(() => {
+    const totalBidVol = displayBids.reduce((sum, [, s]) => sum + s, 0);
+    const totalAskVol = displayAsks.reduce((sum, [, s]) => sum + s, 0);
+    const totalDepth = totalBidVol + totalAskVol;
+    const imbalanceRatio = totalDepth > 0 ? (totalBidVol - totalAskVol) / totalDepth : 0;
+    const spreadBps = bestAsk > 0 ? ((bestAsk - bestBid) / bestAsk) * 10000 : 200;
+
+    let bias: "BULLISH_YES" | "BEARISH_NO" | "BALANCED" = "BALANCED";
+    if (imbalanceRatio > 0.15) bias = "BULLISH_YES";
+    else if (imbalanceRatio < -0.15) bias = "BEARISH_NO";
+
+    return {
+      totalBidVol,
+      totalAskVol,
+      imbalanceRatio: Number(imbalanceRatio.toFixed(3)),
+      imbalancePercent: Number((imbalanceRatio * 100).toFixed(1)),
+      spreadBps: Math.round(spreadBps),
+      bias,
+    };
+  }, [displayBids, displayAsks, bestBid, bestAsk]);
+
   // Manual refresh all data streams
   const handleManualRefresh = async () => {
     sound.playClick();
@@ -554,16 +576,23 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {/* Microstructure Metrics Bar */}
             <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
               <div className="p-1.5 rounded-none bg-[#0B0B14] border border-white/[0.06]">
-                <span className="text-[9px] text-gray-400 block uppercase">BEST BID</span>
-                <span className="text-xs font-bold text-emerald-400">${bestBid.toFixed(3)}</span>
+                <span className="text-[9px] text-gray-400 block uppercase">BOOK IMBALANCE</span>
+                <span className={`text-xs font-bold ${microstructure.imbalancePercent >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  {microstructure.imbalancePercent >= 0 ? `+${microstructure.imbalancePercent}%` : `${microstructure.imbalancePercent}%`}
+                </span>
+                <span className="text-[8px] text-gray-500 block">
+                  {microstructure.bias === "BULLISH_YES" ? "Buy Pressure" : microstructure.bias === "BEARISH_NO" ? "Sell Pressure" : "Balanced"}
+                </span>
               </div>
               <div className="p-1.5 rounded-none bg-[#0B0B14] border border-white/[0.06]">
-                <span className="text-[9px] text-gray-400 block uppercase">BEST ASK</span>
-                <span className="text-xs font-bold text-rose-400">${bestAsk.toFixed(3)}</span>
+                <span className="text-[9px] text-gray-400 block uppercase">CLOB SPREAD</span>
+                <span className="text-xs font-bold text-violet-300">{microstructure.spreadBps} bps</span>
+                <span className="text-[8px] text-gray-500 block">${(bestAsk - bestBid).toFixed(3)} USDC</span>
               </div>
               <div className="p-1.5 rounded-none bg-[#0B0B14] border border-white/[0.06]">
-                <span className="text-[9px] text-gray-400 block uppercase">EST. SLIPPAGE</span>
-                <span className="text-xs font-bold text-violet-300">~0.12% ($100)</span>
+                <span className="text-[9px] text-gray-400 block uppercase">RESTING DEPTH</span>
+                <span className="text-xs font-bold text-white">{(microstructure.totalBidVol + microstructure.totalAskVol).toLocaleString()}</span>
+                <span className="text-[8px] text-gray-500 block">Active Shares</span>
               </div>
             </div>
           </div>

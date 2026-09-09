@@ -31,6 +31,15 @@ export interface Market {
   volume24h?: number;
   midPrice?: number;
   underlyingAsset?: string;
+  strikePrice?: number;
+  timeRemainingSec?: number;
+  expirationTime?: number;
+  interval?: string;
+  venueId?: string;
+  marketAddress?: string;
+  poolAddress?: string;
+  yesTokenId?: string;
+  noTokenId?: string;
 }
 
 const FALLBACK_MARKETS: Market[] = [
@@ -45,6 +54,8 @@ const FALLBACK_MARKETS: Market[] = [
     midPrice: 0.62,
     status: "TRADING",
     volume24h: 342900,
+    strikePrice: 78947.56,
+    interval: "5m",
   },
   {
     id: "eth-hourly-1",
@@ -57,6 +68,8 @@ const FALLBACK_MARKETS: Market[] = [
     midPrice: 0.45,
     status: "TRADING",
     volume24h: 189400,
+    strikePrice: 2500.35,
+    interval: "5m",
   },
   {
     id: "sol-hourly-1",
@@ -69,6 +82,8 @@ const FALLBACK_MARKETS: Market[] = [
     midPrice: 0.54,
     status: "TRADING",
     volume24h: 98150,
+    strikePrice: 178.4,
+    interval: "5m",
   },
   {
     id: "somi-hourly-1",
@@ -81,6 +96,8 @@ const FALLBACK_MARKETS: Market[] = [
     midPrice: 0.735,
     status: "TRADING",
     volume24h: 51240,
+    strikePrice: 0.742,
+    interval: "5m",
   },
 ];
 
@@ -135,28 +152,34 @@ function ForeSightTerminalApp() {
         const data = await res.json();
         const rawList = Array.isArray(data) ? data : data.markets || [];
         if (rawList.length > 0) {
-          const parsed = rawList.map((m: any) => ({
-            id: m.id || m.marketId || m.symbol,
-            symbol: m.underlyingAsset || m.symbol?.split("-")[0] || "BTC",
-            underlyingAsset: m.underlyingAsset || "BTC",
-            question: m.question || `Will ${m.symbol || "Asset"} reach target?`,
-            bestBid: m.bestBid ?? 0.50,
-            bestAsk: m.bestAsk ?? 0.52,
-            probability: m.probability ?? (m.bestBid ? m.bestBid * 100 : 50),
-            midPrice: m.midPrice ?? 0.51,
-            status: m.status || "TRADING",
-            volume24h: m.volume24h || 120000,
-          }));
-          // Ensure core Somnia assets (SOL, SOMI) are always available in the UI
-          const existingAssets = new Set(parsed.map((p: any) => (p.underlyingAsset || p.symbol).toUpperCase()));
-          FALLBACK_MARKETS.forEach((fb) => {
-            if (fb.underlyingAsset && !existingAssets.has(fb.underlyingAsset.toUpperCase())) {
-              parsed.push(fb);
-            }
+          const parsed: Market[] = rawList.map((m: any) => {
+            const underlyingAsset = (m.underlyingAsset || m.symbol?.split("-")[0] || "BTC").toUpperCase();
+            const prob = m.probability ?? (m.bestBid ? m.bestBid * 100 : (m.midPrice ? m.midPrice * 100 : 50));
+            return {
+              id: m.id || m.marketId || m.symbol,
+              symbol: m.symbol || `${underlyingAsset}/tUSDC`,
+              underlyingAsset,
+              question: m.question || `Will ${underlyingAsset} reach target?`,
+              bestBid: m.bestBid ?? 0.50,
+              bestAsk: m.bestAsk ?? 0.52,
+              probability: prob,
+              midPrice: m.midPrice ?? 0.51,
+              status: m.status || "TRADING",
+              volume24h: m.volume24h || 120000,
+              strikePrice: m.strikePrice,
+              timeRemainingSec: m.timeRemainingSec,
+              expirationTime: m.expirationTime,
+              interval: m.interval || "5m",
+              venueId: m.venueId,
+              marketAddress: m.marketAddress,
+              poolAddress: m.poolAddress,
+              yesTokenId: m.yesTokenId,
+              noTokenId: m.noTokenId,
+            };
           });
 
           setMarkets(parsed);
-          if (!selectedMarket) setSelectedMarket(parsed[0]);
+          if (!selectedMarket && parsed.length > 0) setSelectedMarket(parsed[0]);
           return;
         }
       }
@@ -182,10 +205,30 @@ function ForeSightTerminalApp() {
     }
   }, []);
 
-  // 4. Fetch Timeline Data from API
+  // 4. Fetch Authentic Candlesticks / Timeline Data from API
   const fetchTimelineData = useCallback(async (symbol: string, range: "15m" | "1H" | "4H" | "1D") => {
     if (!symbol) return;
     try {
+      const cleanAsset = symbol.replace(/\/.*$/, "").replace(/-.*$/, "").toUpperCase();
+      const intervalMap: Record<string, string> = {
+        "15m": "15m",
+        "1H": "1h",
+        "4H": "4h",
+        "1D": "1d",
+      };
+      const interval = intervalMap[range] || "15m";
+
+      // 1. First try authentic live candlesticks
+      const candleRes = await fetch(apiUrl(`/api/candles/${encodeURIComponent(cleanAsset)}?interval=${interval}&limit=50`));
+      if (candleRes.ok) {
+        const candleJson = await candleRes.json();
+        if (candleJson.candles && candleJson.candles.length > 0) {
+          setTimelineData(candleJson.candles);
+          return;
+        }
+      }
+
+      // 2. Fallback to timeline if candles endpoint fails
       const msMap = { "15m": 900_000, "1H": 3600_000, "4H": 14400_000, "1D": 86400_000 };
       const from = new Date(Date.now() - msMap[range]).toISOString();
       const res = await fetch(apiUrl(`/api/timeline/${encodeURIComponent(symbol)}?from=${from}`));
@@ -429,7 +472,9 @@ function ForeSightTerminalApp() {
     symbol: string,
     outcome: "YES" | "NO",
     amount: number,
-    price?: number
+    price?: number,
+    poolAddress?: string,
+    expirationTime?: number
   ) => {
     if (!wallet.isConnected) {
       wallet.openWalletModal();
@@ -437,14 +482,20 @@ function ForeSightTerminalApp() {
       return;
     }
 
+    const currentMarket = activeMarket;
+    const targetPool = poolAddress || currentMarket?.poolAddress;
+    const targetExpiry = expirationTime || currentMarket?.expirationTime;
+
     setIsSubmittingOrder(true);
     try {
-      // 1. Request on-chain signature/transaction in MetaMask
+      // 1. Request on-chain signature/transaction in MetaMask directly on DreamDEX BinaryPool
       const txResult = await wallet.executeOnChainTrade({
         symbol,
         outcome,
         amount,
         price,
+        poolAddress: targetPool,
+        expirationTime: targetExpiry,
       });
 
       if (!txResult.success) {
@@ -462,6 +513,7 @@ function ForeSightTerminalApp() {
           outcome,
           amount,
           price,
+          poolAddress: targetPool,
           walletAddress: wallet.address,
           signerType: wallet.walletName || "MetaMask",
           txHash: txResult.txHash,
@@ -768,6 +820,7 @@ function ForeSightTerminalApp() {
                     timeRange={timeRange}
                     onTimeRangeChange={setTimeRange}
                     currentPrice={activeMarket.probability}
+                    strikePrice={activeMarket.strikePrice}
                     activeVisualMode={visualMode}
                     onVisualModeChange={setVisualMode}
                     entryPrice={prefillEntryPrice}

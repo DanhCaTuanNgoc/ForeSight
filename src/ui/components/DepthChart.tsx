@@ -49,17 +49,7 @@ export const DepthChart: React.FC<DepthChartProps> = ({
             });
             if (isMounted) setBids(parsedBids);
           } else {
-            // Deterministic distinct depth curve seeded by symbol name
-            let seed = 0;
-            for (let c = 0; c < symbol.length; c++) seed = (seed << 5) - seed + symbol.charCodeAt(c);
-            let currentTotal = 0;
-            const fallbackBids = Array.from({ length: 6 }, (_, i) => {
-              const price = targetMid - (i + 1) * 0.015;
-              const size = Math.floor(600 + (Math.abs(seed * (i + 1) * 123) % 800));
-              currentTotal += size;
-              return { price: Math.max(0.01, parseFloat(price.toFixed(3))), size, total: currentTotal };
-            });
-            if (isMounted) setBids(fallbackBids);
+            if (isMounted) setBids([]);
           }
 
           if (data.asks && data.asks.length > 0) {
@@ -72,16 +62,7 @@ export const DepthChart: React.FC<DepthChartProps> = ({
             });
             if (isMounted) setAsks(parsedAsks);
           } else {
-            let seed = 0;
-            for (let c = 0; c < symbol.length; c++) seed = (seed << 5) - seed + symbol.charCodeAt(c);
-            let currentTotal = 0;
-            const fallbackAsks = Array.from({ length: 6 }, (_, i) => {
-              const price = targetMid + (i + 1) * 0.015;
-              const size = Math.floor(550 + (Math.abs(seed * (i + 1) * 157) % 750));
-              currentTotal += size;
-              return { price: Math.min(0.99, parseFloat(price.toFixed(3))), size, total: currentTotal };
-            });
-            if (isMounted) setAsks(fallbackAsks);
+            if (isMounted) setAsks([]);
           }
         }
       } catch (err) {
@@ -116,7 +97,14 @@ export const DepthChart: React.FC<DepthChartProps> = ({
       </div>
 
       {/* Main Grid: Bids Left | Asks Right */}
-      <div className="p-2.5 grid grid-cols-2 gap-2 text-xs font-mono">
+      {bids.length === 0 && asks.length === 0 ? (
+        <div className="p-4 text-center text-gray-500 font-mono space-y-1">
+          <div className="text-gray-400 font-bold text-[11px]">NO RESTING ORDERS ON CLOB</div>
+          <div className="text-[10px]">Reference Mid: ${realMidPrice.toFixed(3)}</div>
+          <div className="text-[10px] text-violet-400 pt-1">Place an order to seed on-chain liquidity</div>
+        </div>
+      ) : (
+        <div className="p-2.5 grid grid-cols-2 gap-2 text-xs font-mono">
         {/* BUY DEPTH */}
         <div>
           <div className="flex justify-between text-[10px] text-gray-500 border-b border-white/[0.05] pb-1 mb-1 font-sans uppercase font-medium">
@@ -189,6 +177,7 @@ export const DepthChart: React.FC<DepthChartProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* Mid Price Footer */}
       <div className="bg-[#0E0E17] border-t border-white/[0.07] px-3 py-1.5 flex items-center justify-between text-xs font-mono">

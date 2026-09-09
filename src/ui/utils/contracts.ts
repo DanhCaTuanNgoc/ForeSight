@@ -12,8 +12,15 @@ export const BATCH_SWEEPER_ABI = parseAbi([
   "event BatchApprovalExecuted(address indexed user, address indexed token, uint256 indexed poolsCount, uint256 amount)"
 ]);
 
+export const BINARY_POOL_ABI = parseAbi([
+  "function placeBinaryOrder(uint8 kind, uint256 price, uint256 quantity, uint64 expireTimestampNs, uint8 orderType, uint8 selfMatchingOption, address builder, uint96 builderFeeBpsTimes1k, uint64 userData) external payable returns (bool success, uint128 id)",
+  "function marketExpiryNs() external view returns (uint64)",
+  "function getOrderBookParameters() external view returns (uint256 tickSize, uint256 lotSize, uint256 minQuantity)"
+]);
+
 export const ERC20_ABI = parseAbi([
   "function approve(address spender, uint256 amount) external returns (bool)",
+  "function allowance(address owner, address spender) external view returns (uint256)",
   "function balanceOf(address account) external view returns (uint256)",
   "function transfer(address to, uint256 amount) external returns (bool)"
 ]);
@@ -31,12 +38,48 @@ export function encodeBatchSweepCall(pools: Address[] = []): `0x${string}` {
 }
 
 /**
- * Encode calldata for trade approval / dispatch
+ * Encode calldata for ERC20 approve
  */
-export function encodeTradeApproval(amount: bigint = BigInt("1000000000")): `0x${string}` {
+export function encodeErc20Approve(spender: Address, amount: bigint): `0x${string}` {
   return encodeFunctionData({
     abi: ERC20_ABI,
     functionName: "approve",
-    args: [FORESIGHT_BATCH_SWEEPER_ADDRESS, amount],
+    args: [spender, amount],
+  });
+}
+
+/**
+ * Encode calldata for trade approval / dispatch (legacy helper for sweeper)
+ */
+export function encodeTradeApproval(amount: bigint = BigInt("1000000000")): `0x${string}` {
+  return encodeErc20Approve(FORESIGHT_BATCH_SWEEPER_ADDRESS, amount);
+}
+
+export interface PlaceBinaryOrderArgs {
+  kind: 0 | 1 | 2 | 3; // 0: BUY_YES, 1: SELL_YES, 2: BUY_NO, 3: SELL_NO
+  priceRaw: bigint; // YES price in collateral units
+  quantityRaw: bigint; // Outcome tokens quantity in raw units
+  expireTimestampNs: bigint;
+  orderType?: number; // 0: Limit, 1: FOK, 2: IOC, 3: PostOnly
+}
+
+/**
+ * Encode calldata for direct on-chain BinaryPool.placeBinaryOrder on DreamDEX
+ */
+export function encodePlaceBinaryOrderCall(args: PlaceBinaryOrderArgs): `0x${string}` {
+  return encodeFunctionData({
+    abi: BINARY_POOL_ABI,
+    functionName: "placeBinaryOrder",
+    args: [
+      args.kind,
+      args.priceRaw,
+      args.quantityRaw,
+      args.expireTimestampNs,
+      args.orderType ?? 0,
+      0, // selfMatchingOption
+      "0x0000000000000000000000000000000000000000", // builder
+      0n, // builderFeeBpsTimes1k
+      0n, // userData
+    ],
   });
 }

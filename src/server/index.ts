@@ -190,62 +190,7 @@ app.get("/api/health", async (req, res) => {
  * Ensure core Somnia platform assets (BTC, ETH, SOL, SOMI) are always available
  */
 async function getCoreSomniaMarkets() {
-  const markets = await watcher.getActiveEventContracts();
-
-  const hasSol = markets.some((m) => m.underlyingAsset?.toUpperCase() === "SOL" || m.symbol?.toUpperCase().includes("SOL"));
-  const hasSomi = markets.some((m) => m.underlyingAsset?.toUpperCase() === "SOMI" || m.symbol?.toUpperCase().includes("SOMI"));
-
-  if (!hasSol) {
-    markets.push({
-      id: "sol-hourly-clob-1",
-      symbol: "SOL-HOURLY-1",
-      baseSymbol: "SOL",
-      quoteSymbol: "tUSDC",
-      venueId: "somnia-dreamdex",
-      status: "Trading",
-      isTradable: true,
-      question: "Will SOL close at or above opening price at expiry?",
-      outcomes: ["YES", "NO"],
-      expirationTime: Math.floor(Date.now() / 1000) + 3600,
-      timeRemainingSec: 3600,
-      strikePrice: 178.4,
-      underlyingAsset: "SOL",
-      interval: "1h",
-      midPrice: 0.54,
-      impliedUpProbability: 0.54,
-      impliedDownProbability: 0.46,
-      bestBid: 0.53,
-      bestAsk: 0.55,
-      volume24h: 98150,
-    } as any);
-  }
-
-  if (!hasSomi) {
-    markets.push({
-      id: "somi-hourly-clob-1",
-      symbol: "SOMI-HOURLY-1",
-      baseSymbol: "SOMI",
-      quoteSymbol: "tUSDC",
-      venueId: "somnia-dreamdex",
-      status: "Trading",
-      isTradable: true,
-      question: "Will SOMI close at or above opening price at expiry?",
-      outcomes: ["YES", "NO"],
-      expirationTime: Math.floor(Date.now() / 1000) + 3600,
-      timeRemainingSec: 3600,
-      strikePrice: 0.742,
-      underlyingAsset: "SOMI",
-      interval: "1h",
-      midPrice: 0.735,
-      impliedUpProbability: 0.735,
-      impliedDownProbability: 0.265,
-      bestBid: 0.72,
-      bestAsk: 0.75,
-      volume24h: 51240,
-    } as any);
-  }
-
-  return markets;
+  return await watcher.getActiveEventContracts();
 }
 
 /**
@@ -495,6 +440,54 @@ app.get("/api/timeline/:symbol", async (req, res) => {
       count: data.length,
       data,
     });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || String(err) });
+  }
+});
+
+/**
+ * GET /api/candles/:asset
+ * Fetch authentic OHLCV candlesticks for the underlying asset (BTC, ETH, SOL, SOMI)
+ * Query params: interval (1m, 5m, 15m, 1h, 4h, 1d), limit (default 60)
+ */
+app.get("/api/candles/:asset", async (req, res) => {
+  try {
+    const rawAsset = decodeURIComponent(req.params.asset).toUpperCase();
+    const asset = rawAsset.replace(/\/.*$/, "").replace(/-.*$/, "").trim() || "BTC";
+    const intervalMap: Record<string, string> = {
+      "1m": "1m",
+      "5m": "5m",
+      "15m": "15m",
+      "1h": "1h",
+      "1H": "1h",
+      "4h": "4h",
+      "4H": "4h",
+      "1d": "1d",
+      "1D": "1d",
+    };
+    const interval = intervalMap[req.query.interval as string] || "5m";
+    const limit = Math.min(Number(req.query.limit) || 60, 100);
+
+    const pair = `${asset === "SOMI" ? "BNB" : asset}USDT`;
+    const binanceUrl = `https://data-api.binance.vision/api/v3/klines?symbol=${pair}&interval=${interval}&limit=${limit}`;
+    const resp = await fetch(binanceUrl, { signal: AbortSignal.timeout(5000) });
+    if (resp.ok) {
+      const raw = await resp.json();
+      if (Array.isArray(raw)) {
+        const candles = raw.map((c: any) => ({
+          time: new Date(c[0]).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          timestamp: c[0],
+          open: parseFloat(c[1]),
+          high: parseFloat(c[2]),
+          low: parseFloat(c[3]),
+          close: parseFloat(c[4]),
+          price: parseFloat(c[4]),
+          volume: parseFloat(c[5]),
+        }));
+        return res.json({ asset, interval, candles });
+      }
+    }
+    return res.status(502).json({ error: "Failed to fetch live candles" });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || String(err) });
   }
@@ -796,7 +789,7 @@ app.post("/api/positions/reset", (req, res) => {
  */
 app.post("/api/orders", async (req, res) => {
   try {
-    const { symbol, outcome, amount, price, walletAddress, signerType, txHash: clientTxHash } = req.body;
+    const { symbol, outcome, amount, price, poolAddress, walletAddress, signerType, txHash: clientTxHash } = req.body;
 
     if (!walletAddress || typeof walletAddress !== "string") {
       return res.status(401).json({
@@ -820,16 +813,17 @@ app.post("/api/orders", async (req, res) => {
     // Attempt real on-chain execution if PRIVATE_KEY is configured on server and client did not sign
     if (!txHash && orderEngine && ctx?.canTrade) {
       try {
-        const side = outcome === "YES" || outcome === "UP" ? "buy" : "sell";
+        const normalizedOutcome = (outcome.toUpperCase() === "YES" || outcome.toUpperCase() === "UP") ? "YES" : "NO";
         const result = await orderEngine.placeLimitOrder({
           symbol,
-          side,
+          side: "buy",
+          outcome: normalizedOutcome,
           price: safePrice,
           amount: safeAmount,
         });
         if (result.success) {
           orderId = result.orderId || orderId;
-          txHash = result.txHash;
+          txHash = result.txHash || txHash;
           isLiveOnChain = true;
         }
       } catch (chainErr: any) {
@@ -847,6 +841,7 @@ app.post("/api/orders", async (req, res) => {
     const newPosition = {
       id: `pos-${now}-${Math.random().toString(36).slice(2, 6)}`,
       symbol,
+      poolAddress: poolAddress || undefined,
       outcome: (outcome.toUpperCase() === "YES" || outcome.toUpperCase() === "UP") ? ("YES" as const) : ("NO" as const),
       amount: safeAmount,
       entryPrice: safePrice,

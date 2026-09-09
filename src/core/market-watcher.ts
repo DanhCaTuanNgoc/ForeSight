@@ -25,6 +25,10 @@ export interface EventContractMarket {
   impliedUpProbability?: number;
   impliedDownProbability?: number;
   spread?: number;
+  marketAddress?: string;
+  poolAddress?: string;
+  yesTokenId?: string;
+  noTokenId?: string;
 }
 
 export interface MarketAnalysis {
@@ -78,17 +82,38 @@ export class MarketWatcher {
       const isBinary = m.type === "binary" || rawInfo?.marketType === "BINARY" || rawInfo?.isBinary;
       if (!isBinary) continue;
 
-      // Filter by venue if specified
-      if (this.venueId && rawInfo?.venueId && rawInfo.venueId.toLowerCase() !== this.venueId.toLowerCase()) {
+      const expirationTime = rawInfo?.expiry ? Number(rawInfo.expiry) : (rawInfo?.expirationTime ? Number(rawInfo.expirationTime) : undefined);
+      const timeRemainingSec = expirationTime ? Math.max(0, expirationTime - nowSec) : undefined;
+
+      // Exclude expired markets if finished over 1 hour ago
+      if (timeRemainingSec !== undefined && timeRemainingSec <= -3600) {
         continue;
       }
 
-      const expirationTime = rawInfo?.expiry ? Number(rawInfo.expiry) : (rawInfo?.expirationTime ? Number(rawInfo.expirationTime) : undefined);
-      const timeRemainingSec = expirationTime ? Math.max(0, expirationTime - nowSec) : undefined;
-      
       const statusStr = String(rawInfo?.status || "Trading");
       const isTradingStatus = statusStr.toLowerCase() === "trading" || rawInfo?.status === 1 || rawInfo?.status === MarketStatus.Trading;
       const isTradable = isTradingStatus && (!timeRemainingSec || timeRemainingSec > 0);
+
+      // Parse strike price from DreamDEX raw integer representation
+      let strikePrice: number | undefined;
+      const rawStrike = rawInfo?.strike ?? rawInfo?.strikePrice;
+      if (rawStrike !== undefined && rawStrike !== null) {
+        const num = Number(rawStrike);
+        if (num > 10000) {
+          // 2 decimals on DreamDEX (e.g. 250035 => $2500.35, 7894756 => $78947.56)
+          strikePrice = Number((num / 100).toFixed(2));
+        } else if (num > 0) {
+          strikePrice = num;
+        } else {
+          strikePrice = 0;
+        }
+      }
+
+      const underlyingAsset = rawInfo?.asset || m.base.split("-")[0] || m.base;
+      const dynamicQuestion = rawInfo?.question || rawInfo?.title || 
+        (strikePrice && strikePrice > 0 
+          ? `Will ${underlyingAsset} close at or above $${strikePrice.toLocaleString()} at expiry?`
+          : `Will ${underlyingAsset} close at or above opening price at expiry?`);
 
       const contract: EventContractMarket = {
         id: m.id,
@@ -98,15 +123,19 @@ export class MarketWatcher {
         venueId: rawInfo?.venueId,
         status: statusStr,
         isTradable,
-        question: rawInfo?.question || rawInfo?.title || `${m.base} UP/DOWN`,
+        question: dynamicQuestion,
         outcomes: (m as any).outcomes?.map((o: any) => o.label || o.symbol) || [OUTCOME_NAMES.UP, OUTCOME_NAMES.DOWN],
         expirationTime,
         timeRemainingSec,
-        strikePrice: rawInfo?.strike ? Number(rawInfo.strike) : (rawInfo?.strikePrice ? Number(rawInfo.strikePrice) : undefined),
-        underlyingAsset: rawInfo?.asset || m.base.split("-")[0] || m.base,
-        interval: rawInfo?.interval || (rawInfo?.intervalSec ? `${Number(rawInfo.intervalSec) / 60}m` : undefined),
+        strikePrice,
+        underlyingAsset,
+        interval: rawInfo?.interval || (rawInfo?.intervalSec ? `${Number(rawInfo.intervalSec) / 60}m` : "5m"),
         minOrderSize: m.limits?.amount?.min,
         tickSize: m.precision?.price,
+        marketAddress: rawInfo?.marketAddress,
+        poolAddress: rawInfo?.poolAddress,
+        yesTokenId: rawInfo?.yesTokenId,
+        noTokenId: rawInfo?.noTokenId,
       };
 
       // Best bid / ask if present

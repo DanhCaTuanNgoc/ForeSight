@@ -4,6 +4,10 @@ import {
   FORESIGHT_BATCH_SWEEPER_ADDRESS,
   encodeTradeApproval,
   encodeBatchSweepCall,
+  encodeErc20Approve,
+  encodePlaceBinaryOrderCall,
+  BINARY_POOL_ABI,
+  ERC20_ABI as CONTRACT_ERC20_ABI,
 } from "../utils/contracts.js";
 
 export const SOMNIA_SHANNON_CHAIN_ID = 50312;
@@ -73,6 +77,8 @@ interface WalletContextType {
     outcome: "YES" | "NO";
     amount: number;
     price?: number;
+    poolAddress?: string;
+    expirationTime?: number;
   }) => Promise<OnChainTxResult>;
   executeOnChainClaim: (pools?: string[]) => Promise<OnChainTxResult>;
 }
@@ -312,13 +318,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [address, chainId, refreshBalance]);
 
-  // Execute on-chain trade transaction via connected Web3 wallet (MetaMask)
+  // Execute authentic on-chain trade on DreamDEX BinaryPool CLOB via MetaMask
   const executeOnChainTrade = useCallback(
     async (params: {
       symbol: string;
       outcome: "YES" | "NO";
       amount: number;
       price?: number;
+      poolAddress?: string;
+      expirationTime?: number;
     }): Promise<OnChainTxResult> => {
       const ethereum = (window as any).ethereum;
       if (!ethereum || !address) {
@@ -334,10 +342,106 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       try {
-        // Calculate collateral amount required for order (e.g. amount * price in tUSDC 6-decimals)
-        const orderValueUsdc = (params.amount || 10) * (params.price || 0.50);
-        const microUnits = BigInt(Math.max(1, Math.round(orderValueUsdc * 1e6)));
-        const calldata = encodeTradeApproval(microUnits);
+        const poolAddr = (params.poolAddress as Address) || FORESIGHT_BATCH_SWEEPER_ADDRESS;
+        const entryOdds = Math.max(0.01, Math.min(0.99, params.price || 0.50));
+        const contractsCount = Math.max(0.01, params.amount);
+
+        // 1. Calculate required collateral to escrow in tUSDC (6 decimals)
+        // BUY YES cost = contractsCount * price
+        // BUY NO cost = contractsCount * (1 - price)
+        const orderCostUsdc = params.outcome === "YES"
+          ? contractsCount * entryOdds
+          : contractsCount * (1 - entryOdds);
+        const requiredCollateralRaw = BigInt(Math.max(1, Math.ceil(orderCostUsdc * 1e6)));
+
+        // 2. Check and approve tUSDC allowance for the DreamDEX BinaryPool if needed
+        if (params.poolAddress) {
+          try {
+            const currentAllowance = await somniaPublicClient.readContract({
+              address: SOMNIA_TESTNET_TUSDC_ADDRESS,
+              abi: CONTRACT_ERC20_ABI,
+              functionName: "allowance",
+              args: [address as Address, poolAddr],
+            });
+
+            if (currentAllowance < requiredCollateralRaw) {
+              // Approve standard buffer (e.g. 1,000,000 tUSDC) so subsequent trades don't require repeat approval
+              const approveAmount = BigInt("1000000000000"); // 1,000,000 tUSDC
+              const approveCalldata = encodeErc20Approve(poolAddr, approveAmount);
+
+              const approveTxHash = await ethereum.request({
+                method: "eth_sendTransaction",
+                params: [
+                  {
+                    from: address,
+                    to: SOMNIA_TESTNET_TUSDC_ADDRESS,
+                    data: approveCalldata,
+                    value: "0x0",
+                  },
+                ],
+              });
+
+              // Wait for approval confirmation before placing order
+              if (approveTxHash) {
+                await somniaPublicClient.waitForTransactionReceipt({ hash: approveTxHash }).catch(() => {});
+              }
+            }
+          } catch (allowanceErr) {
+            console.warn("[DreamDEX] Allowance check skipped/failed, proceeding to place order:", allowanceErr);
+          }
+        }
+
+        // 3. Prepare parameters for DreamDEX BinaryPool.placeBinaryOrder
+        // kind: 0 = BUY_YES, 2 = BUY_NO
+        const kind = params.outcome === "YES" ? (0 as const) : (2 as const);
+
+        // priceRaw: YES price in raw collateral units (6 decimals)
+        // For YES: entryOdds * 1e6
+        // For NO: (1 - entryOdds) * 1e6 (representing the complementary YES price in the pool)
+        const priceRaw = params.outcome === "YES"
+          ? BigInt(Math.round(entryOdds * 1e6))
+          : BigInt(Math.round((1 - entryOdds) * 1e6));
+
+        // quantityRaw: contract amount in raw units (6 decimals)
+        const quantityRaw = BigInt(Math.round(contractsCount * 1e6));
+
+        // expireTimestampNs: Nanoseconds (0 < expireNs <= pool.marketExpiryNs)
+        let expireTimestampNs: bigint = 0n;
+        if (params.expirationTime && params.expirationTime > 0) {
+          expireTimestampNs = BigInt(params.expirationTime) * 1_000_000_000n;
+        } else if (params.poolAddress) {
+          try {
+            const marketExpiry = await somniaPublicClient.readContract({
+              address: poolAddr,
+              abi: BINARY_POOL_ABI,
+              functionName: "marketExpiryNs",
+            });
+            expireTimestampNs = marketExpiry;
+          } catch {
+            expireTimestampNs = BigInt(Math.floor(Date.now() / 1000) + 3600) * 1_000_000_000n;
+          }
+        } else {
+          expireTimestampNs = BigInt(Math.floor(Date.now() / 1000) + 3600) * 1_000_000_000n;
+        }
+
+        // 4. Encode and dispatch placeBinaryOrder to DreamDEX BinaryPool
+        let calldata: `0x${string}`;
+        let targetContract: Address;
+
+        if (params.poolAddress) {
+          calldata = encodePlaceBinaryOrderCall({
+            kind,
+            priceRaw,
+            quantityRaw,
+            expireTimestampNs,
+            orderType: 0, // Limit / Rest
+          });
+          targetContract = poolAddr;
+        } else {
+          // Fallback if market does not have poolAddress
+          calldata = encodeTradeApproval(requiredCollateralRaw);
+          targetContract = SOMNIA_TESTNET_TUSDC_ADDRESS;
+        }
 
         // Prompt MetaMask transaction confirmation popup on Somnia Shannon Testnet
         const txHash = await ethereum.request({
@@ -345,7 +449,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           params: [
             {
               from: address,
-              to: SOMNIA_TESTNET_TUSDC_ADDRESS,
+              to: targetContract,
               data: calldata,
               value: "0x0",
             },

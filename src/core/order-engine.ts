@@ -7,6 +7,7 @@ export interface PlaceOrderParams {
   side: "buy" | "sell";
   price: number; // 0.01 to 0.99 USDC for binary prediction tokens
   amount: number; // Quantity of outcome tokens
+  outcome?: "YES" | "NO" | "UP" | "DOWN";
   postOnly?: boolean;
 }
 
@@ -52,20 +53,33 @@ export class OrderEngine {
     }
 
     try {
+      // Resolve proper tradable symbol with #YES or #NO suffix for DreamDEX Binary markets
+      const normalizedOutcome = params.outcome
+        ? (params.outcome.toUpperCase() === "NO" || params.outcome.toUpperCase() === "DOWN" ? "NO" : "YES")
+        : undefined;
+
+      let tradableRef = params.symbol;
+      if (normalizedOutcome && !tradableRef.includes("#")) {
+        tradableRef = `${params.symbol}#${normalizedOutcome}`;
+      }
+
       // Validate market state
-      const market = this.exchange.market(params.symbol);
+      const market = this.exchange.market(tradableRef);
       if (!market) {
         return {
           success: false,
-          error: `Market not found for symbol: ${params.symbol}`,
+          error: `Market not found for symbol: ${tradableRef}`,
         };
       }
 
+      // In binary prediction markets, entering an outcome position (YES or NO) is a "buy" on that outcome tradable
+      const orderSide = normalizedOutcome ? "buy" : params.side;
+
       // Execute order via SomniaMarkets unified API
       const result = await this.exchange.createOrder(
-        params.symbol,
+        tradableRef,
         "limit",
-        params.side,
+        orderSide,
         params.amount,
         params.price,
         { postOnly: params.postOnly }
@@ -74,6 +88,7 @@ export class OrderEngine {
       return {
         success: true,
         orderId: result.id,
+        txHash: (result as any).hash || (result as any).txHash,
         filledAmount: result.filled,
       };
     } catch (err: any) {
