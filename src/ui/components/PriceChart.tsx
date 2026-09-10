@@ -161,7 +161,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const [selectedSpike, setSelectedSpike] = useState<any | null>(null);
   const [mcVolatility, setMcVolatility] = useState<VolatilityLevel>("normal");
   const [showEMA, setShowEMA] = useState<boolean>(true); // Trend Indicators Toggle
-  const [clickTargetMode, setClickTargetMode] = useState<"entry" | "tp">("entry");
 
   // ─── Crosshair & Interactive Hover State ─────────────────────────────────────
   const [hoveredPoint, setHoveredPoint] = useState<ChartDataPoint | null>(null);
@@ -197,7 +196,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStartX, setDragStartX] = useState<number>(0);
   const [dragStartPan, setDragStartPan] = useState<number>(0);
-  const [hasDragged, setHasDragged] = useState<boolean>(false);
 
   const chartWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -315,7 +313,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     setIsDragging(true);
     setDragStartX(e.clientX);
     setDragStartPan(panOffset);
-    setHasDragged(false);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -330,7 +327,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     const deltaX = e.clientX - dragStartX;
 
     if (Math.abs(deltaX) > 4) {
-      setHasDragged(true);
       const visibleCount = rawData.length / zoomLevel;
       const chartWidth = chartWrapperRef.current?.clientWidth || 500;
       const pointsPerPixel = visibleCount / chartWidth;
@@ -350,40 +346,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
   const handleMouseUp = () => {
     setIsDragging(false);
-  };
-
-  // ─── Interactive Click: Syncs clicked price to Entry or TP in Simulator ──────
-  const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (hasDragged) {
-      setHasDragged(false);
-      return;
-    }
-
-    const rect = chartWrapperRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const clickY = e.clientY - rect.top;
-    const plotTop = 10;
-    const plotBottom = rect.height - 35;
-    const plotHeight = Math.max(1, plotBottom - plotTop);
-
-    const normalizedPrice = Math.max(0.01, Math.min(0.99, 1 - (clickY - plotTop) / plotHeight));
-    const roundedPrice = Number(normalizedPrice.toFixed(2));
-
-    sound.playClick();
-    const isTP = e.shiftKey || clickTargetMode === "tp";
-
-    if (isTP) {
-      if (onSetTargetExitPrice) onSetTargetExitPrice(roundedPrice);
-      if (showToast) {
-        showToast(`Target Exit (TP) synced: $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%)`, "success");
-      }
-    } else {
-      if (onSetEntryPrice) onSetEntryPrice(roundedPrice);
-      if (showToast) {
-        showToast(`Entry Price synced: $${roundedPrice.toFixed(2)} (${Math.round(roundedPrice * 100)}%)`, "success");
-      }
-    }
   };
 
   const handleInspectSpike = (d: ChartDataPoint) => {
@@ -620,7 +582,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       {/* ─── 3. Main Chart Canvas with Crosshair & Pan Engine ─────────── */}
       <div
         ref={chartWrapperRef}
-        onClick={handleCanvasClick}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
