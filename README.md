@@ -84,7 +84,7 @@ However, speed without intelligence breeds reckless speculation. **ForeSight** b
 ```text
 ┌────────────────────────────────┬────────────────────────────────┬────────────────────────────────┬────────────────────────────────┐
 │ ⚡ SOMNIA L1 FINALITY          │ 📈 DREAMDEX CLOB               │ 📐 0ms MATH REFLEX             │ 🤖 AUTONOMOUS AUTO-PILOT       │
-│ 100K+ TPS                      │ 500+ Markets                   │ < 1 ms client physics          │ Multi-round session runner     │
+│ 100K+ TPS                      │ Rolling Event Markets          │ < 1 ms client physics          │ Multi-round session runner     │
 │ Sub-second reactive EVM speed  │ On-chain limit order liquidity │ Strike Radar, VC, Half-Kelly   │ Momentum/Reversal & Kill-Switch│
 └────────────────────────────────┴──────────────────────────────┴────────────────────────────────┴────────────────────────────────┘
 ```
@@ -348,7 +348,7 @@ Unlike perpetual futures with stop-loss or early take-profit triggers, binary pr
 | Hackathon Criterion & Weight | Official Hackathon Focus (from `hackathon.md`) | ForeSight Technical Implementation & Verified Proof |
 | :--- | :--- | :--- |
 | **1. Innovation & Originality**<br/>`20% Weight` | • *How novel is the idea?*<br/>• *Does the project use Event Contracts creatively to solve a real-world problem?* | • **"Understand Before You Trade" Decision Engine:** Replaces black-box predictive AI with an evidence-grounded adversarial Bull vs. Bear debate (Gemini 2.5 Flash + Meta LLaMA 3.3).<br/>• **0ms Math Reflex Architecture:** Separates deterministic micro-second math (Mini Strike Radar, Imbalance meter, Fast-Pick) from LLM cognition, avoiding 2-4s latency traps in rapid rounds.<br/>• **Physical Momentum Modeling ($VC$):** Introduces real-time Velocity Coverage ($VC = v_{\text{obs}} / v_{\text{req}}$) to mathematically identify theta-decay volatility traps before entry.<br/>• **Truth-Grounded RAG:** Ingests live RSS streams with clickable `[View Evidence]` source URLs to eliminate AI hallucinations. |
-| **2. Technical Implementation**<br/>`25% Weight` | • *How effectively does the project use DreamDEX Event Contracts and available APIs/SDKs?*<br/>• *How strong and functional is the technical implementation?* | • **100% Real DreamDEX Data Integration:** Zero mock data; connects directly to DreamDEX GraphQL Indexer (`dev.smk.somnia.host`), Binance Spot Oracles (`/api/spot`), and contract `0xbF4a49e0...`.<br/>• **Custom Deployed Smart Contract:** [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) enables atomic MultiCall batch settlements in a single transaction.<br/>• **Full 7-State Order Lifecycle:** Full tracking of `RESTING`, `IN FLIGHT`, `RESOLVING`, `SETTLED WIN`, `EXPIRED LOSS`, `REFUNDED`, and `CLAIMED`.<br/>• **100% Collateral Refund Protection:** Audits and verifies automatic principal refunds for unmatched limit orders.<br/>• **Autonomous Auto-Pilot Engine:** Configurable round runner (3/5/10 rounds) with Momentum/Reversal presets and automated 2-loss stop kill-switch.<br/>• **100% Test Coverage:** **124/124 passing Vitest tests** verifying financial math, invariants, and network resilience. |
+| **2. Technical Implementation**<br/>`25% Weight` | • *How effectively does the project use DreamDEX Event Contracts and available APIs/SDKs?*<br/>• *How strong and functional is the technical implementation?* | • **100% Real DreamDEX Data Integration:** Zero mock data; connects directly to DreamDEX GraphQL Indexer (`dev.smk.somnia.host`), Binance Spot Oracles (`/api/spot`), and contract `0xbF4a49e0...`.<br/>• **Custom Deployed Smart Contract:** [`ForeSightBatchSweeper.sol`](https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9) enables atomic MultiCall batch settlements in a single transaction.<br/>• **Full 7-State Order Lifecycle:** Full tracking of `RESTING`, `IN FLIGHT`, `RESOLVING`, `SETTLED WIN`, `EXPIRED LOSS`, `REFUNDED`, and `CLAIMED`.<br/>• **100% Collateral Refund Protection:** Audits and verifies automatic principal refunds for unmatched limit orders.<br/>• **Autonomous Auto-Pilot Engine:** Configurable round runner (3/5/10 rounds) with Momentum/Reversal presets, 12s pacing cooldown, and emergency abort kill-switch.<br/>• **100% Test Coverage:** **124/124 passing Vitest tests** verifying financial math, invariants, and network resilience. |
 | **3. User Experience & Design**<br/>`20% Weight` | • *How intuitive, accessible, and usable is the product?*<br/>• *Does it provide a compelling overall user experience?* | • **Polymarket-Standard Order Ticket:** Intuitive YES/NO tabs, rapid USD preset chips ($10, $25, $50, $100, Max), Shares, potential payout, and ROI% calculation.<br/>• **Agent Fast-Pick (0ms Reflex):** 1-Click ⚡ MOMENTUM PICK and 🛡️ REVERSAL PICK auto-filling ticket with explainable signal tags.<br/>• **1-Minute HFT Quant Cockpit:** Tactical Strike Radar Gauge, 60-Second Round Expiry Phase Bar, and direct on-chain execution CTA.<br/>• **Trading Cutoff Protection:** Proactively disables orders near expiry, eliminating `TradingNotActive()` revert errors.<br/>• **Zero-Barrier Simulation Sandbox:** Instant terminal exploration with virtual funds without requiring wallet connection or testnet faucet tokens. |
 | **4. Business & Ecosystem Impact**<br/>`20% Weight` | • *Does the project have the potential to: Attract new users, Generate trading activity, Increase Event Contracts adoption, Expand the DreamDEX ecosystem, Create a sustainable product?* | • **Eliminating Capital Stagnation:** `ForeSightBatchSweeper.sol` reduces settlement overhead from $O(N)$ repetitive manual transactions to $O(1)$ atomic execution, returning idle capital back into circulation.<br/>• **Converting Casino Churn to Informed Trading:** Giving traders institutional risk metrics ($VC$, Kelly Criterion, Black-Scholes Edge) prevents rapid retail wipeout and fosters sustainable, disciplined trading volume.<br/>• **Bootstrapping CLOB Liquidity:** 4 open-source bot templates allow builders to deploy automated market-making and arbitrage strategies against DreamDEX orderbooks.<br/>• **Frictionless Top-of-Funnel Onboarding:** 0-wallet Sandbox lowers Web3 entry barriers; 1200×675 HD **Alpha Card Studio** enables verifiable cryptographic sharing on X and Telegram. |
 | **5. Presentation & Demo**<br/>`15% Weight` | • *How clearly does the team communicate: The problem, The solution, The product, The demonstration, The future vision?* | • **Live Production Terminal:** Instantly accessible and verifiable on Vercel at [foresightdex.vercel.app](https://foresightdex.vercel.app/).<br/>• **Engineering Documentation:** Complete mathematical derivations, full architectural diagrams, and a dedicated Developer Feedback Report for Somnia core engineers.<br/>• **Machine-Readable Evidence Artifact:** [`evidence.json`](./evidence.json) with verified on-chain proof trails and explorer transaction anchors. |
@@ -540,7 +540,7 @@ ForeSight organizes all trading and quantitative operations into **5 specialized
 | **1. Overview**<br/>`LandingPage.tsx` | Protocol presentation & telemetry | Institutional product overview, real-time live ticker bar, 4-stage pipeline showcase, and 1-click terminal launch. |
 | **2. Terminal**<br/>`PriceChart.tsx` + `ScenarioSimulator.tsx` + `DepthChart.tsx` | High-frequency CLOB trading & 0ms Reflex | Spot Candlesticks with on-chain Strike line, **Mini Strike Radar & Imbalance Meter** (0ms math reflex), **Polymarket-Standard Ticket** (1-click USD chips $10/$25/$50/$100/Max), **Agent Fast-Pick** (⚡ Momentum / 🛡️ Reversal), and Trading Cutoff Protection. |
 | **3. Analytics**<br/>`AnalyticsView.tsx` | 1-Minute HFT Quant Cockpit | **Tactical Strike Radar Gauge**, **60-Second Round Expiry Phase Bar** (Discovery $\to$ Lock $\to$ Cutoff), Closed-form Black-Scholes $\Phi(d2)$ fair value, Orderbook Imbalance ($OI\%$), Velocity Coverage ($VC$), and direct CTA `⚡ TRADE WITH QUANT EDGE`. |
-| **4. AI Insights**<br/>`InsightsView.tsx` | Dual AI Arena & Auto-Pilot Command | Adversarial debate (Gemini 2.5 Flash vs Meta LLaMA 3.3 70B), **Autonomous Auto-Pilot Runner & Risk Guardrail Engine** (3/5/10 rounds, Momentum/Reversal presets, 2-loss stop kill-switch), Autonomous Execution Streak metrics, and Copilot Signals Feed. |
+| **4. AI Insights**<br/>`InsightsView.tsx` | Dual AI Arena & Auto-Pilot Command | Adversarial debate (Gemini 2.5 Flash vs Meta LLaMA 3.3 70B), **Autonomous Auto-Pilot Runner & Risk Guardrail Engine** (3/5/10 rounds, Momentum/Reversal presets, 12s pacing cooldown & emergency abort), Autonomous Execution Streak metrics, and Copilot Signals Feed. |
 | **5. Portfolio**<br/>`ActivityView.tsx` + `PositionsTable.tsx` | On-chain ledger & Alpha Card Studio | **Full 7-State Lifecycle** (`RESTING`, `IN FLIGHT`, `RESOLVING`, `SETTLED WIN`, `EXPIRED LOSS`, `REFUNDED`, `CLAIMED`), transparent PnL and 100% Refund reporting, **1-Click MultiCall Batch Sweeper**, and exportable **1200×675 HD Alpha Cards**. |
 
 ---
@@ -568,7 +568,7 @@ ForeSight organizes all trading and quantitative operations into **5 specialized
 │ • Spot Candlesticks & Radar    │ Recharts, SVG Sparklines      │ 0ms client math reflex         │
 │ • 1-Minute HFT Quant Cockpit   │ Tactical Gauge & Phase Bar    │ Real-time strike & expiry phase│
 │ • Polymarket-Standard Ticket   │ Preset chips, ROI calculator  │ Cutoff protection guardrail    │
-│ • Autonomous Auto-Pilot Runner │ Multi-round execution runner  │ 2-loss stop kill-switch safety │
+│ • Autonomous Auto-Pilot Runner │ Multi-round execution runner  │ 12s pacing delay & manual abort│
 │ • Alpha Card Studio (1:1 UI)   │ HTML5 Canvas, Web Share APIs  │ 1200×675 HD on-chain export    │
 └────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
 
@@ -578,7 +578,7 @@ ForeSight organizes all trading and quantitative operations into **5 specialized
 │ Subsystem / Component          │ Technology Stack              │ Guaranteed SLA & Invariants    │
 ├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
 │ • Snapshot Polling Worker      │ Node.js, Express, TypeScript  │ 10s cadence across pools       │
-│ • News Ingestion & Multi-RAG   │ Multi-Source Stream (5 Venues)│ Verified source RSS citations  │
+│ • News Ingestion & Multi-RAG   │ CryptoPanic, Gecko, Top Venues│ Verified source RAG citations  │
 │ • Dual Debate Engine           │ Gemini 2.5 / Meta LLaMA 3.3   │ Strict Zod schema, <1.5s delay │
 │ • Quantitative Pricing Core    │ Chebyshev Rational Approx     │ Rational error |ε| < 1.5×10⁻⁷  │
 │ • Settlement Sweeper Engine    │ Batch Scanning Worker         │ Recovers claimable winnings    │
@@ -586,14 +586,14 @@ ForeSight organizes all trading and quantitative operations into **5 specialized
 └────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ 🤖 TIER 3: AUTONOMOUS SWARM & AUTO-PILOT RUNNERS                                                 │
+│ 🤖 TIER 3: AUTONOMOUS STRATEGY & AUTO-PILOT RUNNERS                                              │
 ├────────────────────────────────┬───────────────────────────────┬────────────────────────────────┤
 │ Agent Persona                  │ Operational Trigger           │ Execution & Strategy Invariant │
 ├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
-│ • ⚡ Auto-Pilot (Momentum)      │ ΔP/Strike > 0 & OI > +15%     │ Immediate trend follow snipe   │
-│ • 🛡️ Auto-Pilot (Reversal)     │ Oversold deviation from strike│ Mean-reversion counter snipe   │
-│ • 🔮 Oracle (Arbitrageur)      │ |P_spot - P_clob| > 50 bps    │ Exploits Binance vs CLOB drift │
-│ • 🛡️ Titan (Market Maker)      │ Continuous quoting loop       │ Quotes tight spread (e.g. 40bp)│
+│ • ⚡ Auto-Pilot (Momentum)      │ Bull/Bear Conviction ≥ 50%    │ Trend-following CLOB dispatch  │
+│ • 🛡️ Auto-Pilot (Reversal)     │ Mean-reversion counter pick   │ Fades overextended skew        │
+│ • 🔮 Oracle (Arbitrageur)      │ Implied odds lag (<35% in 5m) │ Exploits spot vs CLOB drift    │
+│ • 🛡️ Titan (Market Maker)      │ Continuous quoting loop       │ Quotes two-sided spread (±3%)  │
 │ • 🧹 Sweeper (Claim Bot)       │ Expiry < Now & Claimable > 0  │ Automated batch payout sweeps  │
 └────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
 
@@ -603,7 +603,7 @@ ForeSight organizes all trading and quantitative operations into **5 specialized
 │ Protocol Component             │ Network & Contract Layer      │ Guaranteed SLA & Invariants    │
 ├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
 │ • DreamDEX CLOB Contracts      │ Solidity, BinaryPool, Viem    │ Non-custodial escrow & orders  │
-│ • DreamDEX Settlement Router   │ 0xbF4a49e0...                 │ Singleton settlement lookup    │
+│ • DreamDEX Settlement Router   │ 0xbF4a49e0Dfd092e5FBE8E...    │ Singleton settlement lookup    │
 │ • ForeSight Batch Sweeper      │ Custom MultiCall Router (Sol) │ 1-Click Atomic Batch Claiming  │
 │ • GraphQL Indexer              │ dev.smk.somnia.host           │ Sub-second indexer query speed │
 │ • Somnia Shannon Testnet       │ Somnia L1 (Chain ID: 50312)   │ Sub-second block finality      │
@@ -764,7 +764,7 @@ Open **`http://localhost:3000`** in your browser.
 ### 5. CLI Developer Utilities
 ```bash
 npm run doctor            # Validate Somnia RPC, Indexer, Venue ID, and wallet state
-npm run markets           # Query and inspect all 500+ active event contracts
+npm run markets           # Query and inspect active event contracts across cadences (1m, 5m, 15m, 1h, 4h)
 npm run claim             # Scan finalized markets and execute batch settlement sweep
 npm run contracts:compile # Compile ForeSightBatchSweeper.sol smart contract
 npm run contracts:deploy  # Deploy ForeSightBatchSweeper to Somnia Shannon Testnet
@@ -779,8 +779,8 @@ npm run agent:copilot     # Launch Autonomous AI Copilot Bot
 ## 🗺️ 13. Future Roadmap Beyond Hackathon
 
 | Phase & Milestone | Target Timeline | Strategic Focus | Core Technical Deliverables | Ecosystem Impact on Somnia | Status |
-| :--- | :---: | :--- | :--- | :--- | :---: |
-| **Phase 1: Testnet & Swarm Launch** | **Q3 2026**<br/>*(Current)* | • Shannon Testnet MVP<br/>• Core Decision Loop<br/>• Swarm Personas | • Single-Screen Bento Trading Terminal<br/>• Dual AI Adversarial Debate Arena with RAG<br/>• Deterministic Velocity Coverage ($VC$) Modeling<br/>• 4 Strategy Bot Runners (Volt, Oracle, Titan, Sweeper)<br/>• 1200×675 HD Proof-of-Thesis Alpha Card Studio | • Proves sub-second trading viability on Somnia<br/>• Ingests 500+ DreamDEX event contracts<br/>• Eliminates stranded capital via Settlement Sweeper | **🟢 Complete & Live** |
+| :--- | :--- | :--- | :--- | :--- | :---: |
+| **Phase 1: Testnet & Terminal Launch** | **Q3 2026**<br/>*(Current)* | • Shannon Testnet MVP<br/>• Core Decision Loop<br/>• Automated Strategy Suite | • 5-Tab Bento Trading Terminal<br/>• Dual AI Adversarial Debate Arena with RAG<br/>• Deterministic Velocity Coverage ($VC$) Modeling<br/>• In-Terminal Auto-Pilot + 4 CLI Bot Runners (Volt, Oracle, Titan, Sweeper)<br/>• 1200×675 HD Proof-of-Thesis Alpha Card Studio | • Proves sub-second trading viability on Somnia<br/>• Ingests active rolling DreamDEX event contracts<br/>• Eliminates stranded capital via Settlement Sweeper | **🟢 Complete & Live** |
 | **Phase 2: Somnia Mainnet & Reactive Agents** | **Q4 2026** | • Mainnet Deployment<br/>• Native Reactive VM<br/>• Institutional API | • Deployment on Somnia Mainnet with full SOMI token support<br/>• Integration with **Somnia Native Reactive Agents** for on-chain trigger execution without off-chain keepers<br/>• Institutional REST API & typed WebSocket SDK<br/>• Mobile-optimized Progressive Web App (PWA) | • Drives continuous on-chain transaction volume<br/>• First prediction terminal leveraging Somnia Native Reactivity | **🔵 Planned** |
 | **Phase 3: Cross-Venue Prediction Aggregator** | **2027+** | • Prediction Aggregation<br/>• Social Copy-Trading<br/>• Decentralized Swarms | • Smart Order Routing (SOR) across multi-venue prediction pools<br/>• Non-custodial Social Copy-Trading Vaults with verifiable Proof-of-Alpha<br/>• Community-staked Autonomous Agent Swarm Arenas<br/>• Multi-asset index and basket event contracts | • Establishes ForeSight as the primary liquidity and intelligence router for the Somnia ecosystem | **🔵 Planned** |
 
