@@ -123,71 +123,143 @@
 
 ---
 
-## 5. ĐỊNH HƯỚNG CHIẾN LƯỢC ĐỘT PHÁ ĐỂ CHIẾN THẮNG HACKATHON (1-MINUTE AGENTIC TERMINAL)
-> **Ngày phê duyệt định hướng:** 10/09/2026  
-> **Trọng tâm:** Giải quyết triệt để nghịch lý "Prediction 1 phút không cần AI phân tích", né đòn đối thủ DreamPulse và tối đa hóa điểm số tiêu chí Somnia × DreamDEX.
+## 5. BÁO CÁO PHẢN BIỆN CHUYÊN GIA & CHIẾN LƯỢC TÁI CẤU TRÚC (STRATEGIC EVOLUTION)
+> **Cập nhật ngày:** 10/09/2026  
+> **Nguồn:** Đánh giá độc lập theo Hackathon Rubric & Đối chiếu hệ sinh thái (DreamDEX Bot Kit, Lucid Somnia, PredicTrader AI)  
+> **Mục tiêu:** Thoát khỏi bẫy "AI slop" và "Bot wrapper", xây dựng vị thế cạnh tranh độc tôn (Unfair Advantage) để đạt thang điểm **90–95+**.
 
-### 5.1. Bóc tách Nghịch lý Cốt lõi (The 1-Minute Paradox)
-* **Thực trạng phát hiện:** Trong các round prediction chốt nhanh (1 phút / 5 phút), người chơi hành động bằng **phản xạ (reflex), cảm quan dòng tiền (tape flow) và tốc độ**. Không một ai rảnh rỗi ngồi đọc văn bản phân tích hay nghe AI đọc bài luận dài dòng.
-* **Sai lầm kiểu cũ:** Biến AI thành **"Nhà phân tích bằng lời (Analyst)"** — cố gắng đọc báo CoinDesk, viết luận Bull/Bear. Đây là tính năng thừa thãi và lệch pha hoàn toàn với sản phẩm.
-* **Định vị mới:** Biến AI thành **"Tay đấm thực thi tự động (Autonomous Trading Agent)"**:
-  * AI không sinh ra để giải thích lý lẽ cho người dùng đọc.
-  * AI sinh ra để **làm thay con người**: Tự động quét sổ lệnh, tự động bắt nhịp chốt lệnh trong 300ms trên Somnia L1, giải phóng người dùng khỏi việc phải canh màn hình 60 round mỗi tiếng.
+### 5.1. Bóc Tách Đánh Giá Chuyên Gia (Critique Summary)
 
-### 5.2. Bản đồ Cạnh tranh: ForeSight vs Đối thủ Cực mạnh (DreamPulse)
-* **Phân tích đối thủ:** DreamPulse là dự án institutional-grade rất mạnh về mặt backend/quant (EIP-1167 smart account factory, 507 unit tests, no-code strategy builder, backtesting lab, khung giao dịch $\ge 15m$).
-* **Chiến lược Bất đối xứng (Asymmetric Edge):** 
-  * Không chạy đua làm no-code studio hay backtester phức tạp theo chân họ (tránh trùng lặp ý tưởng).
-  * Chiếm trọn ngách **Consumer-Facing / 1-Minute High-Frequency Prediction** — phân khúc mà DreamPulse hoàn toàn bỏ trống:
-    * DreamPulse phức tạp, hàn lâm $\to$ ForeSight tức thì, cảm xúc, thân thiện với retail degen.
-    * DreamPulse chạy bot ngầm ẩn danh $\to$ ForeSight có **1-Click Agent Runner** trực quan, live PnL nhảy từng round.
-
-### 5.3. Kế hoạch Tái Cấu Trúc 2 Màn Hình Cốt Lõi
-
-```mermaid
-flowchart TD
-    subgraph Analytics["AnalyticsView.tsx -> HFT Cockpit (0.5s Liếc Mắt)"]
-        A1[Xóa sạch tin tức & Lịch sự kiện vĩ mô]
-        A2[Tick Strike Radar: Spot - Strike live 100ms]
-        A3[Phase Bar 60s: Safe Zone vs Danger/Flip Zone ở 15s cuối]
-        A4[Sổ lệnh CLOB Imbalance trực quan]
-    end
-
-    subgraph Insights["InsightsView.tsx -> Autonomous Agent Command Center"]
-        B1[Xóa sạch RAG tin tức báo chí & Luận điểm chữ]
-        B2[1-Click Agent Runner: Gemini Momentum vs LLaMA Reversal]
-        B3[Cơ chế Ủy quyền: Đặt cọc tUSDC -> Bot tự đánh N rounds]
-        B4[Live Execution Stream: TxHash on Somnia + Streak Win/Loss]
-        B5[HFT Sound Alerts: Cảnh báo âm thanh ngắn thay vì đọc văn]
-    end
-```
-
-#### A. Tái cấu trúc `AnalyticsView.tsx` $\to$ HFT Cockpit (Buồng Lái Phản Xạ 1 Phút)
-1. **Xóa bỏ 100% văn bản rườm rà**: Gỡ bỏ `<EventTimeline />`, các phân tích vĩ mô, các đoạn mô tả Black-Scholes lý thuyết.
-2. **Visual Strike Distance Radar**:
-   * Thanh đo độ lệch $Spot - Strike$ cập nhật theo từng tick 100ms từ Binance Oracle.
-   * Phân vùng màu trực quan: 🟢 *Safe Zone* ($> 0.05\%$) vs 🔴 *Danger / Flip Zone* ($\pm 0.01\%$).
-3. **Round Expiry Phase Bar**: Hiển thị nhịp 60 giây:
-   * `0s - 30s`: Open Accumulation.
-   * `30s - 45s`: Momentum Lock.
-   * `45s - 60s`: Pin-Risk / Last Seconds Squeeze.
-4. **Mục tiêu**: Người dùng liếc mắt trong **0.5 giây** là nắm toàn bộ cục diện round cược mà không cần đọc chữ.
-
-#### B. Tái cấu trúc `InsightsView.tsx` $\to$ Autonomous Agent Command Center
-1. **Xóa bỏ 100% RAG News & Bài luận AI**: Gỡ bỏ bảng tin CoinDesk, gỡ bỏ các đoạn văn phân tích hỗ trợ/kháng cự của Gemini và LLaMA.
-2. **Triển khai 1-Click Autonomous Agent Runner**:
-   * Người dùng nạp hạn mức (ví dụ 10 tUSDC) và chọn 1 trong 2 Agent có sẵn:
-     * ⚡ **Gemini Momentum Agent**: Đánh đu trend theo đà nến.
-     * 🛡️ **LLaMA Reversal Agent**: Chuyên săn bẫy bẻ cầu khi thị trường bệt quá 4 cây cùng màu.
-   * Bấm nút: **[ACTIVATE 10-ROUND AUTO RUN]** $\to$ Agent tự động gửi lệnh tương tác trực tiếp với hợp đồng DreamDEX trên Somnia L1 qua từng phút.
-3. **Live Execution Feed & Streak Leaderboard**:
-   * Bảng nhật ký khớp lệnh chạy theo thời gian thực (TxHash explorer link, PnL từng round).
-   * Thống kê Win-Rate Streak (thắng liên tiếp bao nhiêu round).
-4. **HFT Audio Alerts**: Chuyển giọng đọc dài 30 giây thành các hiệu ứng âm thanh cảnh báo phản xạ tức thì (*"10s Remaining"*, *"Strike Defended"*, *"Order Filled in 280ms"*).
+| Luận điểm chuyên gia | Đánh giá tính xác đáng | Quyết định điều chỉnh của ForeSight |
+| :--- | :--- | :--- |
+| **Không nên định vị "HFT" quá đà** | **Chính xác 100%**: DreamDEX là on-chain CLOB trên Somnia, Bot Kit đã có template cơ bản. Tuyên bố "HFT" dễ bị judge chất vấn về microstructure & infra. | Đổi định vị sang: **Autonomous Short-Duration Event Contract Terminal** ("AI watches the market. You decide the risk. ForeSight executes the next N rounds"). |
+| **Compressed Intelligence thay vì AI Essay** | **Chính xác 100%**: User không cần 500 chữ phân tích trong round ngắn; cần tín hiệu trực quan hóa cực nhanh (0.5s comprehension). | Thay thế văn bản dài dòng bằng **Strike Radar + Order Imbalance + Compressed Signal Why?**. |
+| **Bỏ nhãn "Gemini Momentum vs LLaMA Reversal"** | **Chính xác 100%**: LLM không phải thứ tạo ra edge cho momentum toán học; gắn nhãn LLM tạo cảm giác "AI wrapper bọc bot". | Chuyển thành **Chiến lược hành vi (Strategy Personalities)**: `⚡ MOMENTUM`, `🛡️ REVERSAL`, `🎯 BALANCED`. |
+| **Cảnh báo bẫy "60-Second Market"** | **Rất sâu sắc**: Builder khác (Lucid Somnia) ghi nhận 60s testnet có thể gặp bottleneck thực thi, demo thực tế dùng 300s. | Không hardcode 60s; xây dựng **Adaptive Epoch Engine** tương thích cả round 60s (Blitz) lẫn 300s (Tactical). |
+| **Cần có Guardrail Risk Engine** | **Cực kỳ cốt lõi**: Autonomous trading mà không có tầng quản trị rủi ro thì không phải Agent thật. | Bổ sung: Max loss limit, Max rounds, Stop after N consecutive losses, Cooldown circuit-breaker. |
+| **Tận dụng Session Keys (Operator Keys)** | **Điểm cộng kỹ thuật lớn**: Không lưu private key trên server; phân tách rõ Fund Key (ví user) và Operator Key (chỉ trade/cancel, không thể rút vốn). | Tích hợp kiến trúc Session Key không lưu ký (Non-custodial Session Key Delegation). |
 
 ---
 
-## 6. KẾ HOẠCH HÀNH ĐỘNG TIẾP THEO (NEXT STEPS)
-1. [ ] **Giai đoạn 1**: Tái cấu trúc [`AnalyticsView.tsx`](file:///D:/Coding/Somnia/src/ui/components/AnalyticsView.tsx) thành **1-Minute HFT Strike Radar** (xóa bỏ EventTimeline, lắp thanh đo Delta thời gian thực).
-2. [ ] **Giai đoạn 2**: Tái cấu trúc [`InsightsView.tsx`](file:///D:/Coding/Somnia/src/ui/components/InsightsView.tsx) thành **Agent Command Center** (bỏ tin tức RAG, thêm giao diện ủy quyền Bot 1-Click Auto Run).
-3. [ ] **Giai đoạn 3**: Hoàn thiện kịch bản Demo Video 2-3 phút kịch tính (showcase tốc độ sub-second của Somnia L1 và tính năng tự động cày vol của AI Agent).
+### 5.2. Phản Biện Sắc Bén & Nâng Cấp Kiến Trúc (ForeSight's Counter-Critique & Edge)
+
+Dù chuyên gia đưa ra hướng tinh gọn rất chuẩn, nếu làm theo một cách máy móc, ForeSight sẽ đối mặt với 4 rủi ro mới:
+1. **Rủi ro mất chất "AI":** Nếu gạt bỏ hoàn toàn AI và chỉ dùng công thức toán (`Momentum Score = Velocity + Imbalance`), Judge track AI sẽ hỏi: *"Tại sao gọi đây là AI Agent? Đây chỉ là script Bot Kit thông thường với vài câu lệnh if/else!"*
+2. **Rủi ro đứt gãy UX khi tách 2 màn hình riêng biệt:** User xem bot chạy nhưng không thấy tương quan giá so với Strike trên Radar.
+3. **Rủi ro mất Lead Signal nếu bỏ Binance Feed:** Chỉ quan sát DreamDEX feed thì không có bất kỳ lợi thế thông tin nào trước các bot khác.
+
+**Giải pháp nâng cấp đột phá của ForeSight:**
+
+#### A. Kiến trúc Hybrid Neuro-Symbolic (Math Reflex + Cognitive Agent)
+* **Reflex Engine (Deterministic Math - Sub-second):** Tính toán độ lệch Strike, Orderbook Imbalance, Price Velocity. Math làm việc của Math, không bắt LLM làm toán.
+* **Cognitive Agent Layer (Adaptive Policy & Regime Detection):**
+  * **Regime Classification:** Nhận diện trạng thái thị trường (*Trend Expansion* vs *Pin-Risk Choppiness sát Strike*) để tự động điều chỉnh ngưỡng threshold cho toán học.
+  * **Post-Mortem Reflection Loop:** Sau mỗi round thua, Agent thực hiện phản tư nhanh: *"Round vừa rồi thua do Imbalance đảo chiều đột ngột ở 5s cuối -> Giảm tỷ trọng Imbalance, tăng Strike Distance safety margin cho vòng tiếp theo."*
+  * *Pitching Thesis:* **"The math fires the shot; the Agent calibrates the rifle between rounds."**
+
+#### B. Oracle Latency Arbitrage (Lead-Lag Information Asymmetry)
+* **Settlement Source:** Tuân thủ 100% theo Settlement Contract & Oracle chính thức của DreamDEX trên Somnia L1.
+* **Leading Alpha Signal:** Stream tick-by-tick từ Binance WebSocket (~50-100ms). Nếu CEX giật breakout vượt Strike $0.15\%$ mà On-chain CLOB chưa kịp phản ánh, Agent lập tức bắt nhịp đặt lệnh trước khi cửa sổ đóng. Đây là alpha thực sự của thị trường quyền chọn ngắn hạn.
+
+#### C. Unified Tactical Cockpit (Buồng Lái Tác Chiến Hợp Nhất)
+* Không chia rẽ Market và Agent thành 2 tab rời rạc làm nguội cảm xúc người dùng.
+* **Layout Duy Nhất:**
+  * **Trung tâm / Bên trái:** **Strike Radar** trực quan (hiển thị vị trí thực của giá so với Strike, đếm ngược, Orderbook Imbalance).
+  * **Bên phải / Overlay:** **Agent Auto-Pilot HUD** (chọn Strategy, cài Risk Engine, kích hoạt 10-Round Run).
+  * **Hiệu ứng Điện Ảnh (Cinematic Moment for Demo):** Khi Agent bắn lệnh ở giây thứ 12, một Marker sinh động nảy ngay trên Strike Radar: `[⚡ AGENT ENTERED: YES @ $0.48 | CONFIDENCE 84%]`. Người xem vừa thấy lý do vào lệnh, vừa thấy vị trí giá đang rung lắc so với Strike.
+
+---
+
+### 5.3. Ma Trận Cạnh Tranh: Khác Biệt Hóa Tuyệt Đối
+
+```text
+┌────────────────────┬────────────────────┬────────────────────┬────────────────────┐
+│ Tiêu chí           │ DreamDEX Bot Kit   │ Lucid Somnia       │ ForeSight          │
+├────────────────────┼────────────────────┼────────────────────┼────────────────────┤
+│ Target User        │ Developers (CLI)   │ Quants / Protocols │ Retail / Degens    │
+│ Giao diện          │ Code template      │ On-chain desk/lab  │ Visual Cockpit HUD │
+│ Thời gian hiểu     │ Vài giờ đọc docs   │ Vài phút đọc spec  │ 0.5s Glanceable    │
+│ Quản trị rủi ro    │ Tự code script     │ Contract-level     │ Visual Guardrails  │
+│ Bảo mật            │ Env private key    │ Keeper-based       │ Session Keys       │
+│ Trải nghiệm cốt lõi│ Chạy ngầm terminal │ Abstract desk      │ Streak/PnL Loop    │
+└────────────────────┴────────────────────┴────────────────────┴────────────────────┘
+```
+
+---
+
+### 5.4. Sơ Đồ Khối Kiến Trúc Toàn Diện (End-to-End Flow)
+
+```mermaid
+flowchart TD
+    subgraph SignalLayer["1. Dual Signal Stream"]
+        CEX[Binance WebSocket <br/> Fast Leading Signal 50ms]
+        DEX[DreamDEX CLOB & Indexer <br/> Settlement State & Orderbook]
+    end
+
+    subgraph FeatureEngine["2. Feature & Reflex Engine (Deterministic Math)"]
+        FE[Feature Extractor<br/>• Strike Distance: +0.084%<br/>• Order Imbalance: 73% Bid<br/>• Price Velocity & Acceleration]
+    end
+
+    subgraph CognitiveLayer["3. Cognitive Agent & Risk Guardrails"]
+        Agent[Autonomous Agent Strategy<br/>• Regime Classifier: Trend vs Pin-Risk<br/>• Strategy: Momentum / Reversal / Balanced<br/>• Post-Mortem Loss Reflection]
+        Risk[Guardrail Risk Engine<br/>• Max Capital Allocated<br/>• Max Loss Cooldown<br/>• Kill-Switch: Stop after 3 losses]
+    end
+
+    subgraph ExecutionLayer["4. Non-Custodial Execution"]
+        Session[Delegated Session Key<br/>Trade-Only | No-Withdrawal]
+        DEX_Exec[DreamDEX Contract Executor<br/>IOC / Market Order on Somnia L1]
+    end
+
+    subgraph UXCockpit["5. Unified Tactical Cockpit"]
+        Radar[Strike Radar Live Canvas]
+        Explain[Explainable Box: 3 Signal Factors]
+        Streak[PnL Tracker & Win-Rate Streak]
+    end
+
+    SignalLayer --> FE
+    FE --> Agent
+    Agent --> Risk
+    Risk --> Session
+    Session --> DEX_Exec
+    DEX_Exec --> UXCockpit
+    UXCockpit -. Post-Round Feedback .-> Agent
+```
+
+---
+
+## 6. KẾ HOẠCH HÀNH ĐỘNG TRIỂN KHAI (VERTICAL SLICE ROADMAP)
+
+### Giai đoạn 1: Tái cấu trúc giao diện thành Unified Tactical Cockpit (`AnalyticsView.tsx`)
+- [ ] Gỡ bỏ hoàn toàn `EventTimeline`, tin tức RAG vĩ mô và bài luận lý thuyết.
+- [ ] Xây dựng **Strike Radar Widget**:
+  - Trục ngang Strike cố định ở giữa; bóng nến/chấm giá di chuyển thời gian thực.
+  - Phân vùng trực quan: `Safe Zone` vs `Flip/Danger Zone`.
+  - Đồng hồ đếm ngược Phase Bar: `Discovery (0-30s)` $\to$ `Confirmation (30-45s)` $\to$ `Expiry (45-60s)`.
+- [ ] Xây dựng **Orderbook Imbalance Gauge**: Thanh đo tương quan Bid/Ask trực quan ($73\%$ Bid vs $27\%$ Ask).
+
+### Giai đoạn 2: Tích hợp Agent Auto-Pilot Panel & Risk Engine
+- [ ] Xây dựng bảng điều khiển chiến lược (Strategy Selector):
+  - ⚡ **MOMENTUM:** Đánh bám trend theo xung lực giá và bid imbalance.
+  - 🛡️ **REVERSAL:** Săn bẫy đảo chiều khi giá kéo xa strike và cạn kiệt động lượng.
+  - 🎯 **BALANCED:** Chỉ kích hoạt khi độ tin cậy $> 80\%$.
+- [ ] Triển khai **Guardrail Risk Engine Form**:
+  - `Allocated Capital` (ví dụ 10 tUSDC).
+  - `Rounds to Trade` (ví dụ 5, 10 rounds).
+  - `Risk Per Round` (ví dụ 1 tUSDC).
+  - `Stop Condition` (dừng khi thua liên tiếp 3 rounds hoặc chạm Max Loss).
+- [ ] Thiết kế **Explainable Decision Box**: Hiển thị 3 chỉ số ngắn gọn vì sao vào lệnh (thay vì bài văn AI):
+  - `✓ Strike Distance: +11 bps`
+  - `✓ CLOB Imbalance: 78% Bid`
+  - `✓ Momentum Velocity: +0.031%`
+
+### Giai đoạn 3: Cơ chế Session Keys & Direct Execution
+- [ ] Triển khai Session Key Provider: Tạo ephemeral keypair trong trình duyệt, user ký cấp quyền `Trade-Only` (không có quyền `Withdraw`).
+- [ ] Kết nối Executor gửi lệnh trực tiếp vào DreamDEX Settlement / CLOB contract với cờ IOC (Immediate-Or-Cancel).
+- [ ] Cập nhật bảng PnL & Streak Counter trực tiếp trên màn hình: Hiển thị chuỗi thắng/thua `✓ +0.18 | ✓ +0.21 | ✕ -0.10` kèm link Somnia Explorer TxHash.
+
+### Giai đoạn 4: Quay Video Demo 2.5 Phút Chuẩn Sân Khấu Hackathon
+- [ ] **00:00 - 00:20 (Hook):** *"A one-minute prediction contract shouldn't require you to watch the screen for 60 seconds."*
+- [ ] **00:20 - 00:50 (The Cockpit):** Giới thiệu Strike Radar & Imbalance (nắm bắt cục diện trong 0.5s).
+- [ ] **00:50 - 01:30 (Agent In Action):** Chọn Momentum, set 10 rounds/10 tUSDC, kích hoạt bot bằng Session Key $\to$ Lệnh bắn lên radar và on-chain trong 300ms.
+- [ ] **01:30 - 02:10 (Risk & Settlement):** Demo 1 round thắng, 1 round thua và Risk Engine lập tức kiểm soát vốn; link TxHash trên Somnia Explorer.
+- [ ] **02:10 - 02:30 (Closing):** *"Don't watch the market. Let ForeSight watch it for you."*
