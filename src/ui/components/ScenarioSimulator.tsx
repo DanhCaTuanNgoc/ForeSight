@@ -188,7 +188,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             }}
             className={`px-3 py-1 rounded-none font-bold transition-all cursor-pointer ${
               orderMode === "MARKET"
-                ? "bg-violet-600 text-white border border-violet-400/60 shadow-[0_0_8px_rgba(124,58,237,0.3)]"
+                ? "bg-violet-600 text-white border border-violet-400/60"
                 : "text-gray-400 hover:text-white border border-transparent"
             }`}
           >
@@ -202,7 +202,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             }}
             className={`px-3 py-1 rounded-none font-bold transition-all cursor-pointer ${
               orderMode === "LIMIT"
-                ? "bg-violet-600 text-white border border-violet-400/60 shadow-[0_0_8px_rgba(124,58,237,0.3)]"
+                ? "bg-violet-600 text-white border border-violet-400/60"
                 : "text-gray-400 hover:text-white border border-transparent"
             }`}
           >
@@ -229,7 +229,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 onClick={() => handleSelectOutcome("YES")}
                 className={`p-3 rounded-none border transition-all flex flex-col justify-between gap-1.5 cursor-pointer text-left select-none relative overflow-hidden group ${
                   outcome === "YES"
-                    ? "bg-emerald-950/50 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.25)] text-white"
+                    ? "bg-emerald-950/50 border-emerald-500 text-white"
                     : "bg-[#0E0E17] border-white/[0.08] hover:border-emerald-500/40 text-gray-400 hover:text-gray-200"
                 }`}
               >
@@ -238,7 +238,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                     <span
                       className={`w-2 h-2 rounded-none transition-all ${
                         outcome === "YES"
-                          ? "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"
+                          ? "bg-emerald-400"
                           : "bg-gray-600 group-hover:bg-emerald-500/60"
                       }`}
                     />
@@ -277,7 +277,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 onClick={() => handleSelectOutcome("NO")}
                 className={`p-3 rounded-none border transition-all flex flex-col justify-between gap-1.5 cursor-pointer text-left select-none relative overflow-hidden group ${
                   outcome === "NO"
-                    ? "bg-rose-950/50 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.25)] text-white"
+                    ? "bg-rose-950/50 border-rose-500 text-white"
                     : "bg-[#0E0E17] border-white/[0.08] hover:border-rose-500/40 text-gray-400 hover:text-gray-200"
                 }`}
               >
@@ -286,7 +286,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                     <span
                       className={`w-2 h-2 rounded-none transition-all ${
                         outcome === "NO"
-                          ? "bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)] animate-pulse"
+                          ? "bg-rose-400"
                           : "bg-gray-600 group-hover:bg-rose-500/60"
                       }`}
                     />

@@ -12,7 +12,6 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  Sparkles,
   Zap,
   X,
   Volume2,
@@ -1018,10 +1017,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       {radarMetrics && (
         <div className="px-3 py-1.5 bg-[#07070C] border-t border-white/[0.08] flex flex-wrap items-center justify-between text-[10px] font-mono select-none gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="flex items-center gap-1 font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-500/30 px-1.5 py-0.5">
-              <Target className="w-3 h-3 text-cyan-400" />
-              STRIKE RADAR
-            </span>
 
             <span className="text-gray-400">
               Strike: <b className="text-cyan-300 font-bold">${radarMetrics.strikePrice.toLocaleString()}</b>

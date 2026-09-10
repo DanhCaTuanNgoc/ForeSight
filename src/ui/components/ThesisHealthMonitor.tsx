@@ -146,10 +146,10 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
                 {activePos.status === "RESTING" ? "RESTING" : "IN FLIGHT"}
               </span>
 
-              {/* Thesis Health Pill */}
+              {/* Model Probability Pill */}
               <div className="hidden md:flex items-center gap-1.5 bg-[#0E0E17] border border-white/[0.07] px-2 py-0.5 rounded-none text-[10px] text-gray-300">
                 <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                <span className="font-bold">Thesis: {thesisScore}% Valid</span>
+                <span className="font-bold">Model Prob: {thesisScore}%</span>
               </div>
 
               {/* Velocity Coverage */}

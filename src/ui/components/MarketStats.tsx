@@ -1,5 +1,5 @@
 import React from "react";
-import { TrendingUp, BarChart3, ArrowUpDown, Shield, Sparkles } from "lucide-react";
+import { TrendingUp, BarChart3, ArrowUpDown } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 
 interface MarketStatsProps {

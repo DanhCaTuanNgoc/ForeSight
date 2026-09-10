@@ -107,7 +107,7 @@ function ForeSightTerminalApp() {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "HOT" | "SOMNIA" | "VOL">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "TOP" | "SOMNIA" | "VOL">("ALL");
   const [marketSort, setMarketSort] = useState<"DEFAULT" | "ODDS" | "VOL">("DEFAULT");
   const [timeRange, setTimeRange] = useState<"15m" | "1H" | "4H" | "1D">("1H");
   const [visualMode, setVisualMode] = useState<CanvasVisualMode>("probability");
@@ -688,7 +688,7 @@ function ForeSightTerminalApp() {
     }
 
     // Filter by category
-    if (categoryFilter === "HOT") {
+    if (categoryFilter === "TOP") {
       list = list.filter((m) => (m.probability ?? 50) >= 60 || (m.probability ?? 50) <= 40);
     } else if (categoryFilter === "SOMNIA") {
       list = list.filter((m) => (m.underlyingAsset || m.symbol).toUpperCase() === "SOMI");
@@ -824,7 +824,7 @@ function ForeSightTerminalApp() {
 
                 {/* Filter Presets */}
                 <div className="grid grid-cols-4 gap-1">
-                  {(["ALL", "HOT", "SOMNIA", "VOL"] as const).map((cat) => (
+                  {(["ALL", "TOP", "SOMNIA", "VOL"] as const).map((cat) => (
                     <button
                       key={cat}
                       onClick={() => {
@@ -843,9 +843,9 @@ function ForeSightTerminalApp() {
                 </div>
               </div>
 
-              {/* Radar Header with Count and Sort */}
+              {/* Markets Header with Count and Sort */}
               <div className="px-2.5 py-1.5 border-b border-white/[0.07] bg-[#08080E] flex items-center justify-between">
-                <span className="stat-label text-[10px] flex items-center gap-1.5 font-mono">
+                <span className="text-[10px] text-gray-400 flex items-center gap-1.5 font-mono">
                   <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full" />
                   MARKETS
                 </span>
@@ -861,8 +861,8 @@ function ForeSightTerminalApp() {
                     <ArrowUpDown className="w-2.5 h-2.5" />
                     <span>{marketSort === "DEFAULT" ? "SORT" : marketSort}</span>
                   </button>
-                  <span className="text-[10px] font-mono text-violet-300 bg-violet-950/50 border border-violet-500/30 px-1 py-0.2 rounded-none font-bold">
-                    {filteredMarkets.length} ACTIVE
+                  <span className="text-[10px] font-mono text-violet-300 bg-violet-950/40 border border-violet-500/30 px-1.5 py-0.2 rounded-none font-bold">
+                    {filteredMarkets.length} PAIRS
                   </span>
                 </div>
               </div>
@@ -932,15 +932,15 @@ function ForeSightTerminalApp() {
 
               {/* Market Navigator Footer Summary */}
               <div className="p-2 bg-[#07070C] border-t border-white/[0.07] flex items-center justify-between text-[9px] font-mono text-gray-500">
-                <span className="flex items-center gap-1 text-violet-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                  SOMNIA L1
+                <span className="flex items-center gap-1 text-gray-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  SOMNIA TESTNET
                 </span>
                 <span className="text-gray-400 font-bold">24H VOL: ${(total24hVol / 1000).toFixed(0)}K</span>
               </div>
             </aside>
 
-            {/* ── CENTER COLUMN: Visual Intelligence Canvas & Order Simulator ── */}
+            {/* ── CENTER COLUMN: Price Chart & Order Placement ── */}
             <main className="flex-1 flex flex-col min-w-0 bg-[#07070A] overflow-hidden">
               {/* Header Stats Bar */}
               <MarketStats
@@ -949,7 +949,7 @@ function ForeSightTerminalApp() {
                 onOpenDebate={() => setIsDebateModalOpen(true)}
               />
 
-              {/* Unified Visual Board (Zero-Scroll Bento Split) */}
+              {/* Trading Workspace Board */}
               <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
                 {/* Top Half: Multi-Mode Chart Canvas */}
                 <div className="flex-shrink-0">
@@ -1004,7 +1004,7 @@ function ForeSightTerminalApp() {
             </aside>
           </div>
 
-          {/* 4. Bottom Dock: Live Thesis Health Monitor & 1-Click Auto Claim Sweeper */}
+          {/* 4. Bottom Dock: Order Positions & Settlement Monitor */}
           <ThesisHealthMonitor
             positions={positions}
             onClaimAll={handleClaimAll}
@@ -1014,7 +1014,7 @@ function ForeSightTerminalApp() {
         </>
       )}
 
-      {/* Dual AI Agent Arena Full Modal */}
+      {/* Market Consensus Debate Modal */}
       <DualDebateModal
         isOpen={isDebateModalOpen}
         onClose={() => setIsDebateModalOpen(false)}
@@ -1034,12 +1034,12 @@ function ForeSightTerminalApp() {
       {toastMessage && (
         <div className="fixed bottom-12 right-6 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200 pointer-events-none">
           <div
-            className={`px-4 py-2.5 rounded-none font-mono text-xs border shadow-2xl backdrop-blur-md flex items-center gap-2.5 ${
+            className={`px-4 py-2.5 rounded-none font-mono text-xs border shadow-xl backdrop-blur-md flex items-center gap-2.5 ${
               toastMessage.type === "success"
-                ? "bg-[#07130F]/95 text-emerald-300 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                ? "bg-[#0A1813]/95 text-emerald-300 border-emerald-500/40"
                 : toastMessage.type === "error"
-                ? "bg-[#16080B]/95 text-rose-300 border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.2)]"
-                : "bg-[#07111A]/95 text-cyan-300 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+                ? "bg-[#1C0D11]/95 text-rose-300 border-rose-500/40"
+                : "bg-[#0A141E]/95 text-cyan-300 border-cyan-500/40"
             }`}
           >
             {toastMessage.type === "success" && (

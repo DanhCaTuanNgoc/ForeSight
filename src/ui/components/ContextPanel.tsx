@@ -1,5 +1,5 @@
 import React from "react";
-import { Layers, Brain, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { Layers, BarChart3, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { DepthChart } from "./DepthChart.js";
 import { sound } from "../utils/sound-fx.js";
 
@@ -74,13 +74,13 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
         <div className="p-3 rounded-none bg-[#0E0E17] border border-white/[0.07] space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-gray-200 font-bold text-xs">
-              <Brain className="w-3.5 h-3.5 text-violet-400" />
-              <span>RESEARCH & SIGNALS</span>
+              <BarChart3 className="w-3.5 h-3.5 text-violet-400" />
+              <span>RESEARCH & CONSENSUS</span>
             </div>
           </div>
 
           <p className="text-[11px] text-gray-400 font-sans leading-relaxed">
-            Multi-agent thesis debate, directional models, and real-time sentiment data.
+            Technical consensus, orderbook imbalance, and market sentiment models.
           </p>
 
           <button
@@ -94,7 +94,7 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
             }}
             className="w-full py-2 bg-[#12121C] hover:bg-[#161624] text-violet-300 hover:text-white rounded-none font-mono font-bold text-xs transition-colors flex items-center justify-center gap-1.5 border border-white/[0.07] cursor-pointer"
           >
-            <span>VIEW DUAL AREA</span>
+            <span>VIEW RESEARCH & DEBATE</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>

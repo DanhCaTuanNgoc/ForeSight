@@ -49,81 +49,81 @@ const TECH_STACK_ROW_1 = [
   {
     name: "Somnia L1 Blockchain",
     techKey: "somnia",
-    badge: "100K+ TPS",
-    desc: "Shannon Testnet (50312) with sub-second finality & reactive EVM execution",
+    badge: "Shannon 50312",
+    desc: "Sub-second finality with high-throughput reactive EVM execution",
     badgeBg: "bg-violet-950/80 text-violet-300 border-violet-500/30",
   },
   {
     name: "DreamDEX Event Contracts",
     techKey: "dreamdex",
-    badge: "CLOB Orderbook",
-    desc: "Decentralized on-chain binary prediction limit orders and liquidity pools",
+    badge: "CLOB & BinaryPool",
+    desc: "Decentralized on-chain binary prediction with Market & Limit order execution",
     badgeBg: "bg-cyan-950/80 text-cyan-300 border-cyan-500/30",
   },
   {
-    name: "@somnia-chain/markets-sdk",
-    techKey: "typescript",
-    badge: "TypeScript",
-    desc: "Type-safe native client for indexer hydration and order placement",
-    badgeBg: "bg-blue-950/80 text-blue-300 border-blue-500/30",
+    name: "Quantitative Greeks Core",
+    techKey: "scenario",
+    badge: "Black-Scholes",
+    desc: "Client-side binary fair value Φ(d2), theoretical edge bps & Kelly sizing",
+    badgeBg: "bg-rose-950/80 text-rose-300 border-rose-500/30",
   },
   {
-    name: "Viem Web3 Engine",
-    techKey: "viem",
-    badge: "EIP-1193",
-    desc: "High-performance client for Somnia RPC and fast signature verification",
-    badgeBg: "bg-indigo-950/80 text-indigo-300 border-indigo-500/30",
+    name: "Tactical Strike Radar",
+    techKey: "typescript",
+    badge: "60s Cycle",
+    desc: "3-phase execution cycle with real-time Velocity Coverage (VC) physics",
+    badgeBg: "bg-blue-950/80 text-blue-300 border-blue-500/30",
   },
   {
     name: "Prophecy Spot Oracles",
     techKey: "oracle",
-    badge: "Real-Time",
-    desc: "High-precision spot price feeds for transparent binary settlements",
+    badge: "Sub-Second",
+    desc: "Low-latency Binance and Pyth spot feeds for transparent strike settlements",
     badgeBg: "bg-orange-950/80 text-orange-300 border-orange-500/30",
   },
   {
-    name: "Settlement Sweeper",
+    name: "ForeSight Batch Sweeper",
     techKey: "sweeper",
-    badge: "Batch Claim",
-    desc: "MultiCall redemption engine claiming stranded winnings in a single batch",
+    badge: "1-Click Claim",
+    desc: "Custom smart contract claiming multiple expired winning pools in a single batch",
     badgeBg: "bg-emerald-950/80 text-emerald-300 border-emerald-500/30",
   },
 ];
 
 const TECH_STACK_ROW_2 = [
   {
-    name: "Dual AI Debate Arena",
+    name: "Dual AI Thesis Arena",
     techKey: "dual ai",
     badge: "Bull vs Bear",
-    desc: "Adversarial multi-agent consensus challenging single-model bias",
+    desc: "Alpha Momentum vs Mean Reversal agents with Consensus Bias metrics",
     badgeBg: "bg-fuchsia-950/80 text-fuchsia-300 border-fuchsia-500/30",
   },
   {
     name: "RAG Evidence Pipeline",
     techKey: "rag",
     badge: "Source-Cited",
-    desc: "Real-time Crypto RSS ingestion with transparent, verifiable source citations",
+    desc: "Real-time Crypto RSS ingestion with verifiable source citations",
     badgeBg: "bg-amber-950/80 text-amber-300 border-amber-500/30",
   },
   {
-    name: "Deterministic Scenario Engine",
-    techKey: "scenario",
-    badge: "Client-Side",
-    desc: "Zero-latency mathematical modeling for PnL, breakeven, and velocity coverage",
-    badgeBg: "bg-rose-950/80 text-rose-300 border-rose-500/30",
+    name: "AI Auto-Pilot Runner",
+    techKey: "bot",
+    badge: "Autonomous",
+    desc: "Browser-driven multi-round session runner executing automated trades with live logs",
+    badgeBg: "bg-teal-950/80 text-teal-300 border-teal-500/30",
   },
   {
-    name: "Supabase Cloud Database",
+    name: "Activity Ledger & Studio",
     techKey: "supabase",
-    badge: "Postgres",
-    desc: "Time-series probability snapshots, anomaly indexing, and user persistence",
+    badge: "6-State Lifecycle",
+    desc: "Real-time order tracking with 1200×675 HD Alpha Card export",
     badgeBg: "bg-emerald-950/80 text-emerald-300 border-emerald-500/30",
   },
   {
     name: "React 19 & Vite 6",
     techKey: "react",
-    badge: "Concurrent",
-    desc: "Sub-millisecond interactive UI rendering with TypeScript & Tailwind CSS",
+    badge: "Tailwind CSS",
+    desc: "Sharp, pro-terminal responsive UI with zero-latency state transitions",
     badgeBg: "bg-sky-950/80 text-sky-300 border-sky-500/30",
   },
   {
@@ -131,48 +131,48 @@ const TECH_STACK_ROW_2 = [
     techKey: "bot",
     badge: "4 Strategies",
     desc: "Market Maker, Oracle Follower, Starter Bot, and Take-Profit Auto Execution",
-    badgeBg: "bg-teal-950/80 text-teal-300 border-teal-500/30",
+    badgeBg: "bg-indigo-950/80 text-indigo-300 border-indigo-500/30",
   },
 ];
 
 const DECISION_WORKFLOW = [
   {
     step: "01",
-    phase: "DETECT",
-    subtitle: "Real-Time Volatility Scanner",
-    title: "Orderbook Anomaly Detection",
-    desc: "Monitors DreamDEX event contracts. Surfaces real-time implied probability shifts exceeding ≥10% on the probability timeline.",
-    highlights: ["10-Second Indexing", "≥10% Shift Detection", "Interactive Timeline Markers"],
+    phase: "MARKETS",
+    subtitle: "Discovery & Order Terminal",
+    title: "Real-Time Market Scanner",
+    desc: "Track active Somnia binary pools with sub-second price updates, interactive charts, and direct Market or Limit order execution on DreamDEX CLOB.",
+    highlights: ["Sub-Second Market Ticker", "Market & Limit CLOB Orders", "Interactive Multi-Timeframe Chart"],
     accentColor: "text-cyan-400",
     badgeBg: "bg-cyan-950/60 border-cyan-500/30 text-cyan-300",
   },
   {
     step: "02",
-    phase: "CHALLENGE",
-    subtitle: "Adversarial Consensus",
-    title: "Dual-Agent Thesis Debate",
-    desc: "Alpha Bull and Macro Bear agents analyze drivers behind order flow moves with verified news citations to eliminate single-model bias.",
-    highlights: ["Adversarial Multi-Agent Debate", "Verified RAG Citations", "Consensus Divergence Metric"],
-    accentColor: "text-fuchsia-400",
-    badgeBg: "bg-fuchsia-950/60 border-fuchsia-500/30 text-fuchsia-300",
-  },
-  {
-    step: "03",
-    phase: "SIMULATE",
-    subtitle: "Deterministic Trajectory",
-    title: "Trajectory & Feasibility Modeling",
-    desc: "Simulates capital allocation, breakeven curves, and Velocity Coverage (VC) under Black-Scholes implied odds with zero client latency.",
-    highlights: ["Velocity Coverage (VC) Math", "Client-Side Greeks Modeling", "Instant PnL & Breakeven Curves"],
+    phase: "ANALYTICS",
+    subtitle: "Quantitative Physics",
+    title: "Tactical Strike & Greeks Radar",
+    desc: "Analyze the 60-second 3-phase execution cycle (Accumulation, Momentum, Cutoff), Black-Scholes binary fair value Φ(d2), and Velocity Coverage (VC).",
+    highlights: ["60s 3-Phase Execution Cycle", "Black-Scholes Φ(d2) Edge bps", "Velocity Coverage (VC) Gauge"],
     accentColor: "text-rose-400",
     badgeBg: "bg-rose-950/60 border-rose-500/30 text-rose-300",
   },
   {
+    step: "03",
+    phase: "INSIGHTS",
+    subtitle: "Adversarial AI & Automation",
+    title: "Dual Thesis & Auto-Pilot",
+    desc: "Cross-examine Alpha Momentum vs Mean Reversal theses with cited RAG evidence, or run automated multi-round sessions with the AI Auto-Pilot Runner.",
+    highlights: ["Dual-Model Consensus Bias", "Cited News RSS Citations", "Autonomous Session Auto-Pilot"],
+    accentColor: "text-fuchsia-400",
+    badgeBg: "bg-fuchsia-950/60 border-fuchsia-500/30 text-fuchsia-300",
+  },
+  {
     step: "04",
-    phase: "EXECUTE",
-    subtitle: "Precision Settlement",
-    title: "Order Dispatch & Settlement Claim",
-    desc: "Dispatches limit orders directly to DreamDEX CLOB on Somnia L1. Settlement Sweeper claims winning contract payouts in a single batch.",
-    highlights: ["DreamDEX CLOB Execution", "Simulation Sandbox", "Batch MultiCall Settlement"],
+    phase: "ACTIVITY",
+    subtitle: "Ledger & Batch Sweeper",
+    title: "Portfolio Management & Settlement",
+    desc: "Monitor your 6-state order lifecycle, share verified performance with 1200×675 HD Alpha Cards, and batch claim winnings via ForeSightBatchSweeper.",
+    highlights: ["6-State Order Lifecycle", "1-Click Batch Settlement", "HD Alpha Card Studio"],
     accentColor: "text-emerald-400",
     badgeBg: "bg-emerald-950/60 border-emerald-500/30 text-emerald-300",
   },
@@ -378,7 +378,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
               <span className="text-zinc-400">Target Protocol:</span>
               <span className="text-white font-medium">DreamDEX CLOB</span>
               <span className="text-zinc-600">•</span>
-              <span className="text-violet-300">Somnia L1</span>
+              <span className="text-violet-300">Somnia Shannon (50312)</span>
             </div>
 
             {/* Main Headline */}
@@ -391,7 +391,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-zinc-400 font-normal leading-relaxed max-w-xl">
-              Detect anomaly spikes on DreamDEX orderbooks. Challenge market theses with multi-agent RAG evidence. Model trajectory feasibility with zero client latency.
+              An interactive decision & execution terminal for Somnia binary markets. Analyze 60s tactical cycles, evaluate Black-Scholes Greeks, cross-examine dual AI theses, and execute CLOB orders with 1-click batch settlement.
             </p>
 
             {/* Action Row */}
@@ -419,16 +419,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
             {/* Technical Chips */}
             <div className="pt-4 border-t border-white/[0.06] grid grid-cols-3 gap-3 text-[11px] font-mono text-zinc-400">
               <div className="bg-[#0B0B14] p-2.5 border border-white/[0.06] rounded-none">
-                <div className="text-white font-semibold tabular-nums">100K+ TPS</div>
-                <div className="text-zinc-500 text-[10px]">Sub-second finality</div>
+                <div className="text-white font-semibold">Market & Limit</div>
+                <div className="text-zinc-500 text-[10px]">Dual-mode CLOB</div>
               </div>
               <div className="bg-[#0B0B14] p-2.5 border border-white/[0.06] rounded-none">
-                <div className="text-white font-semibold">Decentralized CLOB</div>
-                <div className="text-zinc-500 text-[10px]">Limit orderbook</div>
+                <div className="text-white font-semibold">Tactical Radar</div>
+                <div className="text-zinc-500 text-[10px]">60s cycle & VC math</div>
               </div>
               <div className="bg-[#0B0B14] p-2.5 border border-white/[0.06] rounded-none">
-                <div className="text-white font-semibold">&lt;1ms Math</div>
-                <div className="text-zinc-500 text-[10px]">Deterministic physics</div>
+                <div className="text-white font-semibold">Batch Sweeper</div>
+                <div className="text-zinc-500 text-[10px]">1-click payout claim</div>
               </div>
             </div>
           </div>
@@ -736,39 +736,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                 Somnia L1 Finality
               </span>
               <div className="mt-2 text-2xl sm:text-3xl font-bold font-mono text-white tabular-nums">
-                100K+ TPS
+                Sub-Second
               </div>
-              <p className="mt-1 text-[11px] text-zinc-400 font-normal">Sub-second reactive EVM execution</p>
+              <p className="mt-1 text-[11px] text-zinc-400 font-normal">Shannon Testnet (50312) EVM</p>
             </div>
 
             <div className="terminal-panel-subtle p-4 sm:p-5 border border-white/[0.08] flex flex-col justify-between rounded-none">
               <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
-                DreamDEX CLOB
+                Order Execution
               </span>
               <div className="mt-2 text-2xl sm:text-3xl font-bold font-mono text-white tabular-nums">
-                500+ Markets
+                Market & Limit
               </div>
-              <p className="mt-1 text-[11px] text-zinc-400 font-normal">On-chain limit order liquidity</p>
+              <p className="mt-1 text-[11px] text-zinc-400 font-normal">DreamDEX CLOB BinaryPool</p>
             </div>
 
             <div className="terminal-panel-subtle p-4 sm:p-5 border border-white/[0.08] flex flex-col justify-between rounded-none">
               <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
-                Deterministic Math
+                Quantitative Greeks
               </span>
               <div className="mt-2 text-2xl sm:text-3xl font-bold font-mono text-violet-300 tabular-nums">
                 &lt;1 ms
               </div>
-              <p className="mt-1 text-[11px] text-zinc-400 font-normal">Zero-latency client Greeks engine</p>
+              <p className="mt-1 text-[11px] text-zinc-400 font-normal">Black-Scholes Φ(d2) & VC physics</p>
             </div>
 
             <div className="terminal-panel-subtle p-4 sm:p-5 border border-white/[0.08] flex flex-col justify-between rounded-none">
               <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
-                RAG Evidence
+                Batch Settlement
               </span>
               <div className="mt-2 text-2xl sm:text-3xl font-bold font-mono text-emerald-400 tabular-nums">
-                100% Cited
+                1-Click MultiCall
               </div>
-              <p className="mt-1 text-[11px] text-zinc-400 font-normal">Verifiable news RSS citations</p>
+              <p className="mt-1 text-[11px] text-zinc-400 font-normal">ForeSightBatchSweeper contract</p>
             </div>
           </div>
         </RevealOnScroll>
@@ -893,7 +893,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
         </div>
       </section>
 
-      {/* ─── Benchmarks: ForeSight vs Black-Box Bots ──────────────────── */}
+      {/* ─── Benchmarks: ForeSight vs Generic Prediction Market UIs ──── */}
       <section className="py-16 px-4 sm:px-8 lg:px-12 max-w-6xl mx-auto border-t border-white/[0.08] w-full relative z-10">
         <RevealOnScroll direction="up" delayMs={60}>
           <div className="text-center max-w-2xl mx-auto mb-10">
@@ -901,7 +901,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
               TRANSPARENCY BENCHMARK
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1.5">
-              ForeSight vs Traditional Black-Box Bots
+              ForeSight vs Generic Prediction UIs
             </h2>
           </div>
 
@@ -909,43 +909,51 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
             <table className="w-full text-left text-xs font-mono divide-y divide-white/[0.06]">
               <thead className="bg-[#07070C] text-zinc-400 uppercase text-[11px]">
                 <tr>
-                  <th className="p-3.5 sm:p-4">Feature</th>
+                  <th className="p-3.5 sm:p-4">Capability</th>
                   <th className="p-3.5 sm:p-4 text-violet-400 font-bold">ForeSight Terminal</th>
-                  <th className="p-3.5 sm:p-4 text-zinc-500">Generic Black-Box Bots</th>
+                  <th className="p-3.5 sm:p-4 text-zinc-500">Standard Prediction DEXs</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
                 <tr className="hover:bg-white/[0.02] transition">
-                  <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Decision Transparency</td>
+                  <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Order Execution</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    Dual Bull/Bear debate + Grounded RAG citations
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    Market & Limit orderbook on DreamDEX CLOB
                   </td>
-                  <td className="p-3.5 sm:p-4 text-zinc-500">Opaque single-number signals</td>
+                  <td className="p-3.5 sm:p-4 text-zinc-500">AMM swap only, high slippage</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition">
-                  <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Risk & Scenario Modeling</td>
+                  <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Quantitative Modeling</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    Client-side Greeks & Velocity Coverage (&lt;1ms)
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    Black-Scholes Φ(d2), VC physics & Edge bps (&lt;1ms)
                   </td>
-                  <td className="p-3.5 sm:p-4 text-zinc-500">Manual spreadsheets or none</td>
+                  <td className="p-3.5 sm:p-4 text-zinc-500">No math modeling or risk curves</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition">
-                  <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Execution Speed</td>
+                  <td className="p-3.5 sm:p-4 font-medium text-zinc-200">AI Validation</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    Sub-second CLOB limit orders on Somnia Shannon L1
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    Dual Momentum vs Reversal debate + Verified RSS citations
                   </td>
-                  <td className="p-3.5 sm:p-4 text-zinc-500">Slow gas-constrained EVM blocks</td>
+                  <td className="p-3.5 sm:p-4 text-zinc-500">Ungrounded sentiment or zero analysis</td>
+                </tr>
+                <tr className="hover:bg-white/[0.02] transition">
+                  <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Autonomous Execution</td>
+                  <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    Browser-driven Multi-Round Auto-Pilot Runner + 4 Bot loops
+                  </td>
+                  <td className="p-3.5 sm:p-4 text-zinc-500">Manual clicking per round only</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition">
                   <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Payout Recovery</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    1-Click Auto Sweeper recovering stranded collateral
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    1-Click ForeSightBatchSweeper smart contract
                   </td>
-                  <td className="p-3.5 sm:p-4 text-zinc-500">Manual round-by-round claiming</td>
+                  <td className="p-3.5 sm:p-4 text-zinc-500">Tedious round-by-round manual claiming</td>
                 </tr>
               </tbody>
             </table>

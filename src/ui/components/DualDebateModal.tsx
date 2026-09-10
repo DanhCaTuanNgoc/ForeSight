@@ -4,8 +4,8 @@ import {
   TrendingUp,
   TrendingDown,
   ExternalLink,
-  Sparkles,
-  Bot,
+  FileText,
+  Loader2,
   Zap,
   ArrowRight,
 } from "lucide-react";
@@ -72,13 +72,13 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider">DUAL INTELLIGENCE ARENA</h2>
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider">MARKET CONSENSUS DEBATE</h2>
                 <span className="text-[9px] px-1.5 py-0.2 rounded-none bg-violet-950/60 text-violet-300 font-mono border border-violet-500/30 font-bold">
-                  CONSENSUS MODEL
+                  DUAL THESIS
                 </span>
               </div>
               <p className="text-[11px] text-gray-400 font-mono">
-                Market: <span className="text-violet-300 font-bold">{symbol}</span> · Grounded Multi-Model Synthesis
+                Market: <span className="text-violet-300 font-bold">{symbol}</span> · Multi-Source Consensus Analysis
               </p>
             </div>
           </div>
@@ -95,17 +95,17 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
         <div className="p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar bg-[#07070A]">
           {isLoading ? (
             <div className="py-16 text-center text-gray-400 space-y-2 font-mono">
-              <Bot className="w-6 h-6 mx-auto text-violet-400 animate-spin" />
+              <Loader2 className="w-6 h-6 mx-auto text-violet-400 animate-spin" />
               <p className="font-bold text-xs">Synthesizing institutional perspectives...</p>
             </div>
           ) : debateData ? (
             <>
               {/* Executive Summary */}
               <div className="p-3 rounded-none bg-[#0B0B14] border border-white/[0.08] flex items-start gap-2.5">
-                <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                <FileText className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <h4 className="text-[10px] font-bold text-violet-300 uppercase tracking-wider font-mono">
-                    EXECUTIVE SYNTHESIS & MARKET VERDICT
+                    EXECUTIVE SUMMARY & MARKET CONSENSUS
                   </h4>
                   <p className="text-xs text-gray-300 leading-relaxed font-sans">{debateData.summary}</p>
                 </div>
@@ -119,7 +119,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                       <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
                         <TrendingUp className="w-3.5 h-3.5" />
-                        <span className="text-gray-200">GEMINI 2.5 FLASH · LONG THESIS</span>
+                        <span className="text-gray-200">BULLISH CASE · LONG THESIS</span>
                       </div>
                       <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-emerald-950/40 text-emerald-300 border border-emerald-500/30 font-bold">
                         {Math.round(debateData.bullCase.confidence * 100)}% Conviction
@@ -202,7 +202,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                     <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                       <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs">
                         <TrendingDown className="w-3.5 h-3.5" />
-                        <span className="text-gray-200">META LLAMA 3.3 70B · SHORT THESIS</span>
+                        <span className="text-gray-200">BEARISH CASE · SHORT THESIS</span>
                       </div>
                       <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-none bg-rose-950/40 text-rose-300 border border-rose-500/30 font-bold">
                         {Math.round(debateData.bearCase.confidence * 100)}% Risk Skew
@@ -272,7 +272,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                       onLoadScenario("NO", debateData.bearCase.targetProbability);
                       onClose();
                     }}
-                    className="w-full py-2 rounded-none bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-rose-400/40 cursor-pointer shadow-[0_0_12px_rgba(244,63,94,0.2)]"
+                    className="w-full py-2 rounded-none bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono border border-rose-400/40 cursor-pointer"
                   >
                     <span>BUY NO @ {(debateData.bearCase.targetProbability * 100).toFixed(0)}%</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -280,12 +280,12 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
                 </div>
               </div>
 
-              {/* RAG News & Evidence Sources */}
+              {/* Grounded News & Evidence Sources */}
               <div className="space-y-2 pt-1 font-mono">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-300 uppercase tracking-wider">
                     <ExternalLink className="w-3.5 h-3.5 text-violet-400" />
-                    <span>VERIFIED NEWS GROUNDING</span>
+                    <span>GROUNDED NEWS SOURCES</span>
                   </div>
                   <span className="text-[9px] text-gray-400">
                     {debateData.sources?.length || 0} Sources
@@ -332,7 +332,7 @@ export const DualDebateModal: React.FC<DualDebateModalProps> = ({
 
         {/* Modal Footer */}
         <div className="p-2.5 px-5 border-t border-white/[0.07] bg-[#0E0E17] flex items-center justify-between text-[10px] text-gray-400 font-mono">
-          <span>AI Multi-Agent Consensus · Somnia L1</span>
+          <span>Consensus Model · Somnia L1</span>
           <button
             onClick={onClose}
             className="px-2.5 py-1 rounded-none bg-[#12121C] hover:bg-[#181826] text-gray-200 text-[10px] font-bold border border-white/[0.07] transition-colors cursor-pointer"

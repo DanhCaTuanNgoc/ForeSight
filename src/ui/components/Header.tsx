@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: "landing", label: "Overview" },
     { id: "markets", label: "Terminal" },
     { id: "analytics", label: "Analytics" },
-    { id: "insights", label: "AI Insights" },
+    { id: "insights", label: "Insights" },
     { id: "activity", label: "Portfolio" },
   ];
 
@@ -68,10 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </button>
         <div className="flex items-center gap-1.5 pl-2.5 border-l border-white/[0.07]">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-          </span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           <span className="text-[9px] text-gray-400 font-mono hidden sm:inline-block">LIVE</span>
         </div>
       </div>
@@ -123,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="bg-[#0E0E17] hover:bg-[#141420] border border-white/[0.08] text-gray-200 text-xs font-mono px-2.5 py-1 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Manage Connected Wallet"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
             <span>{shortAddr}</span>
             {wallet.balance !== null && (
               <span className="hidden lg:inline text-gray-400 text-[10px] pl-1.5 border-l border-white/[0.07]">
