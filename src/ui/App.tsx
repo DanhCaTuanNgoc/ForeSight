@@ -475,6 +475,9 @@ function ForeSightTerminalApp() {
 
   // Re-fetch positions when wallet changes
   useEffect(() => {
+    if (!wallet.address) {
+      setPositions([]);
+    }
     fetchPositions();
   }, [wallet.address, fetchPositions]);
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { Coins, Activity, CheckCircle2, Clock, RotateCcw, XCircle, CheckCheck } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
+import { useWallet } from "../context/WalletContext.js";
 
 export interface PositionRecord {
   id: string;
@@ -31,7 +32,8 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
   onClaim,
   isClaiming = false,
 }) => {
-  const list = positions;
+  const wallet = useWallet();
+  const list = [...positions].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
   return (
     <div className="rounded-none bg-[#0A0A12] border border-white/[0.08] flex flex-col font-mono">
@@ -59,7 +61,9 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
       <div className="flex-1 overflow-y-auto max-h-[220px]">
         {list.length === 0 ? (
           <div className="p-6 text-center text-gray-500 text-xs font-mono">
-            No active on-chain positions recorded yet.
+            {!wallet.isConnected
+              ? "Wallet disconnected. Connect your wallet to view activity log."
+              : "No active on-chain positions recorded yet."}
           </div>
         ) : (
           list.slice(0, 8).map((pos) => {

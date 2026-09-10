@@ -490,20 +490,20 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
         <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.07] flex items-center justify-between">
           <div>
-            <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">Order Flow Bias</span>
-            <span className={`text-sm font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
-              {isUp ? "1.82× Bid Depth" : "1.45× Ask Depth"}
+            <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">Orderbook Imbalance</span>
+            <span className={`text-sm font-bold font-mono ${microstructure.imbalancePercent >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+              {microstructure.imbalancePercent >= 0 ? `+${microstructure.imbalancePercent}% Bid Skew` : `${microstructure.imbalancePercent}% Ask Skew`}
             </span>
           </div>
           <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-gray-300">
-            {isUp ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-400" />}
+            {microstructure.imbalancePercent >= 0 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-400" />}
           </div>
         </div>
 
         <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.07] flex items-center justify-between">
           <div>
-            <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">CLOB Latency</span>
-            <span className="text-sm font-bold font-mono text-violet-300">~15ms Sub-Second</span>
+            <span className="text-[9px] text-gray-400 font-mono uppercase tracking-wider block">CLOB Spread</span>
+            <span className="text-sm font-bold font-mono text-violet-300">{spreadCents}¢ ({microstructure.spreadBps} bps)</span>
           </div>
           <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-violet-400">
             <Radio className="w-3.5 h-3.5" />
@@ -714,7 +714,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
       </div>
 
-      {/* ─── 4. HFT TACTICAL STRIKE RADAR & 60s PHASE BAR (Replaces EventTimeline) ─── */}
+      {/* ─── 4. TACTICAL STRIKE RADAR & 60-SECOND EXECUTION CYCLE ─── */}
       {(() => {
         const deltaPct = strikePrice > 0 ? ((spotPrice - strikePrice) / strikePrice) * 100 : 0;
         const deltaBps = Math.round(deltaPct * 100);
@@ -733,9 +733,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-2">
-                    <span>1-MINUTE HFT STRIKE RADAR & EXECUTION COCKPIT</span>
+                    <span>1-MINUTE STRIKE RADAR & EXECUTION CYCLE</span>
                     <span className="text-[9px] px-1.5 py-0.2 bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
-                      0ms Sub-Second
+                      Real-Time
                     </span>
                   </h3>
                 </div>
@@ -746,9 +746,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <span className={`text-[10px] font-bold px-2 py-0.5 border ${
                   isSafe
                     ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
-                    : "text-amber-300 bg-amber-950/60 border-amber-500/40 animate-pulse"
+                    : "text-amber-300 bg-amber-950/60 border-amber-500/40"
                 }`}>
-                  {isSafe ? "🟢 SAFE CONVICTION ZONE" : "⚠️ PIN-RISK / FLIP ZONE"}
+                  {isSafe ? "SAFE CONVICTION ZONE" : "PIN-RISK / FLIP ZONE"}
                 </span>
 
                 <button
@@ -852,7 +852,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
                 <div className={`p-1.5 border transition-all ${
                   cycleSec > 45
-                    ? "bg-rose-950/40 border-rose-500/60 text-rose-300 font-bold animate-pulse"
+                    ? "bg-rose-950/40 border-rose-500/60 text-rose-300 font-bold"
                     : "bg-[#07070A] border-white/[0.04] text-gray-500"
                 }`}>
                   <div className="text-[9px]">PHASE 3 (45s-60s)</div>
@@ -863,7 +863,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
         );
       })()}
-
     </div>
   );
 };

@@ -1,30 +1,26 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
-  Bot,
-  Sparkles,
-  Brain,
-  ShieldCheck,
-  ArrowUpRight,
   TrendingUp,
   TrendingDown,
-  CheckCircle2,
-  AlertTriangle,
-  Radio,
-  ExternalLink,
+  ArrowUpRight,
   RefreshCw,
-  Cpu,
-  Flame,
-  Swords,
-  Zap,
+  ExternalLink,
+  History,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
   Scale,
   ShieldAlert,
+  Zap,
   Play,
-  History,
-  Lock,
   Square,
   RotateCcw,
   Timer,
   Loader2,
+  Lock,
+  Radio,
+  Activity,
+  Cpu,
 } from "lucide-react";
 import { AICopilotFeed } from "./AICopilotFeed.js";
 import { CryptoIcon } from "./CryptoIcon.js";
@@ -65,7 +61,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
 
   const [debate, setDebate] = useState<any>(() => debateCache[selectedSymbol] || null);
   const [debateLoading, setDebateLoading] = useState<boolean>(false);
-  const [lastGenTimestamp, setLastGenTimestamp] = useState<number>(Date.now());
   const [serverPositions, setServerPositions] = useState<any[]>([]);
 
   // Fetch real on-chain ledger positions from Somnia Shannon Testnet with continuous polling
@@ -90,7 +85,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   const [autoRounds, setAutoRounds] = useState<number>(5);
   const [autoBudget, setAutoBudget] = useState<number>(25);
   const [activeStrategy, setActiveStrategy] = useState<"MOMENTUM" | "REVERSAL">("MOMENTUM");
-  
+
   // Real Autonomous Bot Session Engine
   const [botSession, setBotSession] = useState<{
     isActive: boolean;
@@ -163,7 +158,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     );
   }, [propSelectedMarket, markets, selectedSymbol]);
 
-  // Round ID extraction (consistent with AnalyticsView)
+  // Round ID extraction
   const roundId = useMemo(() => {
     if (!activeMarket?.symbol) return `${selectedSymbol}-5M`;
     const cleanSym = activeMarket.symbol.split("/")[0];
@@ -190,7 +185,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     }
   }, []);
 
-  // Explicit Re-Debate (Only called when user manually clicks Re-Debate or Refresh)
+  // Manual Re-Analysis
   const handleExplicitReDebate = useCallback(async (sym: string) => {
     setDebateLoading(true);
     try {
@@ -200,7 +195,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
         const resDebate = data.debate || data;
         debateCache[sym] = resDebate;
         setDebate(resDebate);
-        setLastGenTimestamp(Date.now());
       }
     } catch {
       // Keep existing debate if refresh fails
@@ -215,7 +209,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     return () => clearInterval(interval);
   }, [fetchSignals]);
 
-  // Quiet initial background loader: loads once if no cache exists
+  // Quiet initial background loader
   useEffect(() => {
     if (!selectedSymbol) return;
 
@@ -263,7 +257,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   const targetBullOdds = debate?.bullCase?.targetProbability ?? Math.min(0.95, (currentTokenProb / 100) + 0.15);
   const targetBearOdds = debate?.bearCase?.targetProbability ?? Math.max(0.05, (1 - (currentTokenProb / 100)) - 0.15);
 
-  // ─── REAL-TIME ON-CHAIN EXECUTION & STREAK (DREAMDEX & SOMNIA SHANNON) ──────
+  // Real-time on-chain execution & streak
   const allPositions = useMemo(() => {
     const list = [...propPositions, ...(publicPositions || []), ...serverPositions];
     const map = new Map<string, any>();
@@ -285,11 +279,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     return { winRate: rate, totalSettled: settled.length, winsCount: wins };
   }, [allPositions]);
 
-  // Real on-chain streak items (or active DreamDEX rounds if user has fewer than 5)
+  // Real on-chain streak items
   const streakHistory = useMemo(() => {
     const items: any[] = [];
-
-    // 1. First add real on-chain positions
     for (const p of allPositions.slice(0, 5)) {
       const isWin = p.isWinner || p.status === "SETTLED_WIN" || p.status === "CLAIMED";
       const isRefund = p.isRefunded || p.status === "REFUNDED";
@@ -308,12 +300,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
         status: p.status,
         txHash: p.txHash,
         poolAddress: p.poolAddress,
-        isLiveOnChain: true,
-        latency: "~240ms",
       });
     }
 
-    // 2. If fewer than 5 on-chain positions, backfill with real active DreamDEX contracts from `markets`
     if (items.length < 5) {
       const remainingNeeded = 5 - items.length;
       const filteredMarkets = markets.filter((m) => (m.underlyingAsset || m.symbol || "").toUpperCase().includes(selectedSymbol.toUpperCase()));
@@ -331,8 +320,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           isRefund: false,
           status: "IN FLIGHT",
           poolAddress: m.poolAddress || m.marketAddress,
-          isLiveOnChain: true,
-          latency: "DreamDEX CLOB",
         });
       }
     }
@@ -340,7 +327,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     return items;
   }, [allPositions, markets, selectedSymbol]);
 
-  // ─── AUTONOMOUS BOT ORDER EXECUTION ENGINE ─────────────────────────────────
+  // Autonomous Order Execution Engine
   const executeBotOrder = async (
     roundNum: number,
     strat: "MOMENTUM" | "REVERSAL",
@@ -359,7 +346,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
       : (bullConfidence >= 50 ? "NO" : "YES");
     const targetPrice = pick === "YES" ? targetBullOdds : targetBearOdds;
 
-    // Dynamically resolve the currently active live round for this asset
     const liveMarket = markets.find(
       (m) =>
         (m.underlyingAsset || m.symbol).toUpperCase().includes(selectedSymbol.toUpperCase()) &&
@@ -407,10 +393,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
 
         fetchPublicPositions();
         if (showToast) {
-          showToast(`🤖 Bot Round ${roundNum}/${totalRounds} Executed on Somnia Shannon!`, "success");
+          showToast(`Round ${roundNum}/${totalRounds} Executed on Somnia Shannon!`, "success");
         }
 
-        // Check if session finished or schedule next round
         if (roundNum >= totalRounds) {
           setBotSession((prev) => ({
             ...prev,
@@ -419,7 +404,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
               {
                 id: `log-complete-${Date.now()}`,
                 time: new Date().toLocaleTimeString(),
-                message: `🎉 All ${totalRounds} rounds deployed successfully! Total budget: $${(budgetPerRound * totalRounds).toFixed(2)} tUSDC.`,
+                message: `All ${totalRounds} rounds deployed successfully. Total budget: $${(budgetPerRound * totalRounds).toFixed(2)} tUSDC.`,
                 type: "success" as const,
               },
               ...prev.logs,
@@ -427,7 +412,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           }));
           sound.playSuccessChime();
         } else {
-          // Schedule next round after 12 seconds
           let countdown = 12;
           setBotSession((prev) => ({
             ...prev,
@@ -462,7 +446,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           status: "WAITING_NEXT",
         }));
         if (showToast) {
-          showToast(`⚠️ Round ${roundNum} notice: ${errorMsg}`, "error");
+          showToast(`Round ${roundNum} notice: ${errorMsg}`, "error");
         }
       }
     } catch (err: any) {
@@ -488,13 +472,13 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
       {
         id: `log-init-1`,
         time: new Date().toLocaleTimeString(),
-        message: `🔑 Session Key Verified: Non-custodial trade-only authorization active.`,
+        message: `Session Authorization: Non-custodial trade-only active.`,
         type: "info" as const,
       },
       {
         id: `log-init-2`,
         time: new Date().toLocaleTimeString(),
-        message: `📊 Strategy Locked: ${activeStrategy} on ${selectedSymbol} (${autoRounds} rounds @ $${budgetPerRound} tUSDC/round).`,
+        message: `Strategy Selected: ${activeStrategy} on ${selectedSymbol} (${autoRounds} rounds @ $${budgetPerRound} tUSDC/round).`,
         type: "info" as const,
       },
     ];
@@ -512,10 +496,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     });
 
     if (showToast) {
-      showToast(`🚀 Autonomous Bot Dispatched: Deploying ${autoRounds} rounds on ${selectedSymbol}!`, "info");
+      showToast(`Autonomous Session Started: Deploying ${autoRounds} rounds on ${selectedSymbol}`, "info");
     }
 
-    // Trigger Round 1 immediately on-chain
     executeBotOrder(1, activeStrategy, budgetPerRound, autoRounds);
   };
 
@@ -529,14 +512,14 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
         {
           id: `log-abort-${Date.now()}`,
           time: new Date().toLocaleTimeString(),
-          message: `🛑 Kill-Switch Activated: Autonomous session aborted by user. Remaining rounds cancelled.`,
+          message: `Session Aborted: In-flight rounds stopped by user.`,
           type: "warning" as const,
         },
         ...prev.logs,
       ],
     }));
     if (showToast) {
-      showToast(`🛑 Autonomous Bot Session Aborted. Kill-switch activated!`, "info");
+      showToast(`Autonomous Session Aborted.`, "info");
     }
   };
 
@@ -600,9 +583,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           </div>
           <div className="w-px h-5 bg-white/[0.07]" />
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Fast Reflex</span>
-            <span className="text-xs font-bold font-mono text-cyan-300">
-              0ms Sub-Second
+            <span className="text-[9px] text-gray-400 block uppercase tracking-wider">24H Volume</span>
+            <span className="text-xs font-bold font-mono text-white">
+              ${((activeMarket?.volume24h || 120000) / 1000).toFixed(1)}K USDC
             </span>
           </div>
           <div className="w-px h-5 bg-white/[0.07]" />
@@ -610,7 +593,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
             <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Status</span>
             <span className="text-xs font-bold font-mono text-emerald-400 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {debateLoading ? "Synthesizing" : "Live"}
+              {debateLoading ? "Updating..." : "Live"}
             </span>
           </div>
         </div>
@@ -639,7 +622,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           <button
             onClick={() => handleExplicitReDebate(selectedSymbol)}
             disabled={debateLoading}
-            title="Re-analyze market debate"
+            title="Refresh market analysis"
             className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-gray-400 hover:text-white hover:border-violet-500/40 transition-colors cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${debateLoading ? "animate-spin text-violet-400" : ""}`} />
@@ -647,20 +630,20 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
         </div>
       </div>
 
-      {/* ─── 2. Main Intelligence Layout: ARENA + SIDECAR ──── */}
+      {/* ─── 2. MAIN INTELLIGENCE LAYOUT: THESIS + SIGNALS ──── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-        {/* ── CENTER STAGE (lg:col-span-8): Dual Intelligence Arena ── */}
+        {/* ── LEFT COLUMN (lg:col-span-8): Dual Model Thesis & Autonomous Session ── */}
         <div className="lg:col-span-8 flex flex-col space-y-3">
           <div className="rounded-none p-3.5 sm:p-4 flex flex-col space-y-3.5 border border-white/[0.08] bg-[#08080E] shadow-xl">
-            {/* Arena Header */}
+            {/* Header */}
             <div className="flex flex-wrap items-center justify-between border-b border-white/[0.07] pb-2.5 gap-2">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-none bg-violet-950/70 border border-violet-500/40 text-violet-300">
-                  <Swords className="w-4 h-4 text-violet-400" />
+                  <Scale className="w-4 h-4 text-violet-400" />
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-sm tracking-wider uppercase font-mono">
-                    AUTONOMOUS AGENT COMMAND CENTER · {selectedSymbol}/tUSDC
+                    MARKET INTELLIGENCE & THESIS EVALUATION · {selectedSymbol}/tUSDC
                   </h3>
                 </div>
               </div>
@@ -675,59 +658,36 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                       ? "bg-[#0E0E17] text-gray-500 border-white/[0.06] cursor-not-allowed"
                       : "bg-[#0E0E17] text-violet-300 hover:text-white hover:border-violet-500/40 border-white/[0.07]"
                   }`}
-                  title="Re-run dual model analysis"
+                  title="Re-analyze market thesis"
                 >
-                  <Sparkles className={`w-3 h-3 ${debateLoading ? "animate-spin text-violet-400" : "text-violet-400"}`} />
-                  <span>{debateLoading ? "Synthesizing..." : "Re-Analyze"}</span>
+                  <RefreshCw className={`w-3 h-3 ${debateLoading ? "animate-spin text-violet-400" : ""}`} />
+                  <span>{debateLoading ? "Analyzing..." : "Re-Analyze"}</span>
                 </button>
-
-                <div className="flex items-center gap-1 px-2 py-1 bg-[#0E0E17] border border-white/[0.07] text-[10px] text-cyan-300 font-mono font-bold">
-                  <Cpu className="w-3 h-3 text-cyan-400" />
-                  <span>AI Sub-Second Runner</span>
-                </div>
               </div>
             </div>
 
-            {/* Pipeline Loading State */}
-            {debateLoading && (
-              <div className="p-3 rounded-none bg-[#0B0B14] border border-violet-500/30 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-spin" />
-                    <span className="text-xs font-bold text-white tracking-wide">
-                      Synthesizing Institutional Bull & Bear Perspectives...
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-mono text-violet-300 bg-violet-950/60 px-1.5 py-0.2 rounded-none border border-violet-500/30 font-bold">
-                    Dual Model Run
-                  </span>
-                </div>
-                <div className="space-y-1 text-[10px] font-mono text-gray-300">
-                  <div className="flex items-center gap-1.5 text-emerald-400">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                    <span>Gemini 2.5 Flash: Evaluating bid asymmetry, volume velocity, and momentum targets...</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-rose-400">
-                    <CheckCircle2 className="w-3 h-3 text-rose-400 flex-shrink-0" />
-                    <span>Meta LLaMA 3.3 70B: Stress-testing supply wall resistance and binary theta decay...</span>
-                  </div>
+            {/* Executive Summary (if available) */}
+            {debate?.summary && (
+              <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.06] flex items-start gap-2.5 text-xs">
+                <FileText className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                <div className="text-gray-300 font-sans leading-relaxed text-[11px]">
+                  {debate.summary}
                 </div>
               </div>
             )}
 
-            {/* ─── TUG-OF-WAR POWER BALANCE BAR ─── */}
+            {/* ─── CONSENSUS BIAS BALANCE BAR ─── */}
             <div className="space-y-1.5 p-2.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
               <div className="flex justify-between items-center text-xs font-bold font-mono">
                 <div className="flex items-center gap-1 text-emerald-400">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  <span>LONG THESIS · GEMINI 2.5 ({bullConfidence}%)</span>
+                  <span>LONG MOMENTUM ({bullConfidence}%)</span>
                 </div>
                 <div className="px-2 py-0.2 rounded-none bg-[#12121C] border border-white/[0.07] text-[9px] text-gray-300 font-bold flex items-center gap-1">
-                  <Swords className="w-3 h-3 text-violet-400" />
-                  <span>{bullConfidence >= 50 ? `Bull Lead (+${bullConfidence - bearConfidence}%)` : `Bear Lead (+${bearConfidence - bullConfidence}%)`}</span>
+                  <span>{bullConfidence >= 50 ? `Bullish Lead (+${bullConfidence - bearConfidence}%)` : `Bearish Lead (+${bearConfidence - bullConfidence}%)`}</span>
                 </div>
                 <div className="flex items-center gap-1 text-rose-400">
-                  <span>({bearConfidence}%) SHORT THESIS · LLAMA 3.3</span>
+                  <span>({bearConfidence}%) MEAN REVERSION</span>
                   <TrendingDown className="w-3.5 h-3.5" />
                 </div>
               </div>
@@ -744,15 +704,15 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
               </div>
             </div>
 
-            {/* ─── CONDENSED AGENT TACTICAL CARDS (PURE QUANTITATIVE METRICS) ─── */}
+            {/* ─── CONDENSED STRATEGY CARDS ─── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-              {/* 🟢 GEMINI 2.5 FLASH (MOMENTUM AGENT) */}
+              {/* MOMENTUM STRATEGY */}
               <div className="p-3 rounded-none bg-[#08080E] border border-emerald-500/30 flex flex-col justify-between space-y-2.5">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5">
                     <div className="flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-amber-400" />
-                      <span className="text-xs font-bold text-white">⚡ GEMINI MOMENTUM</span>
+                      <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-xs font-bold text-white">MOMENTUM STRATEGY</span>
                       <span className="text-[8px] px-1 py-0.2 bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 font-bold">
                         TREND BREAKOUT
                       </span>
@@ -798,13 +758,13 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                 </button>
               </div>
 
-              {/* 🔴 META LLAMA 3.3 70B (REVERSAL AGENT) */}
+              {/* REVERSAL STRATEGY */}
               <div className="p-3 rounded-none bg-[#08080E] border border-rose-500/30 flex flex-col justify-between space-y-2.5">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5">
                     <div className="flex items-center gap-1.5">
                       <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="text-xs font-bold text-white">🛡️ LLAMA REVERSAL</span>
+                      <span className="text-xs font-bold text-white">REVERSAL STRATEGY</span>
                       <span className="text-[8px] px-1 py-0.2 bg-rose-950/60 text-rose-400 border border-rose-500/30 font-bold">
                         MEAN REVERSION
                       </span>
@@ -851,30 +811,30 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
               </div>
             </div>
 
-            {/* ─── 3. AUTONOMOUS AGENT AUTO-PILOT & GUARDRAIL RISK ENGINE (Replaces RAG) ─── */}
+            {/* ─── 3. AUTONOMOUS MULTI-ROUND SESSION RUNNER ─── */}
             <div className="pt-2 border-t border-white/[0.07] space-y-3 font-mono">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <div className="p-1 rounded-none bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
-                    <Bot className="w-3.5 h-3.5" />
+                    <Activity className="w-3.5 h-3.5" />
                   </div>
                   <div>
                     <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                      AUTONOMOUS AGENT AUTO-PILOT & RISK GUARDRAIL
+                      AUTONOMOUS MULTI-ROUND SESSION RUNNER
                     </span>
                     <span className="text-[9px] text-gray-400 block">
-                      Non-Custodial Session Execution · 1-Click Bot Deployment
+                      Automated Execution on DreamDEX CLOB · Non-Custodial Session
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-[9px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 font-bold">
                   <Lock className="w-3 h-3 text-emerald-400" />
-                  <span>SESSION KEY: TRADE-ONLY (NO WITHDRAWAL)</span>
+                  <span>SESSION KEY: TRADE-ONLY</span>
                 </div>
               </div>
 
-              {/* Strategy Selector & Risk Configuration Grid */}
+              {/* Strategy Selector & Configuration Grid */}
               {(() => {
                 const realStrike = activeMarket?.strikePrice
                   ? `$${activeMarket.strikePrice > 10 ? activeMarket.strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 }) : activeMarket.strikePrice.toFixed(4)}`
@@ -885,9 +845,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
 
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 p-3 rounded-none bg-[#0B0B14] border border-white/[0.06]">
-                    {/* 1. Pick Strategy */}
+                    {/* 1. Strategy */}
                     <div className="space-y-1.5">
-                      <span className="text-[9px] text-gray-400 uppercase font-bold block">1. SELECT AGENT STRATEGY (DREAMDEX)</span>
+                      <span className="text-[9px] text-gray-400 uppercase font-bold block">1. SELECT STRATEGY</span>
                       <div className="grid grid-cols-2 gap-1.5">
                         <button
                           type="button"
@@ -902,16 +862,16 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-amber-300">⚡ MOMENTUM</span>
+                            <span className="text-[10px] font-bold text-amber-300">MOMENTUM</span>
                             <span className="text-[8px] px-1 py-0.2 bg-emerald-950 text-emerald-400 border border-emerald-500/30 font-bold">
                               {currentTokenProb >= 50 ? "BUY YES" : "BUY NO"}
                             </span>
                           </div>
                           <div className="text-[8px] text-gray-300 mt-1 font-mono">
-                            Follow {realInterval} CLOB trend ({realOdds}%)
+                            Follow {realInterval} trend ({realOdds}%)
                           </div>
                           <div className="text-[8px] text-gray-500 font-mono truncate">
-                            Strike {realStrike} · {realPool.slice(0, 6)}...
+                            Strike {realStrike}
                           </div>
                         </button>
 
@@ -928,22 +888,22 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-cyan-300">🛡️ REVERSAL</span>
+                            <span className="text-[10px] font-bold text-cyan-300">REVERSAL</span>
                             <span className="text-[8px] px-1 py-0.2 bg-rose-950 text-rose-400 border border-rose-500/30 font-bold">
                               {currentTokenProb >= 50 ? "BUY NO" : "BUY YES"}
                             </span>
                           </div>
                           <div className="text-[8px] text-gray-300 mt-1 font-mono">
-                            Fade spike on DreamDEX CLOB
+                            Fade spike on CLOB
                           </div>
                           <div className="text-[8px] text-gray-500 font-mono truncate">
-                            Mean-reverting to {realStrike}
+                            Mean-revert to {realStrike}
                           </div>
                         </button>
                       </div>
                     </div>
 
-                    {/* 2. Pick Rounds & Budget */}
+                    {/* 2. Rounds & Budget */}
                     <div className="space-y-1.5">
                       <span className="text-[9px] text-gray-400 uppercase font-bold block">2. ROUNDS & BUDGET</span>
                       <div className="flex items-center gap-1">
@@ -987,39 +947,39 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                       </div>
                     </div>
 
-                    {/* 3. Launch Trigger Button */}
+                    {/* 3. Action */}
                     <div className="space-y-1.5 flex flex-col justify-between">
-                      <span className="text-[9px] text-gray-400 uppercase font-bold block">3. DEPLOY ON-CHAIN TO DREAMDEX</span>
+                      <span className="text-[9px] text-gray-400 uppercase font-bold block">3. DEPLOY ON-CHAIN</span>
                       {botSession.isActive && (botSession.status === "EXECUTING" || botSession.status === "WAITING_NEXT") ? (
                         <button
                           type="button"
                           onClick={handleAbortSession}
-                          className="w-full py-2.5 bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-rose-400/40 cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.4)] animate-pulse"
+                          className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-rose-400/40 cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.4)]"
                         >
                           <Square className="w-3.5 h-3.5 fill-white text-white" />
-                          <span>KILL-SWITCH (ABORT RND {botSession.currentRound}/{botSession.totalRounds})</span>
+                          <span>STOP SESSION (RND {botSession.currentRound}/{botSession.totalRounds})</span>
                         </button>
                       ) : botSession.isActive && (botSession.status === "COMPLETED" || botSession.status === "ABORTED") ? (
                         <button
                           type="button"
                           onClick={handleResetSession}
-                          className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.35)]"
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.35)]"
                         >
                           <RotateCcw className="w-3.5 h-3.5 text-white" />
-                          <span>RESET / NEW BOT RUN</span>
+                          <span>RESET / NEW RUN</span>
                         </button>
                       ) : (
                         <button
                           type="button"
                           onClick={handleLaunchAutoRun}
-                          className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-white/20 cursor-pointer shadow-[0_0_15px_rgba(124,58,237,0.35)]"
+                          className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-violet-400/40 cursor-pointer shadow-[0_0_15px_rgba(124,58,237,0.35)]"
                         >
                           <Play className="w-3.5 h-3.5 fill-white text-white" />
-                          <span>DISPATCH {autoRounds}-RND BOT (${autoBudget})</span>
+                          <span>DISPATCH {autoRounds}-RND RUN (${autoBudget})</span>
                         </button>
                       )}
                       <div className="flex items-center justify-between text-[8px] text-gray-400">
-                        <span title={realPool}>Target: {realPool.slice(0, 8)}...</span>
+                        <span title={realPool}>Pool: {realPool.slice(0, 8)}...</span>
                         {onTradeSignal && (
                           <button
                             type="button"
@@ -1027,11 +987,11 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                               sound.playClick();
                               const pick = activeStrategy === "MOMENTUM" ? (bullConfidence >= 50 ? "YES" : "NO") : (bullConfidence >= 50 ? "NO" : "YES");
                               const price = pick === "YES" ? targetBullOdds : targetBearOdds;
-                              onTradeSignal(activeMarket?.symbol || `${selectedSymbol}-5M`, pick, price, "Prefilled in Cockpit");
+                              onTradeSignal(activeMarket?.symbol || `${selectedSymbol}-5M`, pick, price, "Prefilled in Terminal");
                             }}
                             className="text-cyan-400 hover:underline cursor-pointer"
                           >
-                            Prefill Cockpit ↗
+                            Prefill Terminal ↗
                           </button>
                         )}
                       </div>
@@ -1040,10 +1000,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                 );
               })()}
 
-              {/* Live Autonomous Bot HUD & Execution Terminal Console */}
+              {/* Live Session HUD */}
               {botSession.isActive && (
-                <div className="p-3 bg-gradient-to-b from-[#0A0D18] to-[#080911] border border-cyan-500/30 font-mono shadow-[0_0_20px_rgba(6,182,212,0.15)] space-y-3">
-                  {/* Header & Status Bar */}
+                <div className="p-3 bg-[#080911] border border-cyan-500/30 font-mono shadow-[0_0_20px_rgba(6,182,212,0.15)] space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-2">
                     <div className="flex items-center gap-2">
                       <div
@@ -1058,10 +1017,10 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         }`}
                       />
                       <span className="text-xs font-bold tracking-wider text-white">
-                        {botSession.status === "EXECUTING" && `BOT EXECUTING · ROUND ${botSession.currentRound}/${botSession.totalRounds}`}
-                        {botSession.status === "WAITING_NEXT" && `BOT ACTIVE · WAITING NEXT ROUND (${botSession.currentRound}/${botSession.totalRounds})`}
-                        {botSession.status === "COMPLETED" && `BOT SESSION COMPLETED (${botSession.totalRounds}/${botSession.totalRounds} ROUNDS)`}
-                        {botSession.status === "ABORTED" && `BOT SESSION ABORTED (KILL-SWITCH TRIGGERED)`}
+                        {botSession.status === "EXECUTING" && `EXECUTING · ROUND ${botSession.currentRound}/${botSession.totalRounds}`}
+                        {botSession.status === "WAITING_NEXT" && `ACTIVE · WAITING NEXT ROUND (${botSession.currentRound}/${botSession.totalRounds})`}
+                        {botSession.status === "COMPLETED" && `SESSION COMPLETED (${botSession.totalRounds}/${botSession.totalRounds} ROUNDS)`}
+                        {botSession.status === "ABORTED" && `SESSION ABORTED`}
                       </span>
                       <span className="text-[9px] px-1.5 py-0.5 bg-violet-950/80 border border-violet-500/40 text-violet-300 font-bold">
                         STRATEGY: {botSession.strategy}
@@ -1070,9 +1029,9 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
 
                     <div className="flex items-center gap-2">
                       {botSession.status === "WAITING_NEXT" && (
-                        <div className="flex items-center gap-1 text-[11px] text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 px-2 py-0.5 font-bold animate-pulse">
+                        <div className="flex items-center gap-1 text-[11px] text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 px-2 py-0.5 font-bold">
                           <Timer className="w-3.5 h-3.5" />
-                          <span>NEXT ORDER IN: {botSession.countdownToNextSec}s</span>
+                          <span>NEXT ORDER: {botSession.countdownToNextSec}s</span>
                         </div>
                       )}
 
@@ -1087,10 +1046,10 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         <button
                           type="button"
                           onClick={handleAbortSession}
-                          className="px-2.5 py-1 bg-rose-600/90 hover:bg-rose-500 text-white text-[10px] font-bold tracking-wider border border-rose-400/50 cursor-pointer shadow-[0_0_10px_rgba(244,63,94,0.4)] flex items-center gap-1 transition-all"
+                          className="px-2.5 py-1 bg-rose-600/90 hover:bg-rose-500 text-white text-[10px] font-bold tracking-wider border border-rose-400/50 cursor-pointer flex items-center gap-1 transition-all"
                         >
                           <Square className="w-2.5 h-2.5 fill-white text-white" />
-                          <span>KILL-SWITCH (ABORT)</span>
+                          <span>STOP</span>
                         </button>
                       ) : (
                         <button
@@ -1099,13 +1058,12 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                           className="px-2.5 py-1 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 text-[10px] font-bold tracking-wider border border-cyan-500/50 cursor-pointer flex items-center gap-1 transition-all"
                         >
                           <RotateCcw className="w-2.5 h-2.5" />
-                          <span>RESET / NEW RUN</span>
+                          <span>RESET</span>
                         </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Progress & Capital Stats */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] bg-[#06070E] p-2 border border-white/[0.05]">
                     <div>
                       <span className="text-gray-400 block text-[9px]">PROGRESS</span>
@@ -1120,15 +1078,15 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-400 block text-[9px]">EXECUTION CADENCE</span>
+                      <span className="text-gray-400 block text-[9px]">CADENCE</span>
                       <span className="text-emerald-400 font-bold">
                         ~12s (DreamDEX CLOB)
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-400 block text-[9px]">SESSION AGENT</span>
-                      <span className="text-violet-300 font-bold truncate block" title="Somnia Shannon Non-Custodial Session Agent">
-                        Somnia Shannon L1
+                      <span className="text-gray-400 block text-[9px]">NETWORK</span>
+                      <span className="text-violet-300 font-bold truncate block">
+                        Somnia Shannon
                       </span>
                     </div>
                   </div>
@@ -1149,10 +1107,10 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                     />
                   </div>
 
-                  {/* Live Bot Execution Log Terminal */}
+                  {/* Live Execution Log Terminal */}
                   <div className="bg-[#030407] border border-white/[0.08] p-2.5 rounded-none font-mono text-[10px] space-y-1 max-h-36 overflow-y-auto">
                     <div className="text-[9px] text-gray-500 uppercase font-bold border-b border-white/[0.05] pb-1 mb-1 flex items-center justify-between">
-                      <span>TERMINAL STREAM · SOMNIA SHANNON RELAY LOGS</span>
+                      <span>EXECUTION SESSION LOGS</span>
                       <span className="text-[8px] text-gray-400">{botSession.logs.length} events</span>
                     </div>
                     {botSession.logs.map((log) => (
@@ -1247,7 +1205,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         ) : (
                           <span className="text-gray-500">DreamDEX CLOB</span>
                         )}
-                        <span className="text-gray-400">⚡ {s.latency}</span>
                       </div>
                     </div>
                   ))}
@@ -1257,7 +1214,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           </div>
         </div>
 
-        {/* ── RIGHT SIDECAR (lg:col-span-4): Live Signals Feed ── */}
+        {/* ── RIGHT COLUMN (lg:col-span-4): Live Signals Feed ── */}
         <div className="lg:col-span-4 flex flex-col min-h-[500px] sticky top-4">
           <AICopilotFeed
             signals={signals}

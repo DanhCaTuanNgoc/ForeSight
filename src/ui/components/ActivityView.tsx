@@ -378,26 +378,25 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
 
       {/* ─── 4. RECENT ON-CHAIN EXECUTION LEDGER ───────────────────────────── */}
       <div className="w-full">
-        {(() => {
-          const ledgerList = publicPositions && publicPositions.length > 0 ? publicPositions : enrichedPositions;
-          return (
-            <ActivityTable
-              positions={ledgerList.map((p) => ({
-                id: p.id,
-                symbol: p.symbol,
-                outcome: p.outcome,
-                amount: p.amount,
-                entryPrice: p.entryPrice,
-                timestamp: p.timestamp || Date.now(),
-                status: p.status,
-                orderId: p.orderId,
-                txHash: p.txHash,
-                isLiveOnChain: p.isLiveOnChain,
-                isWinner: p.isWinner,
-              }))}
-            />
-          );
-        })()}
+        <ActivityTable
+          positions={
+            isConnected
+              ? enrichedPositions.map((p) => ({
+                  id: p.id,
+                  symbol: p.symbol,
+                  outcome: p.outcome,
+                  amount: p.amount,
+                  entryPrice: p.entryPrice,
+                  timestamp: p.timestamp || Date.now(),
+                  status: p.status,
+                  orderId: p.orderId,
+                  txHash: p.txHash,
+                  isLiveOnChain: p.isLiveOnChain,
+                  isWinner: p.isWinner,
+                }))
+              : []
+          }
+        />
       </div>
 
       {/* ─── 5. SETTLED / IN-FLIGHT ALPHA CARD MODAL ───────────────────────── */}
