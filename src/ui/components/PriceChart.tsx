@@ -136,8 +136,6 @@ function generateMockData(range: TimeRange, baseProbability: number, symbol: str
 
 // ─── Mode tab config ─────────────────────────────────────────────────────────
 const MODE_TABS: { mode: CanvasVisualMode; icon: React.ElementType; label: string; activeClass: string }[] = [
-  { mode: "probability", icon: TrendingUp, label: "Price Chart", activeClass: "bg-violet-600 text-white shadow-sm" },
-  { mode: "montecarlo", icon: Sparkles, label: "Monte Carlo", activeClass: "bg-violet-800 text-violet-100 border border-violet-500/40 shadow-sm" },
 ];
 
 export const PriceChart: React.FC<PriceChartProps> = ({
@@ -553,26 +551,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               <span>EMA</span>
             </button>
           )}
-          
-
-          {/* Monte Carlo Volatility */}
-          {visualMode === "montecarlo" && (
-            <div className="flex items-center bg-[#0E0E17] rounded-none border border-white/[0.07] text-[9px]">
-              {(["low", "normal", "high"] as VolatilityLevel[]).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => { sound.playClick(); setMcVolatility(v); }}
-                  className={`px-1.5 py-0.5 capitalize font-bold transition cursor-pointer ${
-                    mcVolatility === v
-                      ? v === "high" ? "text-rose-400 bg-rose-950/40" : "text-violet-300 bg-violet-950/50"
-                      : "text-gray-500 hover:text-gray-300"
-                  }`}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-          )}
+        
 
           <div className="w-px h-3.5 bg-white/[0.08]" />
 
@@ -1009,64 +988,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                   />
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {/* Mode 2: Monte Carlo Visual Projection */}
-        {visualMode === "montecarlo" && (
-          <div className="h-52 sm:h-60 w-full bg-[#08080E] rounded-none border border-white/[0.06] relative overflow-hidden p-2">
-            <svg className="w-full h-full" viewBox="0 0 500 180" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="mcUp" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.06} />
-                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="mcDn" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.04} />
-                  <stop offset="100%" stopColor="#F43F5E" stopOpacity={0.2} />
-                </linearGradient>
-              </defs>
-
-              <path
-                d={`M 0 100 Q 250 ${90 - mcStats.spread / 2} 500 ${30 - mcStats.spread / 3} L 500 100 L 0 100 Z`}
-                fill="url(#mcUp)"
-              />
-              <path
-                d={`M 0 100 Q 250 ${110 + mcStats.spread / 2} 500 ${150 + mcStats.spread / 3} L 500 100 L 0 100 Z`}
-                fill="url(#mcDn)"
-              />
-
-              {[
-                `M 0 100 Q 150 ${85 - mcStats.spread / 4} 500 ${25 - mcStats.spread / 4}`,
-                `M 0 100 Q 220 70 500 45`,
-                `M 0 100 Q 180 95 500 55`,
-                `M 0 100 Q 240 90 500 68`,
-                `M 0 100 Q 250 105 500 82`,
-                `M 0 100 Q 200 110 500 95`,
-                `M 0 100 Q 300 115 500 112`,
-                `M 0 100 Q 180 ${130 + mcStats.spread / 4} 500 ${138 + mcStats.spread / 4}`,
-              ].map((d, i) => (
-                <path
-                  key={i}
-                  d={d}
-                  fill="none"
-                  stroke={i < 4 ? "#A78BFA" : "#FB7185"}
-                  strokeWidth="1"
-                  strokeOpacity={0.35}
-                  strokeDasharray={i % 2 === 0 ? "3 3" : undefined}
-                />
-              ))}
-
-              <path d="M 0 100 Q 250 80 500 48" fill="none" stroke="#C4B5FD" strokeWidth="2" />
-              <line x1="0" y1="30" x2="500" y2="30" stroke="#10B981" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="0" y1="150" x2="500" y2="150" stroke="#F43F5E" strokeWidth="1" strokeDasharray="4 4" />
-            </svg>
-
-            <div className="absolute top-2 right-2 text-[9px] font-mono space-y-0.5">
-              <div className="text-emerald-400/80">Strike ↑</div>
-              <div className="text-violet-300 font-bold">{mcStats.feasibility}% feasible</div>
-              <div className="text-rose-400/80">Break ↓</div>
             </div>
           </div>
         )}

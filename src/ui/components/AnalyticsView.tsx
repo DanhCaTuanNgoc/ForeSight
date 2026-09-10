@@ -511,7 +511,157 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
       </div>
 
-      {/* ─── 3. MID-TIER FORENSIC MATRIX (2 BALANCED CARDS) ─────────────── */}
+      {/* ─── 3. TACTICAL STRIKE RADAR & 60-SECOND EXECUTION CYCLE ─── */}
+      {(() => {
+        const deltaPct = strikePrice > 0 ? ((spotPrice - strikePrice) / strikePrice) * 100 : 0;
+        const deltaBps = Math.round(deltaPct * 100);
+        const isAbove = spotPrice >= strikePrice;
+        const isSafe = Math.abs(deltaBps) >= 8;
+        const sliderPos = Math.min(95, Math.max(5, 50 + deltaPct * 120));
+        const cycleSec = 60 - (countdownSec % 60);
+
+        return (
+          <div className="w-full flex-shrink-0 p-3.5 rounded-none border border-white/[0.08] bg-[#08080E] space-y-3 font-mono">
+            {/* Radar Header */}
+            <div className="flex flex-wrap items-center justify-between border-b border-white/[0.07] pb-2.5 gap-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
+                  <Radio className="w-3.5 h-3.5 text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                    <span>1-MINUTE STRIKE RADAR & EXECUTION CYCLE</span>
+                    <span className="text-[9px] px-1.5 py-0.2 bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
+                      Real-Time
+                    </span>
+                  </h3>
+                </div>
+              </div>
+
+              {/* Status Alert Badge */}
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-bold px-2 py-0.5 border ${
+                  isSafe
+                    ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
+                    : "text-amber-300 bg-amber-950/60 border-amber-500/40"
+                }`}>
+                  {isSafe ? "SAFE CONVICTION ZONE" : "PIN-RISK / FLIP ZONE"}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    onSelectMarket(activeSymbol);
+                  }}
+                  className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-colors flex items-center gap-1 border border-cyan-400/50 cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+                >
+                  <span>EXECUTE ON-CHAIN</span>
+                  <ArrowUpRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Radar Gauge (Strike Centered, Spot Moving) */}
+            <div className="p-3 bg-[#0B0B14] border border-white/[0.06] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400 text-[10px]">CURRENT SPOT:</span>
+                  <span className="text-white font-bold text-sm">
+                    ${spotPrice > 10 ? spotPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : spotPrice.toFixed(4)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400 text-[10px]">TARGET STRIKE:</span>
+                  <span className="text-cyan-300 font-bold text-sm">
+                    ${strikePrice > 10 ? strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : strikePrice.toFixed(4)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 text-[10px]">DELTA:</span>
+                  <span className={`font-bold text-sm ${isAbove ? "text-emerald-400" : "text-rose-400"}`}>
+                    {isAbove ? "+" : ""}{deltaPct.toFixed(3)}% ({isAbove ? "+" : ""}{deltaBps} bps)
+                  </span>
+                </div>
+              </div>
+
+              {/* Dynamic Visual Slider */}
+              <div className="relative pt-1 pb-2">
+                <div className="flex justify-between text-[9px] text-gray-400 font-bold mb-1">
+                  <span className="text-rose-400">BEAR TERRITORY (NO WIN)</span>
+                  <span className="text-cyan-300">STRIKE TARGET ($0.50 MID)</span>
+                  <span className="text-emerald-400">BULL TERRITORY (YES WIN)</span>
+                </div>
+
+                <div className="w-full h-4 bg-[#07070A] border border-white/[0.1] relative overflow-hidden">
+                  {/* Danger Zone Band around Strike */}
+                  <div className="absolute top-0 bottom-0 left-[45%] right-[45%] bg-amber-500/10 border-x border-amber-500/30" />
+                  {/* Center Strike Line */}
+                  <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-cyan-400 z-10" />
+                  {/* Spot Marker */}
+                  <div
+                    className={`absolute top-0 bottom-0 w-3 transition-all duration-300 ${
+                      isAbove
+                        ? "bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]"
+                        : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]"
+                    }`}
+                    style={{
+                      left: `${sliderPos}%`,
+                      transform: "translateX(-50%)",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 60-Second Round Expiry Phase Bar */}
+            <div className="p-2.5 bg-[#0B0B14] border border-white/[0.06] space-y-1.5">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-gray-400 font-bold uppercase flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-violet-400" />
+                  60-SECOND ROUND EXECUTION CYCLE
+                </span>
+                <span className="text-violet-300 font-bold">
+                  Phase Tick: {cycleSec}s / 60s
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                <div className={`p-1.5 border transition-all ${
+                  cycleSec <= 30
+                    ? "bg-emerald-950/40 border-emerald-500/60 text-emerald-300 font-bold"
+                    : "bg-[#07070A] border-white/[0.04] text-gray-500"
+                }`}>
+                  <div className="text-[9px]">PHASE 1 (0s-30s)</div>
+                  <div className="text-[10px]">Accumulation & Depth</div>
+                </div>
+
+                <div className={`p-1.5 border transition-all ${
+                  cycleSec > 30 && cycleSec <= 45
+                    ? "bg-violet-950/40 border-violet-500/60 text-violet-300 font-bold"
+                    : "bg-[#07070A] border-white/[0.04] text-gray-500"
+                }`}>
+                  <div className="text-[9px]">PHASE 2 (30s-45s)</div>
+                  <div className="text-[10px]">Momentum Lock-in</div>
+                </div>
+
+                <div className={`p-1.5 border transition-all ${
+                  cycleSec > 45
+                    ? "bg-rose-950/40 border-rose-500/60 text-rose-300 font-bold"
+                    : "bg-[#07070A] border-white/[0.04] text-gray-500"
+                }`}>
+                  <div className="text-[9px]">PHASE 3 (45s-60s)</div>
+                  <div className="text-[10px]">Pin-Risk / Cutoff</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ─── 4. MID-TIER FORENSIC MATRIX (2 BALANCED CARDS) ─────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-shrink-0">
 
         {/* ── Card A: Order Flow & Liquidity Depth ─────────── */}
@@ -713,156 +863,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
         </div>
       </div>
-
-      {/* ─── 4. TACTICAL STRIKE RADAR & 60-SECOND EXECUTION CYCLE ─── */}
-      {(() => {
-        const deltaPct = strikePrice > 0 ? ((spotPrice - strikePrice) / strikePrice) * 100 : 0;
-        const deltaBps = Math.round(deltaPct * 100);
-        const isAbove = spotPrice >= strikePrice;
-        const isSafe = Math.abs(deltaBps) >= 8;
-        const sliderPos = Math.min(95, Math.max(5, 50 + deltaPct * 120));
-        const cycleSec = 60 - (countdownSec % 60);
-
-        return (
-          <div className="w-full flex-shrink-0 p-3.5 rounded-none border border-white/[0.08] bg-[#08080E] space-y-3 font-mono">
-            {/* Radar Header */}
-            <div className="flex flex-wrap items-center justify-between border-b border-white/[0.07] pb-2.5 gap-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
-                  <Radio className="w-3.5 h-3.5 text-cyan-400" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-2">
-                    <span>1-MINUTE STRIKE RADAR & EXECUTION CYCLE</span>
-                    <span className="text-[9px] px-1.5 py-0.2 bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
-                      Real-Time
-                    </span>
-                  </h3>
-                </div>
-              </div>
-
-              {/* Status Alert Badge */}
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-bold px-2 py-0.5 border ${
-                  isSafe
-                    ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
-                    : "text-amber-300 bg-amber-950/60 border-amber-500/40"
-                }`}>
-                  {isSafe ? "SAFE CONVICTION ZONE" : "PIN-RISK / FLIP ZONE"}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    sound.playClick();
-                    onSelectMarket(activeSymbol);
-                  }}
-                  className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-colors flex items-center gap-1 border border-cyan-400/50 cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.3)]"
-                >
-                  <span>EXECUTE ON-CHAIN</span>
-                  <ArrowUpRight className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-
-            {/* Radar Gauge (Strike Centered, Spot Moving) */}
-            <div className="p-3 bg-[#0B0B14] border border-white/[0.06] space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400 text-[10px]">CURRENT SPOT:</span>
-                  <span className="text-white font-bold text-sm">
-                    ${spotPrice > 10 ? spotPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : spotPrice.toFixed(4)}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400 text-[10px]">TARGET STRIKE:</span>
-                  <span className="text-cyan-300 font-bold text-sm">
-                    ${strikePrice > 10 ? strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : strikePrice.toFixed(4)}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <span className="text-gray-400 text-[10px]">DELTA:</span>
-                  <span className={`font-bold text-sm ${isAbove ? "text-emerald-400" : "text-rose-400"}`}>
-                    {isAbove ? "+" : ""}{deltaPct.toFixed(3)}% ({isAbove ? "+" : ""}{deltaBps} bps)
-                  </span>
-                </div>
-              </div>
-
-              {/* Dynamic Visual Slider */}
-              <div className="relative pt-1 pb-2">
-                <div className="flex justify-between text-[9px] text-gray-400 font-bold mb-1">
-                  <span className="text-rose-400">BEAR TERRITORY (NO WIN)</span>
-                  <span className="text-cyan-300">STRIKE TARGET ($0.50 MID)</span>
-                  <span className="text-emerald-400">BULL TERRITORY (YES WIN)</span>
-                </div>
-
-                <div className="w-full h-4 bg-[#07070A] border border-white/[0.1] relative overflow-hidden">
-                  {/* Danger Zone Band around Strike */}
-                  <div className="absolute top-0 bottom-0 left-[45%] right-[45%] bg-amber-500/10 border-x border-amber-500/30" />
-                  {/* Center Strike Line */}
-                  <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-cyan-400 z-10" />
-                  {/* Spot Marker */}
-                  <div
-                    className={`absolute top-0 bottom-0 w-3 transition-all duration-300 ${
-                      isAbove
-                        ? "bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]"
-                        : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]"
-                    }`}
-                    style={{
-                      left: `${sliderPos}%`,
-                      transform: "translateX(-50%)",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 60-Second Round Expiry Phase Bar */}
-            <div className="p-2.5 bg-[#0B0B14] border border-white/[0.06] space-y-1.5">
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-gray-400 font-bold uppercase flex items-center gap-1.5">
-                  <Clock className="w-3 h-3 text-violet-400" />
-                  60-SECOND ROUND EXECUTION CYCLE
-                </span>
-                <span className="text-violet-300 font-bold">
-                  Phase Tick: {cycleSec}s / 60s
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-                <div className={`p-1.5 border transition-all ${
-                  cycleSec <= 30
-                    ? "bg-emerald-950/40 border-emerald-500/60 text-emerald-300 font-bold"
-                    : "bg-[#07070A] border-white/[0.04] text-gray-500"
-                }`}>
-                  <div className="text-[9px]">PHASE 1 (0s-30s)</div>
-                  <div className="text-[10px]">Accumulation & Depth</div>
-                </div>
-
-                <div className={`p-1.5 border transition-all ${
-                  cycleSec > 30 && cycleSec <= 45
-                    ? "bg-violet-950/40 border-violet-500/60 text-violet-300 font-bold"
-                    : "bg-[#07070A] border-white/[0.04] text-gray-500"
-                }`}>
-                  <div className="text-[9px]">PHASE 2 (30s-45s)</div>
-                  <div className="text-[10px]">Momentum Lock-in</div>
-                </div>
-
-                <div className={`p-1.5 border transition-all ${
-                  cycleSec > 45
-                    ? "bg-rose-950/40 border-rose-500/60 text-rose-300 font-bold"
-                    : "bg-[#07070A] border-white/[0.04] text-gray-500"
-                }`}>
-                  <div className="text-[9px]">PHASE 3 (45s-60s)</div>
-                  <div className="text-[10px]">Pin-Risk / Cutoff</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 };

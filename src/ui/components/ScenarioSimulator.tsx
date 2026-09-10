@@ -8,8 +8,6 @@ import {
   CheckCircle2,
   Plus,
   Minus,
-  Sparkles,
-  Shield,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
 import { useWallet } from "../context/WalletContext.js";
@@ -49,7 +47,6 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const [outcome, setOutcome] = useState<"YES" | "NO">(prefillOutcome);
   const [orderMode, setOrderMode] = useState<"MARKET" | "LIMIT">("MARKET");
   const [investment, setInvestment] = useState<number>(50); // in tUSDC
-  const [agentTrigger, setAgentTrigger] = useState<"MOMENTUM" | "REVERSAL" | null>(null);
   const wallet = useWallet();
 
   // Balance
@@ -109,24 +106,6 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       setEntryPrice(targetPrice);
       if (onEntryPriceChange) onEntryPriceChange(targetPrice);
     }
-  };
-
-  // ─── 0ms Math Reflex: Agent Fast-Pick Triggers ────────────────────────────
-  const prob = market?.probability ?? 50;
-  const isBullish = prob >= 50;
-
-  const handleAgentFastPick = (strategy: "MOMENTUM" | "REVERSAL") => {
-    sound.playClick();
-    setAgentTrigger(strategy);
-    let pick: "YES" | "NO" = "YES";
-    if (strategy === "MOMENTUM") {
-      pick = isBullish ? "YES" : "NO";
-      showToast(`⚡ Momentum Agent selected BUY ${pick} (${prob.toFixed(1)}% Trend)`, "success");
-    } else {
-      pick = isBullish ? "NO" : "YES";
-      showToast(`🛡️ Reversal Agent selected BUY ${pick} (Fading Trend)`, "info");
-    }
-    handleSelectOutcome(pick);
   };
 
   // ─── Polymarket Deterministic Binary Payoff Calculation ───────────
@@ -240,118 +219,110 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
         {/* Left Column (7 Cols): Outcome Select & Amount Input */}
         <div className="lg:col-span-7 space-y-2.5">
-          {/* 0. 1-Click Agent Fast-Pick Bar (0ms Math Reflex) */}
-          <div className="p-2 rounded-xl bg-[#0D0D16] border border-white/[0.08] space-y-1.5 font-mono">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-gray-300 font-bold flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-violet-400" />
-                AUTONOMOUS FAST-TRIGGER
-              </span>
-              <span className="text-[9px] text-violet-300 bg-violet-950/40 border border-violet-500/30 px-1 py-0.2 font-bold">
-                0ms Math Reflex
-              </span>
+          {/* Outcome Selection: Direct, Intuitive 1-Click BUY YES | BUY NO */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-mono">
+              <span className="text-gray-400 font-bold uppercase tracking-wider">Select Outcome</span>
+              <span className="text-[10px] text-gray-500 font-mono">Pays $1.00 per share</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* BUY YES Button */}
               <button
                 type="button"
-                onClick={() => handleAgentFastPick("MOMENTUM")}
-                className={`px-2 py-1.5 rounded-lg border text-left transition-all flex items-center justify-between cursor-pointer ${
-                  agentTrigger === "MOMENTUM"
-                    ? "bg-violet-950/50 border-violet-500/80 text-violet-200 shadow-[0_0_12px_rgba(139,92,246,0.3)]"
-                    : "bg-[#12121D] border-white/[0.06] hover:border-violet-500/40 text-gray-300"
+                onClick={() => handleSelectOutcome("YES")}
+                className={`p-3 rounded-xl border-2 transition-all flex flex-col justify-between gap-1.5 cursor-pointer text-left select-none relative overflow-hidden group active:scale-[0.98] ${
+                  outcome === "YES"
+                    ? "bg-emerald-950/50 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.25)] text-white"
+                    : "bg-[#12121E] border-white/[0.08] hover:border-emerald-500/40 text-gray-400 hover:text-gray-200"
                 }`}
               >
-                <div className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  <div>
-                    <div className="text-[10px] font-bold text-amber-300">⚡ MOMENTUM</div>
-                    <div className="text-[8px] text-gray-400 font-sans">Follow the breakout</div>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        outcome === "YES"
+                          ? "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"
+                          : "bg-gray-600 group-hover:bg-emerald-500/60"
+                      }`}
+                    />
+                    <span
+                      className={`text-xs font-mono font-extrabold uppercase tracking-wide ${
+                        outcome === "YES" ? "text-emerald-400" : "text-gray-300"
+                      }`}
+                    >
+                      BUY YES
+                    </span>
                   </div>
+                  {outcome === "YES" && (
+                    <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded">
+                      SELECTED
+                    </span>
+                  )}
                 </div>
-                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                  isBullish ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40" : "bg-rose-950/60 text-rose-400 border border-rose-500/40"
-                }`}>
-                  {isBullish ? "BUY YES" : "BUY NO"}
-                </span>
+
+                <div className="flex items-baseline justify-between w-full pt-0.5">
+                  <span
+                    className={`text-xl font-mono font-black tracking-tight ${
+                      outcome === "YES" ? "text-emerald-300" : "text-gray-300"
+                    }`}
+                  >
+                    {Math.round(yesPrice * 100)}¢
+                  </span>
+                  <span className="text-[11px] font-mono text-gray-400">
+                    {Math.round(yesPrice * 100)}% chance
+                  </span>
+                </div>
               </button>
 
+              {/* BUY NO Button */}
               <button
                 type="button"
-                onClick={() => handleAgentFastPick("REVERSAL")}
-                className={`px-2 py-1.5 rounded-lg border text-left transition-all flex items-center justify-between cursor-pointer ${
-                  agentTrigger === "REVERSAL"
-                    ? "bg-cyan-950/50 border-cyan-500/80 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.3)]"
-                    : "bg-[#12121D] border-white/[0.06] hover:border-cyan-500/40 text-gray-300"
+                onClick={() => handleSelectOutcome("NO")}
+                className={`p-3 rounded-xl border-2 transition-all flex flex-col justify-between gap-1.5 cursor-pointer text-left select-none relative overflow-hidden group active:scale-[0.98] ${
+                  outcome === "NO"
+                    ? "bg-rose-950/50 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.25)] text-white"
+                    : "bg-[#12121E] border-white/[0.08] hover:border-rose-500/40 text-gray-400 hover:text-gray-200"
                 }`}
               >
-                <div className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-cyan-400" />
-                  <div>
-                    <div className="text-[10px] font-bold text-cyan-300">🛡️ REVERSAL</div>
-                    <div className="text-[8px] text-gray-400 font-sans">Fade overextension</div>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        outcome === "NO"
+                          ? "bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)] animate-pulse"
+                          : "bg-gray-600 group-hover:bg-rose-500/60"
+                      }`}
+                    />
+                    <span
+                      className={`text-xs font-mono font-extrabold uppercase tracking-wide ${
+                        outcome === "NO" ? "text-rose-400" : "text-gray-300"
+                      }`}
+                    >
+                      BUY NO
+                    </span>
                   </div>
+                  {outcome === "NO" && (
+                    <span className="text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded">
+                      SELECTED
+                    </span>
+                  )}
                 </div>
-                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                  !isBullish ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40" : "bg-rose-950/60 text-rose-400 border border-rose-500/40"
-                }`}>
-                  {!isBullish ? "BUY YES" : "BUY NO"}
-                </span>
+
+                <div className="flex items-baseline justify-between w-full pt-0.5">
+                  <span
+                    className={`text-xl font-mono font-black tracking-tight ${
+                      outcome === "NO" ? "text-rose-300" : "text-gray-300"
+                    }`}
+                  >
+                    {Math.round(noPrice * 100)}¢
+                  </span>
+                  <span className="text-[11px] font-mono text-gray-400">
+                    {Math.round(noPrice * 100)}% chance
+                  </span>
+                </div>
               </button>
             </div>
-
-            {/* Explainable Reasoning Tag */}
-            {agentTrigger && (
-              <div className="text-[9px] px-2 py-1 rounded bg-[#09090F] border border-white/[0.06] text-gray-300 flex items-center gap-1.5 animate-fadeIn">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-                <span>
-                  {agentTrigger === "MOMENTUM"
-                    ? `Momentum Strategy: Velocity positive (+${Math.abs(prob - 50).toFixed(1)} bps) | Defending strike`
-                    : `Reversal Strategy: Mean-reverting ${prob >= 50 ? "overbought" : "oversold"} spike back to strike target`}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* 1. Large Polymarket Outcome Pills */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleSelectOutcome("YES")}
-              className={`p-2.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${
-                outcome === "YES"
-                  ? "bg-emerald-950/40 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-                  : "bg-[#11111A] border-white/[0.06] hover:border-white/20 text-gray-400"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-mono font-bold ${outcome === "YES" ? "text-emerald-400" : "text-gray-300"}`}>
-                  BUY YES
-                </span>
-              </div>
-              <span className={`text-base font-mono font-black ${outcome === "YES" ? "text-emerald-400" : "text-gray-400"}`}>
-                {Math.round(yesPrice * 100)}¢
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectOutcome("NO")}
-              className={`p-2.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${
-                outcome === "NO"
-                  ? "bg-rose-950/40 border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]"
-                  : "bg-[#11111A] border-white/[0.06] hover:border-white/20 text-gray-400"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-mono font-bold ${outcome === "NO" ? "text-rose-400" : "text-gray-300"}`}>
-                  BUY NO
-                </span>
-              </div>
-              <span className={`text-base font-mono font-black ${outcome === "NO" ? "text-rose-400" : "text-gray-400"}`}>
-                {Math.round(noPrice * 100)}¢
-              </span>
-            </button>
           </div>
 
           {/* 2. Amount Input Field */}
