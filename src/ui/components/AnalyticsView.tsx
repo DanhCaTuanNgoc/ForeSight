@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   BarChart3,
-  Zap,
+  Layers,
   ArrowUpRight,
-  Radio,
+  ArrowUpDown,
   Clock,
   TrendingUp,
   TrendingDown,
-  Activity,
-  AlertTriangle,
   RefreshCw,
   BookOpen,
   Scale,
   Gauge,
-  HelpCircle,
+  Target,
 } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { sound } from "../utils/sound-fx.js";
@@ -393,8 +391,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.2 bg-[#0E0E17] border border-white/[0.07] text-gray-300 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                Somnia L1
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Somnia Testnet
               </span>
               <span className="text-[9px] px-1.5 py-0.2 bg-violet-950/40 text-violet-300 border border-violet-500/30 font-mono font-bold">
                 Round: {roundId}
@@ -430,7 +428,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
           <div className="w-px h-5 bg-white/[0.07]" />
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Model Edge (Φ)</span>
+            <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Pricing Edge (BS)</span>
             <span className={`text-sm font-bold font-mono ${quantEdgeBps > 0 ? "text-emerald-400" : quantEdgeBps < 0 ? "text-rose-400" : "text-gray-400"}`}>
               {quantEdgeBps > 0 ? `+${quantEdgeBps}` : quantEdgeBps} bps
             </span>
@@ -446,7 +444,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 onClick={() => handleSelectSymbol(sym)}
                 className={`px-2.5 py-1 text-xs font-mono font-bold rounded-none transition-colors cursor-pointer border ${
                   sym === activeSymbol
-                    ? "bg-violet-600 text-white border-violet-400/60 shadow-[0_0_8px_rgba(124,58,237,0.25)]"
+                    ? "bg-violet-600 text-white border-violet-400/60"
                     : "bg-[#0B0B14] text-gray-400 border-white/[0.05] hover:text-white hover:bg-[#141422]"
                 }`}
               >
@@ -484,7 +482,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <span className="text-sm font-bold font-mono text-emerald-400">{Math.max(4, allMarkets.length)} Live Pairs</span>
           </div>
           <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-emerald-400">
-            <Zap className="w-3.5 h-3.5" />
+            <Layers className="w-3.5 h-3.5" />
           </div>
         </div>
 
@@ -506,12 +504,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <span className="text-sm font-bold font-mono text-violet-300">{spreadCents}¢ ({microstructure.spreadBps} bps)</span>
           </div>
           <div className="p-1.5 rounded-none bg-[#0E0E17] border border-white/[0.07] text-violet-400">
-            <Radio className="w-3.5 h-3.5" />
+            <ArrowUpDown className="w-3.5 h-3.5" />
           </div>
         </div>
       </div>
 
-      {/* ─── 3. TACTICAL STRIKE RADAR & 60-SECOND EXECUTION CYCLE ─── */}
+      {/* ─── 3. STRIKE PRICE DYNAMICS & EXECUTION CYCLE ─── */}
       {(() => {
         const deltaPct = strikePrice > 0 ? ((spotPrice - strikePrice) / strikePrice) * 100 : 0;
         const deltaBps = Math.round(deltaPct * 100);
@@ -522,19 +520,18 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
         return (
           <div className="w-full flex-shrink-0 p-3.5 rounded-none border border-white/[0.08] bg-[#08080E] space-y-3 font-mono">
-            {/* Radar Header */}
+            {/* Strike Header */}
             <div className="flex flex-wrap items-center justify-between border-b border-white/[0.07] pb-2.5 gap-2">
               <div className="flex items-center gap-2">
                 <div className="p-1 rounded-none bg-violet-950/80 border border-violet-500/40 text-violet-300">
-                  <Radio className="w-3.5 h-3.5 text-cyan-400" />
+                  <Target className="w-3.5 h-3.5 text-cyan-400" />
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-2">
-                    <span>1-MINUTE STRIKE RADAR & EXECUTION CYCLE</span>
+                    <span>STRIKE PRICE DYNAMICS & EXECUTION CYCLE</span>
                   </h3>
                 </div>
               </div>
-
             </div>
 
             {/* Radar Gauge (Strike Centered, Spot Moving) */}
@@ -565,9 +562,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               {/* Dynamic Visual Slider */}
               <div className="relative pt-1 pb-2">
                 <div className="flex justify-between text-[9px] text-gray-400 font-bold mb-1">
-                  <span className="text-rose-400">BEAR TERRITORY (NO WIN)</span>
-                  <span className="text-cyan-300">STRIKE TARGET ($0.50 MID)</span>
-                  <span className="text-emerald-400">BULL TERRITORY (YES WIN)</span>
+                  <span className="text-rose-400">BELOW STRIKE (NO OUTCOME)</span>
+                  <span className="text-cyan-300">STRIKE PIN (${strikePrice > 10 ? strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : strikePrice.toFixed(4)})</span>
+                  <span className="text-emerald-400">ABOVE STRIKE (YES OUTCOME)</span>
                 </div>
 
                 <div className="w-full h-4 bg-[#07070A] border border-white/[0.1] relative overflow-hidden">
@@ -579,8 +576,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   <div
                     className={`absolute top-0 bottom-0 w-3 transition-all duration-300 ${
                       isAbove
-                        ? "bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]"
-                        : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]"
+                        ? "bg-emerald-400"
+                        : "bg-rose-500"
                     }`}
                     style={{
                       left: `${sliderPos}%`,
@@ -829,10 +826,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 sound.playClick();
                 onSelectMarket(activeSymbol);
               }}
-              className="w-full mt-2 py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1.5 border border-violet-400/40 cursor-pointer shadow-[0_0_12px_rgba(139,92,246,0.25)]"
+              className="w-full mt-2 py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1.5 border border-violet-400/40 cursor-pointer"
             >
-              <Zap className="w-3.5 h-3.5 text-amber-300" />
-              <span>TRADE WITH QUANT EDGE ({quantEdgeBps >= 0 ? `+${quantEdgeBps} bps` : `${quantEdgeBps} bps`})</span>
+              <span>TRADE CONTRACT (EDGE: {quantEdgeBps >= 0 ? `+${quantEdgeBps} bps` : `${quantEdgeBps} bps`})</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>

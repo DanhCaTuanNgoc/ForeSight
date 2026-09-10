@@ -11,20 +11,14 @@ import {
   FileText,
   Scale,
   ShieldAlert,
-  Zap,
   Play,
   Square,
   RotateCcw,
   Timer,
   Loader2,
-  Lock,
-  Radio,
   Activity,
-  Cpu,
-  Bot,
   ChevronDown,
   ChevronUp,
-  Sparkles,
 } from "lucide-react";
 import { AICopilotFeed } from "./AICopilotFeed.js";
 import { CryptoIcon } from "./CryptoIcon.js";
@@ -58,10 +52,11 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   showToast,
 }) => {
   const [internalSymbol, setInternalSymbol] = useState<string>(
-    propSymbol || markets[0]?.underlyingAsset || markets[0]?.symbol || "BTC"
+    propSymbol || "BTC"
   );
   const [signals, setSignals] = useState<any[]>([]);
-  const selectedSymbol = propSymbol || internalSymbol;
+  // internalSymbol has direct authority from user action, synced from propSymbol
+  const selectedSymbol = internalSymbol || propSymbol || "BTC";
 
   const [debate, setDebate] = useState<any>(() => debateCache[selectedSymbol] || null);
   const [debateLoading, setDebateLoading] = useState<boolean>(false);
@@ -137,7 +132,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   };
 
   useEffect(() => {
-    if (propSymbol) {
+    if (propSymbol && propSymbol !== internalSymbol) {
       setInternalSymbol(propSymbol);
       if (debateCache[propSymbol]) {
         setDebate(debateCache[propSymbol]);
@@ -145,22 +140,39 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     }
   }, [propSymbol]);
 
+  // Default probability matrix
+  const defaultProbMap: Record<string, number> = {
+    BTC: 62.4,
+    ETH: 45.1,
+    SOL: 54.0,
+    SOMI: 73.8,
+  };
+
   // Find active market data for selected symbol
   const activeMarket = useMemo(() => {
-    if (propSelectedMarket && (propSelectedMarket.underlyingAsset || propSelectedMarket.symbol || "").toUpperCase().includes(selectedSymbol.toUpperCase())) {
-      return propSelectedMarket;
-    }
-    return (
-      markets.find(
-        (m) => (m.underlyingAsset || m.symbol).toUpperCase() === selectedSymbol.toUpperCase()
-      ) || markets[0] || {
-        symbol: selectedSymbol,
-        underlyingAsset: selectedSymbol,
-        probability: 50,
-        midPrice: 0.50,
-        volume24h: 100000,
+    const sym = (selectedSymbol || "BTC").toUpperCase();
+    if (propSelectedMarket) {
+      const propSym = (propSelectedMarket.underlyingAsset || propSelectedMarket.symbol || "").toUpperCase();
+      if (propSym === sym || propSym.startsWith(sym) || propSym.includes(sym)) {
+        return propSelectedMarket;
       }
-    );
+    }
+    const found = markets.find((m) => {
+      const mSym = (m.underlyingAsset || m.symbol || "").toUpperCase();
+      return mSym === sym || mSym.startsWith(sym) || mSym.includes(sym);
+    });
+    if (found) return found;
+
+    return {
+      id: `${sym.toLowerCase()}-live-5m`,
+      symbol: `${sym}/tUSDC`,
+      underlyingAsset: sym,
+      probability: defaultProbMap[sym] || 50,
+      midPrice: (defaultProbMap[sym] || 50) / 100,
+      volume24h: sym === "SOL" ? 98150 : sym === "SOMI" ? 51240 : 100000,
+      status: "TRADING",
+      interval: "5m",
+    };
   }, [propSelectedMarket, markets, selectedSymbol]);
 
   // Round ID extraction
@@ -241,12 +253,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   }, [selectedSymbol]);
 
   // Real-time confidence calculations tied directly to the active token's distinct market odds
-  const defaultProbMap: Record<string, number> = {
-    BTC: 62.4,
-    ETH: 45.1,
-    SOL: 54.0,
-    SOMI: 73.8,
-  };
   const tokenDefaultProb = defaultProbMap[selectedSymbol.toUpperCase()] || 55;
   const currentTokenProb = activeMarket?.probability && activeMarket.probability !== 50
     ? activeMarket.probability
@@ -561,8 +567,8 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.2 bg-[#0E0E17] border border-white/[0.07] text-gray-300 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                Somnia L1
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Somnia Testnet
               </span>
               <span className="text-[9px] px-1.5 py-0.2 bg-violet-950/40 text-violet-300 border border-violet-500/30 font-mono font-bold">
                 Round: {roundId}
@@ -597,7 +603,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           <div>
             <span className="text-[9px] text-gray-400 block uppercase tracking-wider">Status</span>
             <span className="text-xs font-bold font-mono text-emerald-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               {debateLoading ? "Updating..." : "Live"}
             </span>
           </div>
@@ -614,7 +620,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                   onClick={() => handleSelectSymbol(sym)}
                   className={`px-2.5 py-1 text-xs font-mono font-bold rounded-none transition-colors cursor-pointer border ${
                     isCurrent
-                      ? "bg-violet-600 text-white border-violet-400/60 shadow-[0_0_8px_rgba(124,58,237,0.25)]"
+                      ? "bg-violet-600 text-white border-violet-400/60"
                       : "bg-[#0B0B14] text-gray-400 border-white/[0.05] hover:text-white hover:bg-[#141422]"
                   }`}
                 >
@@ -635,7 +641,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
         </div>
       </div>
 
-      {/* ─── 2. MAIN INTELLIGENCE LAYOUT: THESIS + SIGNALS ──── */}
+      {/* ─── 2. MARKET ANALYSIS & SIGNALS ──── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
         {/* ── LEFT COLUMN (lg:col-span-8): Dual Model Thesis & Autonomous Session ── */}
         <div className="lg:col-span-8 flex flex-col space-y-3">
@@ -648,7 +654,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-sm tracking-wider uppercase font-mono">
-                    MARKET INTELLIGENCE & THESIS EVALUATION · {selectedSymbol}/tUSDC
+                    MARKET CONSENSUS & STRATEGY EVALUATION · {selectedSymbol}/tUSDC
                   </h3>
                 </div>
               </div>
@@ -706,11 +712,8 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between border-b border-white/[0.06] pb-1.5">
                     <div className="flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="text-xs font-bold text-white">MOMENTUM STRATEGY</span>
-                      <span className="text-[8px] px-1 py-0.2 bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 font-bold">
-                        TREND BREAKOUT
-                      </span>
                     </div>
                     <span className="text-xs font-bold text-emerald-400 font-mono">
                       {bullConfidence}% Conviction
@@ -746,7 +749,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onTradeSignal(selectedSymbol, "YES", targetBullOdds)}
-                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-none font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1 border border-emerald-400/40 cursor-pointer shadow-[0_0_10px_rgba(16,185,129,0.25)]"
+                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-none font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1 border border-emerald-400/40 cursor-pointer"
                 >
                   <span>BUY YES @ ${(targetBullOdds * 100).toFixed(0)}% ODDS</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
@@ -760,9 +763,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                     <div className="flex items-center gap-1.5">
                       <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
                       <span className="text-xs font-bold text-white">REVERSAL STRATEGY</span>
-                      <span className="text-[8px] px-1 py-0.2 bg-rose-950/60 text-rose-400 border border-rose-500/30 font-bold">
-                        MEAN REVERSION
-                      </span>
                     </div>
                     <span className="text-xs font-bold text-rose-400 font-mono">
                       {bearConfidence}% Risk Skew
@@ -798,7 +798,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onTradeSignal(selectedSymbol, "NO", targetBearOdds)}
-                  className="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-none font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1 border border-rose-400/40 cursor-pointer shadow-[0_0_10px_rgba(244,63,94,0.25)]"
+                  className="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-none font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1 border border-rose-400/40 cursor-pointer"
                 >
                   <span>BUY NO @ ${(targetBearOdds * 100).toFixed(0)}% ODDS</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
@@ -806,22 +806,22 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
               </div>
             </div>
 
-            {/* ─── 3. AI AUTO-PILOT RUNNER ─── */}
+            {/* ─── 3. AUTOMATED ORDER RUNNER ─── */}
             <div className="pt-3 border-t border-white/[0.08] space-y-3 font-mono">
               {/* Header */}
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded bg-violet-950/60 border border-violet-500/40 text-violet-300">
-                    <Bot className="w-4 h-4 text-violet-400" />
+                  <div className="p-1.5 rounded bg-[#0E0E17] border border-white/[0.08] text-violet-300">
+                    <Activity className="w-4 h-4 text-violet-400" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-white uppercase tracking-wider">
-                        AI Auto-Pilot Runner
+                        AUTOMATED ORDER RUNNER
                       </span>
                     </div>
                     <span className="text-[10px] text-gray-400 block font-sans">
-                      Automated round-by-round execution on Somnia L1 CLOB
+                      Multi-round automated execution on Somnia CLOB
                     </span>
                   </div>
                 </div>
@@ -862,7 +862,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         }}
                         className={`p-2 border text-left transition-all cursor-pointer rounded-sm ${
                           activeStrategy === "MOMENTUM"
-                            ? "bg-emerald-950/60 border-emerald-500/80 text-white shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                            ? "bg-emerald-950/60 border-emerald-500/80 text-white"
                             : "bg-[#06070B] border-white/[0.05] text-gray-400 hover:text-white"
                         }`}
                       >
@@ -885,7 +885,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         }}
                         className={`p-2 border text-left transition-all cursor-pointer rounded-sm ${
                           activeStrategy === "REVERSAL"
-                            ? "bg-rose-950/60 border-rose-500/80 text-white shadow-[0_0_10px_rgba(244,63,94,0.2)]"
+                            ? "bg-rose-950/60 border-rose-500/80 text-white"
                             : "bg-[#06070B] border-white/[0.05] text-gray-400 hover:text-white"
                         }`}
                       >
@@ -965,7 +965,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                       <button
                         type="button"
                         onClick={handleAbortSession}
-                        className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-rose-400/40 cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.35)]"
+                        className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-rose-400/40 cursor-pointer"
                       >
                         <Square className="w-3.5 h-3.5 fill-white text-white" />
                         <span>STOP (RND {botSession.currentRound}/{botSession.totalRounds})</span>
@@ -974,16 +974,16 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                       <button
                         type="button"
                         onClick={handleResetSession}
-                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer"
                       >
                         <RotateCcw className="w-3.5 h-3.5 text-white" />
-                        <span>NEW AUTO-PILOT RUN</span>
+                        <span>NEW EXECUTION RUN</span>
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={handleLaunchAutoRun}
-                        className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-violet-400/40 cursor-pointer shadow-[0_0_15px_rgba(124,58,237,0.35)]"
+                        className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-violet-400/40 cursor-pointer"
                       >
                         <Play className="w-3.5 h-3.5 fill-white text-white" />
                         <span>START RUN ({autoRounds} Rnds · ${autoBudget})</span>
@@ -995,15 +995,15 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
 
               {/* Live Session Progress HUD */}
               {botSession.isActive && (
-                <div className="p-3 bg-[#080911] border border-cyan-500/30 rounded-sm shadow-[0_0_20px_rgba(6,182,212,0.12)] space-y-2.5">
+                <div className="p-3 bg-[#080911] border border-cyan-500/30 rounded-sm shadow-md space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2.5 h-2.5 rounded-full ${
                           botSession.status === "EXECUTING"
-                            ? "bg-amber-400 animate-ping"
+                            ? "bg-amber-400"
                             : botSession.status === "WAITING_NEXT"
-                            ? "bg-cyan-400 animate-pulse"
+                            ? "bg-cyan-400"
                             : botSession.status === "COMPLETED"
                             ? "bg-emerald-400"
                             : "bg-rose-500"

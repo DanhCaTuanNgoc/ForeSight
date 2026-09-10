@@ -180,15 +180,28 @@ function ForeSightTerminalApp() {
             };
           });
 
-          setMarkets(parsed);
+          // Ensure all 4 core assets are always represented in markets
+          const mergedMarkets = [...parsed];
+          for (const fb of FALLBACK_MARKETS) {
+            const fbSym = (fb.underlyingAsset || fb.symbol).toUpperCase();
+            const hasAsset = mergedMarkets.some(
+              (m) => (m.underlyingAsset || m.symbol).toUpperCase() === fbSym
+            );
+            if (!hasAsset) {
+              mergedMarkets.push(fb);
+            }
+          }
+
+          setMarkets(mergedMarkets);
           setSelectedMarket((prev) => {
-            if (!prev) return parsed[0];
-            const updated = parsed.find((p) => p.id === prev.id || p.symbol === prev.symbol);
+            if (!prev) return mergedMarkets[0];
+            const updated = mergedMarkets.find((p) => p.id === prev.id || p.symbol === prev.symbol);
             if (updated) return updated;
-            const sameAsset = parsed.find(
+            const sameAsset = mergedMarkets.find(
               (p) => (p.underlyingAsset || p.symbol).toUpperCase() === (prev.underlyingAsset || prev.symbol).toUpperCase()
             );
-            return sameAsset || parsed[0];
+            // CRITICAL: Keep user-selected market; never abruptly reset to mergedMarkets[0]
+            return sameAsset || prev;
           });
           return;
         }
@@ -715,13 +728,19 @@ function ForeSightTerminalApp() {
   const activeSymbol = activeMarket.underlyingAsset || activeMarket.symbol;
 
   const handleSelectSymbolGlobal = (sym: string) => {
+    const clean = sym.trim().toUpperCase();
     const list = markets.length > 0 ? markets : FALLBACK_MARKETS;
     let found = list.find(
-      (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
+      (m) =>
+        (m.underlyingAsset || "").toUpperCase() === clean ||
+        (m.symbol || "").toUpperCase() === clean ||
+        (m.symbol || "").toUpperCase().startsWith(clean)
     );
     if (!found) {
       found = FALLBACK_MARKETS.find(
-        (m) => (m.underlyingAsset || m.symbol).toLowerCase() === sym.toLowerCase()
+        (m) =>
+          (m.underlyingAsset || "").toUpperCase() === clean ||
+          (m.symbol || "").toUpperCase() === clean
       );
     }
     if (found) {

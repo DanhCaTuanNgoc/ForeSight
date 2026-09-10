@@ -35,7 +35,7 @@ export const AICopilotFeed: React.FC<AICopilotFeedProps> = ({ signals, onSelectM
           </div>
         </div>
         <span className="text-[9px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded-none font-bold flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           LIVE
         </span>
       </div>
