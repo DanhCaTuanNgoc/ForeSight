@@ -53,6 +53,10 @@ export interface MarketAnalysis {
 export class MarketWatcher {
   private exchange: SomniaMarkets;
   private venueId?: string;
+  private lastReloadTime: number = 0;
+  private reloadPromise: Promise<void> | null = null;
+  private autoPollTimer: NodeJS.Timeout | null = null;
+  private readonly reloadIntervalMs: number = 8_000; // 8-second cache TTL for high-frequency pool discovery
 
   constructor(context: ExchangeContext) {
     this.exchange = context.exchange;
@@ -60,13 +64,58 @@ export class MarketWatcher {
   }
 
   /**
-   * Hydrates/loads markets from DreamDEX indexer
+   * Hydrates/reloads markets from DreamDEX indexer with request deduplication
    */
-  async loadMarkets(): Promise<void> {
-    try {
-      await this.exchange.fetchMarkets();
-    } catch {
-      // Ignore if already loaded
+  async loadMarkets(force = false): Promise<void> {
+    const now = Date.now();
+    if (!force && this.lastReloadTime > 0 && now - this.lastReloadTime < this.reloadIntervalMs) {
+      return;
+    }
+
+    if (this.reloadPromise) {
+      return this.reloadPromise;
+    }
+
+    this.reloadPromise = (async () => {
+      try {
+        await (this.exchange as any).loadMarkets(true);
+        this.lastReloadTime = Date.now();
+      } catch (err) {
+        console.warn("[MarketWatcher] Error reloading markets from DreamDEX indexer:", err);
+      } finally {
+        this.reloadPromise = null;
+      }
+    })();
+
+    return this.reloadPromise;
+  }
+
+  /**
+   * Starts high-frequency background polling to discover newly created DreamDEX rounds immediately
+   */
+  startAutoPolling(intervalMs = 8000): void {
+    if (this.autoPollTimer) return;
+    // Immediate initial sync
+    this.loadMarkets(true).catch(() => {});
+    this.autoPollTimer = setInterval(async () => {
+      try {
+        await this.loadMarkets(true);
+      } catch (err) {
+        console.warn("[MarketWatcher] Auto-poll sync error:", err);
+      }
+    }, intervalMs);
+    if (this.autoPollTimer.unref) {
+      this.autoPollTimer.unref();
+    }
+  }
+
+  /**
+   * Stops high-frequency background polling
+   */
+  stopAutoPolling(): void {
+    if (this.autoPollTimer) {
+      clearInterval(this.autoPollTimer);
+      this.autoPollTimer = null;
     }
   }
 
@@ -74,6 +123,11 @@ export class MarketWatcher {
    * Retrieves all binary event contract markets filtered by venue
    */
   async getActiveEventContracts(): Promise<EventContractMarket[]> {
+    // If never loaded or cache is stale, reload markets from indexer
+    if (this.lastReloadTime === 0 || Date.now() - this.lastReloadTime >= this.reloadIntervalMs) {
+      await this.loadMarkets(false);
+    }
+
     const rawMarkets = await this.exchange.fetchMarkets();
     const nowSec = Math.floor(Date.now() / 1000);
 
@@ -117,6 +171,22 @@ export class MarketWatcher {
           ? `Will ${underlyingAsset} close at or above $${strikePrice.toLocaleString()} at expiry?`
           : `Will ${underlyingAsset} close at or above opening price at expiry?`);
 
+      // Determine human-readable cadence interval
+      let interval = "5m";
+      if (rawInfo?.interval) {
+        interval = rawInfo.interval;
+      } else if (rawInfo?.intervalSec) {
+        const sec = Number(rawInfo.intervalSec);
+        if (sec === 60) interval = "1m";
+        else if (sec === 300) interval = "5m";
+        else if (sec === 900) interval = "15m";
+        else if (sec === 3600) interval = "1h";
+        else if (sec === 14400) interval = "4h";
+        else if (sec === 86400) interval = "24h";
+        else if (sec >= 86400) interval = `${Math.round(sec / 86400)}d`;
+        else interval = `${Math.round(sec / 60)}m`;
+      }
+
       const contract: EventContractMarket = {
         id: m.id,
         symbol: m.symbol,
@@ -131,7 +201,7 @@ export class MarketWatcher {
         timeRemainingSec,
         strikePrice,
         underlyingAsset,
-        interval: rawInfo?.interval || (rawInfo?.intervalSec ? `${Number(rawInfo.intervalSec) / 60}m` : "5m"),
+        interval,
         minOrderSize: m.limits?.amount?.min,
         tickSize: m.precision?.price,
         marketAddress: rawInfo?.marketAddress,
@@ -155,6 +225,11 @@ export class MarketWatcher {
       }
 
       eventContracts.push(contract);
+    }
+
+    // Trigger immediate force reload if zero active contracts remain
+    if (eventContracts.length === 0) {
+      this.loadMarkets(true).catch(() => {});
     }
 
     eventContracts.sort((a, b) => (a.timeRemainingSec || 999999) - (b.timeRemainingSec || 999999));

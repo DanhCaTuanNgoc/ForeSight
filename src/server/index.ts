@@ -1004,9 +1004,9 @@ app.get("/api/positions", async (req, res) => {
     const wallet = req.query.wallet as string | undefined;
     if (!wallet || wallet.trim().length === 0) {
       return res.json({
-        count: 0,
-        positions: [],
-        message: "No wallet connected. Connect MetaMask to view your on-chain portfolio.",
+        count: recordedPositions.length,
+        positions: recordedPositions,
+        message: "Showing public on-chain execution ledger from Somnia Shannon Testnet.",
       });
     }
 
@@ -1147,6 +1147,8 @@ app.post("/api/orders", async (req, res) => {
     let txHash: string | undefined = clientTxHash;
     let orderId = `ord-${symbol.slice(0, 4).toLowerCase()}-${now.toString(36)}`;
     let isLiveOnChain = Boolean(clientTxHash);
+    let effectiveSymbol: string = symbol;
+    let effectivePool: string | undefined = poolAddress;
 
     // Verify client on-chain transaction receipt if clientTxHash is provided
     if (clientTxHash) {
@@ -1174,40 +1176,95 @@ app.post("/api/orders", async (req, res) => {
     }
 
     // Attempt real on-chain execution if PRIVATE_KEY is configured on server and client did not sign
-    if (!txHash && orderEngine && ctx?.canTrade) {
+    if (!txHash) {
+      if (!orderEngine || !ctx?.canTrade) {
+        return res.status(503).json({
+          success: false,
+          error: "Server on-chain execution unavailable: PRIVATE_KEY not configured or trading disabled.",
+        });
+      }
+
+      let activeTargetSymbol = symbol;
+      let activePool = poolAddress;
+      const normalizedOutcome = (outcome.toUpperCase() === "YES" || outcome.toUpperCase() === "UP") ? "YES" : "NO";
+      const asset = (symbol.split("-")[0] || "ETH").toUpperCase();
+
       try {
-        const normalizedOutcome = (outcome.toUpperCase() === "YES" || outcome.toUpperCase() === "UP") ? "YES" : "NO";
+        // Ensure markets cache is hydrated
+        await ctx.exchange.loadMarkets(false);
+      } catch {}
+
+      const tradableRef = `${activeTargetSymbol}#${normalizedOutcome}`;
+      const isLoaded = Boolean(ctx.exchange.markets?.[tradableRef] || ctx.exchange.markets?.[activeTargetSymbol]);
+
+      // If symbol is missing or expired, auto-route to current live active contract
+      if (!isLoaded || (watcher && isPositionExpired({ symbol: activeTargetSymbol, timestamp: now, expirationTime: 0 }))) {
+        try {
+          await ctx.exchange.loadMarkets(true);
+          const activeContracts = await watcher.getActiveEventContracts();
+          const matchingActive = activeContracts.find(
+            (m) =>
+              (m.underlyingAsset || m.symbol).toUpperCase().includes(asset) &&
+              (m.timeRemainingSec === undefined || m.timeRemainingSec > 15)
+          );
+
+          if (matchingActive) {
+            activeTargetSymbol = matchingActive.symbol;
+            activePool = matchingActive.poolAddress || matchingActive.marketAddress || activePool;
+            console.log(chalk.cyan(`[Orders] Auto-routed order from stale '${symbol}' to active live contract '${activeTargetSymbol}' (Pool: ${activePool})`));
+          }
+        } catch (routeErr) {
+          console.warn("[Orders] Dynamic contract auto-routing notice:", routeErr);
+        }
+      }
+
+      try {
         const result = await orderEngine.placeLimitOrder({
-          symbol,
+          symbol: activeTargetSymbol,
           side: "buy",
           outcome: normalizedOutcome,
           price: safePrice,
           amount: safeAmount,
         });
-        if (result.success) {
+
+        if (result.success && result.txHash) {
           orderId = result.orderId || orderId;
-          txHash = result.txHash || txHash;
+          txHash = result.txHash;
           isLiveOnChain = true;
+          effectiveSymbol = activeTargetSymbol;
+          if (activePool) effectivePool = activePool;
+          console.log(chalk.green(`[Orders] 🚀 REAL SOMNIA L1 ON-CHAIN TX MINED: ${txHash} on ${activeTargetSymbol}`));
+        } else {
+          console.error(chalk.red(`[Orders] DreamDEX CLOB order execution failed: ${result.error}`));
+          return res.status(400).json({
+            success: false,
+            error: result.error || "DreamDEX CLOB order rejected on-chain.",
+            symbol: activeTargetSymbol,
+          });
         }
       } catch (chainErr: any) {
-        console.warn("[orderEngine error]:", chainErr?.message || chainErr);
+        console.error("[Orders] Exception executing on-chain order:", chainErr);
+        return res.status(500).json({
+          success: false,
+          error: `Blockchain execution error: ${chainErr?.message || chainErr}`,
+        });
       }
     }
 
-    // If still no txHash, generate a verified reference on Somnia Shannon testnet
     if (!txHash) {
-      const randomBytes = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-      txHash = `0x${randomBytes}`;
-      isLiveOnChain = Boolean(walletAddress);
+      return res.status(400).json({
+        success: false,
+        error: "On-chain execution failed: No verified transaction hash returned from Somnia Shannon blockchain.",
+      });
     }
 
-    const expirySec = Number(expirationTime) || parseExpiryFromSymbol(symbol, now) || (Math.floor(now / 1000) + 900);
-    const isExpiredNow = isPositionExpired({ symbol, timestamp: now, expirationTime: expirySec });
+    const expirySec = Number(expirationTime) || parseExpiryFromSymbol(effectiveSymbol, now) || (Math.floor(now / 1000) + 900);
+    const isExpiredNow = isPositionExpired({ symbol: effectiveSymbol, timestamp: now, expirationTime: expirySec });
 
     const newPosition = {
       id: `pos-${now}-${Math.random().toString(36).slice(2, 6)}`,
-      symbol,
-      poolAddress: poolAddress || undefined,
+      symbol: effectiveSymbol,
+      poolAddress: effectivePool || undefined,
       outcome: (outcome.toUpperCase() === "YES" || outcome.toUpperCase() === "UP") ? ("YES" as const) : ("NO" as const),
       amount: safeAmount,
       entryPrice: safePrice,
@@ -1217,7 +1274,7 @@ app.post("/api/orders", async (req, res) => {
       walletAddress: walletAddress || undefined,
       orderId,
       txHash,
-      isLiveOnChain,
+      isLiveOnChain: true,
     };
 
     recordedPositions.unshift(newPosition);
@@ -1227,7 +1284,7 @@ app.post("/api/orders", async (req, res) => {
       success: true,
       orderId,
       txHash,
-      isLiveOnChain,
+      isLiveOnChain: true,
       position: newPosition,
       explorerUrl: `https://shannon-explorer.somnia.network/tx/${txHash}`,
     });
@@ -1650,6 +1707,7 @@ async function startServer() {
     // ── 1. Core exchange context ──────────────────────────────
     ctx = await createExchangeContext();
     watcher = new MarketWatcher(ctx);
+    watcher.startAutoPolling(8000); // 8-second continuous polling for DreamDEX pools
     orderEngine = new OrderEngine(ctx);
     sweeper = new SettlementSweeper(ctx);
 
@@ -1704,6 +1762,7 @@ async function startServer() {
     const shutdown = async () => {
       console.log(chalk.yellow("\nShutting down..."));
       if (rssPollerInterval) clearInterval(rssPollerInterval);
+      watcher?.stopAutoPolling();
       snapshotWorker?.stop();
       newsWorker?.stop();
       await shutdownExchange(ctx);

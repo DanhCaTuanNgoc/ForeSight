@@ -424,6 +424,44 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     };
   }, [crosshairPos]);
 
+  // ─── Mini Strike Radar Calculation (0ms Math Reflex) ────────────────────────
+  const radarMetrics = useMemo(() => {
+    if (!strikePrice || strikePrice <= 0) return null;
+    const spotVal = last;
+    let delta = 0;
+    let deltaPct = 0;
+    let bps = 0;
+    let isAbove = false;
+    let isSafe = false;
+
+    if (isSpotMode) {
+      delta = spotVal - strikePrice;
+      deltaPct = (delta / strikePrice) * 100;
+      bps = Math.round(deltaPct * 100);
+      isAbove = spotVal >= strikePrice;
+      isSafe = Math.abs(deltaPct) >= 0.05; // 5 bps safety margin
+    } else {
+      const prob = spotVal * 100;
+      deltaPct = prob - 50;
+      bps = Math.round(deltaPct * 10);
+      isAbove = prob >= 50;
+      isSafe = Math.abs(deltaPct) >= 5;
+    }
+
+    const sliderPos = Math.max(5, Math.min(95, 50 + (isSpotMode ? deltaPct * 150 : deltaPct)));
+
+    return {
+      spotVal,
+      strikePrice,
+      delta,
+      deltaPct,
+      bps,
+      isAbove,
+      isSafe,
+      sliderPos,
+    };
+  }, [strikePrice, last, isSpotMode]);
+
   return (
     <div className="rounded-none border border-white/[0.08] bg-[#09090F] flex flex-col overflow-hidden font-mono relative select-none shadow-xl">
       {/* ─── 1. Top Control Toolbar (Clean, Pro & Uncluttered) ─────────── */}
@@ -515,31 +553,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               <span>EMA</span>
             </button>
           )}
-
-          {/* Area vs Candle Switcher */}
-          {visualMode === "probability" && (
-            <div className="flex items-center bg-[#0E0E17] rounded-none border border-white/[0.07] text-[10px]">
-              <button
-                onClick={() => { sound.playClick(); setCurveMode(curveMode === "dual" ? "yes-only" : "dual"); }}
-                title={curveMode === "dual" ? "YES Only" : "Dual YES/NO"}
-                className={`px-1.5 py-0.5 transition cursor-pointer ${
-                  curveMode === "dual" ? "text-emerald-400 bg-emerald-950/40" : "text-gray-500 hover:text-gray-300"
-                }`}
-              >
-                <Split className="w-3 h-3" />
-              </button>
-              <div className="w-px h-3 bg-white/[0.08]" />
-              <button
-                onClick={() => { sound.playClick(); setRenderType(renderType === "area" ? "candles" : "area"); }}
-                title={renderType === "area" ? "Switch to Candlesticks" : "Switch to Area"}
-                className={`px-1.5 py-0.5 transition cursor-pointer ${
-                  renderType === "candles" ? "text-violet-300 bg-violet-950/40" : "text-gray-500 hover:text-gray-300"
-                }`}
-              >
-                <CandlestickChart className="w-3 h-3" />
-              </button>
-            </div>
-          )}
+          
 
           {/* Monte Carlo Volatility */}
           {visualMode === "montecarlo" && (
@@ -1117,6 +1131,66 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           </div>
         )}
       </div>
+
+      {/* ─── 4. Bottom Mini Strike Radar & Real-Time Distance Ribbon (0.5s Comprehension) ─── */}
+      {radarMetrics && (
+        <div className="px-3 py-1.5 bg-[#07070C] border-t border-white/[0.08] flex flex-wrap items-center justify-between text-[10px] font-mono select-none gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="flex items-center gap-1 font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-500/30 px-1.5 py-0.5">
+              <Target className="w-3 h-3 text-cyan-400" />
+              STRIKE RADAR
+            </span>
+
+            <span className="text-gray-400">
+              Strike: <b className="text-cyan-300 font-bold">${radarMetrics.strikePrice.toLocaleString()}</b>
+            </span>
+
+            <span className="text-gray-600">|</span>
+
+            <span className="text-gray-400">
+              Spot: <b className={radarMetrics.isAbove ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
+                ${radarMetrics.spotVal >= 1000 ? radarMetrics.spotVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : radarMetrics.spotVal.toFixed(3)}
+              </b>
+            </span>
+
+            <span className={`px-1.5 py-0.5 font-bold text-[9px] ${
+              radarMetrics.isAbove
+                ? "text-emerald-300 bg-emerald-950/50 border border-emerald-500/40"
+                : "text-rose-300 bg-rose-950/50 border border-rose-500/40"
+            }`}>
+              {radarMetrics.isAbove ? "+" : ""}{radarMetrics.deltaPct.toFixed(3)}% ({radarMetrics.isAbove ? "+" : ""}{radarMetrics.bps} bps)
+            </span>
+
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 ${
+              radarMetrics.isSafe
+                ? "text-emerald-400 bg-emerald-950/30 border border-emerald-500/30"
+                : "text-amber-400 bg-amber-950/30 border border-amber-500/30 animate-pulse"
+            }`}>
+              {radarMetrics.isSafe ? "🟢 SAFE ZONE" : "⚠️ PIN-RISK / FLIP ZONE"}
+            </span>
+          </div>
+
+          {/* Mini Visual Gauge (Strike in center) */}
+          <div className="flex items-center gap-2">
+            <span className="text-[8px] text-gray-500 font-bold">BEAR (NO)</span>
+            <div className="w-28 sm:w-36 h-2.5 bg-[#0E0E17] border border-white/[0.1] relative rounded-none overflow-hidden">
+              {/* Center Strike Marker */}
+              <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-cyan-400 z-10" />
+              {/* Dynamic Spot Pointer */}
+              <div
+                className={`absolute top-0 bottom-0 w-2.5 ${
+                  radarMetrics.isAbove ? "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
+                } transition-all duration-300`}
+                style={{
+                  left: `${radarMetrics.sliderPos}%`,
+                  transform: "translateX(-50%)",
+                }}
+              />
+            </div>
+            <span className="text-[8px] text-gray-500 font-bold">BULL (YES)</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

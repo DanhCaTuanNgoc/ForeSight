@@ -112,6 +112,7 @@ function ForeSightTerminalApp() {
   const [timeRange, setTimeRange] = useState<"15m" | "1H" | "4H" | "1D">("1H");
   const [visualMode, setVisualMode] = useState<CanvasVisualMode>("probability");
   const [positions, setPositions] = useState<PositionRecord[]>([]);
+  const [publicPositions, setPublicPositions] = useState<PositionRecord[]>([]);
   const [news, setNews] = useState<any[]>([]);
   const [debate, setDebate] = useState<any>(null);
   const [debateLoading, setDebateLoading] = useState<boolean>(false);
@@ -183,7 +184,11 @@ function ForeSightTerminalApp() {
           setSelectedMarket((prev) => {
             if (!prev) return parsed[0];
             const updated = parsed.find((p) => p.id === prev.id || p.symbol === prev.symbol);
-            return updated || prev;
+            if (updated) return updated;
+            const sameAsset = parsed.find(
+              (p) => (p.underlyingAsset || p.symbol).toUpperCase() === (prev.underlyingAsset || prev.symbol).toUpperCase()
+            );
+            return sameAsset || parsed[0];
           });
           return;
         }
@@ -321,7 +326,7 @@ function ForeSightTerminalApp() {
     }
   };
 
-  // 5. Fetch Positions (Scoped exclusively to connected Web3 wallet)
+  // 5. Fetch Positions (User scoped + Public verifiable ledger)
   const fetchPositions = useCallback(async () => {
     const resolveStatus = (p: any) => {
       if (p.status === "CLAIMED") return "CLAIMED";
@@ -336,6 +341,22 @@ function ForeSightTerminalApp() {
     };
 
     try {
+      // 1. Fetch public verifiable on-chain positions from Somnia testnet
+      const pubRes = await fetch(apiUrl("/api/positions"));
+      if (pubRes.ok) {
+        const pubData = await pubRes.json();
+        const pubList = Array.isArray(pubData) ? pubData : pubData.positions || [];
+        const cleanedPub = pubList.filter(
+          (p: any) => p && !p.id?.startsWith("pos-demo-") && p.status !== "FAILED"
+        );
+        const enrichedPub = cleanedPub.map((p: any) => ({
+          ...p,
+          status: resolveStatus(p),
+        }));
+        setPublicPositions(enrichedPub);
+      }
+
+      // 2. Fetch user scoped positions if wallet is connected
       if (!wallet.address) {
         setPositions([]);
         return;
@@ -736,6 +757,7 @@ function ForeSightTerminalApp() {
       {activeTab === "analytics" && (
         <AnalyticsView
           markets={markets.length > 0 ? markets : FALLBACK_MARKETS}
+          selectedMarket={selectedMarket}
           selectedSymbol={activeSymbol}
           onSelectSymbol={handleSelectSymbolGlobal}
           onSelectMarket={(sym) => {
@@ -748,14 +770,19 @@ function ForeSightTerminalApp() {
       {activeTab === "insights" && (
         <InsightsView
           markets={markets.length > 0 ? markets : FALLBACK_MARKETS}
+          selectedMarket={selectedMarket}
           selectedSymbol={activeSymbol}
+          positions={positions}
+          publicPositions={publicPositions}
+          walletAddress={wallet.address || undefined}
+          showToast={showToast}
           onSelectSymbol={handleSelectSymbolGlobal}
-          onTradeSignal={(sym, outcome, price) => {
+          onTradeSignal={(sym, outcome, price, toastText) => {
             handleSelectSymbolGlobal(sym);
             setPrefillOutcome(outcome);
             if (price) setPrefillEntryPrice(price);
             setActiveTab("markets");
-            showToast(`Loaded ${sym} ${outcome} signal into Terminal!`, "success");
+            showToast(toastText || `Loaded ${sym} ${outcome} signal into Terminal!`, "success");
           }}
         />
       )}
@@ -763,6 +790,7 @@ function ForeSightTerminalApp() {
       {activeTab === "activity" && (
         <ActivityView
           positions={positions}
+          publicPositions={publicPositions}
           onClaimAll={handleClaimAll}
           isClaiming={isClaiming}
           onTradeNew={() => setActiveTab("markets")}
