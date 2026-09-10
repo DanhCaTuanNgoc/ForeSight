@@ -531,35 +531,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <div>
                   <h3 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-2">
                     <span>1-MINUTE STRIKE RADAR & EXECUTION CYCLE</span>
-                    <span className="text-[9px] px-1.5 py-0.2 bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
-                      Real-Time
-                    </span>
                   </h3>
                 </div>
               </div>
 
-              {/* Status Alert Badge */}
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-bold px-2 py-0.5 border ${
-                  isSafe
-                    ? "text-emerald-300 bg-emerald-950/60 border-emerald-500/40"
-                    : "text-amber-300 bg-amber-950/60 border-amber-500/40"
-                }`}>
-                  {isSafe ? "SAFE CONVICTION ZONE" : "PIN-RISK / FLIP ZONE"}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    sound.playClick();
-                    onSelectMarket(activeSymbol);
-                  }}
-                  className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-colors flex items-center gap-1 border border-cyan-400/50 cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.3)]"
-                >
-                  <span>EXECUTE ON-CHAIN</span>
-                  <ArrowUpRight className="w-3 h-3" />
-                </button>
-              </div>
             </div>
 
             {/* Radar Gauge (Strike Centered, Spot Moving) */}

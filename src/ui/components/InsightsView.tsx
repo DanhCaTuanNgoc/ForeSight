@@ -21,6 +21,10 @@ import {
   Radio,
   Activity,
   Cpu,
+  Bot,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
 } from "lucide-react";
 import { AICopilotFeed } from "./AICopilotFeed.js";
 import { CryptoIcon } from "./CryptoIcon.js";
@@ -85,6 +89,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   const [autoRounds, setAutoRounds] = useState<number>(5);
   const [autoBudget, setAutoBudget] = useState<number>(25);
   const [activeStrategy, setActiveStrategy] = useState<"MOMENTUM" | "REVERSAL">("MOMENTUM");
+  const [showSessionLogs, setShowSessionLogs] = useState<boolean>(false);
 
   // Real Autonomous Bot Session Engine
   const [botSession, setBotSession] = useState<{
@@ -666,16 +671,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
               </div>
             </div>
 
-            {/* Executive Summary (if available) */}
-            {debate?.summary && (
-              <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.06] flex items-start gap-2.5 text-xs">
-                <FileText className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
-                <div className="text-gray-300 font-sans leading-relaxed text-[11px]">
-                  {debate.summary}
-                </div>
-              </div>
-            )}
-
             {/* ─── CONSENSUS BIAS BALANCE BAR ─── */}
             <div className="space-y-1.5 p-2.5 rounded-none bg-[#0E0E17] border border-white/[0.06]">
               <div className="flex justify-between items-center text-xs font-bold font-mono">
@@ -811,101 +806,113 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
               </div>
             </div>
 
-            {/* ─── 3. AUTONOMOUS MULTI-ROUND SESSION RUNNER ─── */}
-            <div className="pt-2 border-t border-white/[0.07] space-y-3 font-mono">
+            {/* ─── 3. AI AUTO-PILOT RUNNER ─── */}
+            <div className="pt-3 border-t border-white/[0.08] space-y-3 font-mono">
+              {/* Header */}
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-1 rounded-none bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
-                    <Activity className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded bg-violet-950/60 border border-violet-500/40 text-violet-300">
+                    <Bot className="w-4 h-4 text-violet-400" />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                      AUTONOMOUS MULTI-ROUND SESSION RUNNER
-                    </span>
-                    <span className="text-[9px] text-gray-400 block">
-                      Automated Execution on DreamDEX CLOB · Non-Custodial Session
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">
+                        AI Auto-Pilot Runner
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-400 block font-sans">
+                      Automated round-by-round execution on Somnia L1 CLOB
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[9px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 font-bold">
-                  <Lock className="w-3 h-3 text-emerald-400" />
-                  <span>SESSION KEY: TRADE-ONLY</span>
+                <div className="flex items-center gap-2.5">
+                  {onTradeSignal && !botSession.isActive && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        const pick = activeStrategy === "MOMENTUM" ? (bullConfidence >= 50 ? "YES" : "NO") : (bullConfidence >= 50 ? "NO" : "YES");
+                        const price = pick === "YES" ? targetBullOdds : targetBearOdds;
+                        onTradeSignal(activeMarket?.symbol || `${selectedSymbol}-5M`, pick, price, "Prefilled in Terminal");
+                      }}
+                      className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer font-sans"
+                    >
+                      <span>Prefill Terminal</span>
+                      <ArrowUpRight className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Strategy Selector & Configuration Grid */}
-              {(() => {
-                const realStrike = activeMarket?.strikePrice
-                  ? `$${activeMarket.strikePrice > 10 ? activeMarket.strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 }) : activeMarket.strikePrice.toFixed(4)}`
-                  : "$78,725.0";
-                const realPool = activeMarket?.poolAddress || activeMarket?.marketAddress || "0x898002b0b95fbedf76c15a650ed0de23cd6fc113";
-                const realInterval = activeMarket?.interval || "5m";
-                const realOdds = currentTokenProb.toFixed(1);
+              {/* Strategy & Budget Setup Grid */}
+              <div className="p-3 bg-[#090A12] border border-white/[0.07] space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                  {/* 1. Strategy Selector */}
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] text-gray-400 uppercase font-bold block">
+                      1. STRATEGY
+                    </span>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setActiveStrategy("MOMENTUM");
+                        }}
+                        className={`p-2 border text-left transition-all cursor-pointer rounded-sm ${
+                          activeStrategy === "MOMENTUM"
+                            ? "bg-emerald-950/60 border-emerald-500/80 text-white shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                            : "bg-[#06070B] border-white/[0.05] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-emerald-400">MOMENTUM</span>
+                          <span className="text-[8px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 font-bold">
+                            {currentTokenProb >= 50 ? "BUY YES" : "BUY NO"}
+                          </span>
+                        </div>
+                        <div className="text-[9px] text-gray-400 mt-1 truncate">
+                          Follow {selectedSymbol} trend ({bullConfidence}%)
+                        </div>
+                      </button>
 
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 p-3 rounded-none bg-[#0B0B14] border border-white/[0.06]">
-                    {/* 1. Strategy */}
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] text-gray-400 uppercase font-bold block">1. SELECT STRATEGY</span>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sound.playClick();
-                            setActiveStrategy("MOMENTUM");
-                          }}
-                          className={`p-2 border text-left rounded-none transition-all cursor-pointer ${
-                            activeStrategy === "MOMENTUM"
-                              ? "bg-emerald-950/60 border-emerald-500/80 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.25)]"
-                              : "bg-[#07070A] border-white/[0.05] text-gray-400 hover:text-white"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-amber-300">MOMENTUM</span>
-                            <span className="text-[8px] px-1 py-0.2 bg-emerald-950 text-emerald-400 border border-emerald-500/30 font-bold">
-                              {currentTokenProb >= 50 ? "BUY YES" : "BUY NO"}
-                            </span>
-                          </div>
-                          <div className="text-[8px] text-gray-300 mt-1 font-mono">
-                            Follow {realInterval} trend ({realOdds}%)
-                          </div>
-                          <div className="text-[8px] text-gray-500 font-mono truncate">
-                            Strike {realStrike}
-                          </div>
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setActiveStrategy("REVERSAL");
+                        }}
+                        className={`p-2 border text-left transition-all cursor-pointer rounded-sm ${
+                          activeStrategy === "REVERSAL"
+                            ? "bg-rose-950/60 border-rose-500/80 text-white shadow-[0_0_10px_rgba(244,63,94,0.2)]"
+                            : "bg-[#06070B] border-white/[0.05] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-rose-400">REVERSAL</span>
+                          <span className="text-[8px] px-1 py-0.2 rounded bg-rose-950 text-rose-300 border border-rose-500/40 font-bold">
+                            {currentTokenProb >= 50 ? "BUY NO" : "BUY YES"}
+                          </span>
+                        </div>
+                        <div className="text-[9px] text-gray-400 mt-1 truncate">
+                          Mean-revert / fade spike
+                        </div>
+                      </button>
+                    </div>
+                  </div>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sound.playClick();
-                            setActiveStrategy("REVERSAL");
-                          }}
-                          className={`p-2 border text-left rounded-none transition-all cursor-pointer ${
-                            activeStrategy === "REVERSAL"
-                              ? "bg-rose-950/60 border-rose-500/80 text-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.25)]"
-                              : "bg-[#07070A] border-white/[0.05] text-gray-400 hover:text-white"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-cyan-300">REVERSAL</span>
-                            <span className="text-[8px] px-1 py-0.2 bg-rose-950 text-rose-400 border border-rose-500/30 font-bold">
-                              {currentTokenProb >= 50 ? "BUY NO" : "BUY YES"}
-                            </span>
-                          </div>
-                          <div className="text-[8px] text-gray-300 mt-1 font-mono">
-                            Fade spike on CLOB
-                          </div>
-                          <div className="text-[8px] text-gray-500 font-mono truncate">
-                            Mean-revert to {realStrike}
-                          </div>
-                        </button>
-                      </div>
+                  {/* 2. Rounds & Budget */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[9px]">
+                      <span className="text-gray-400 uppercase font-bold">2. ROUNDS & BUDGET</span>
+                      <span className="text-cyan-300 font-bold">
+                        ~${(autoBudget / autoRounds).toFixed(1)} / round
+                      </span>
                     </div>
 
-                    {/* 2. Rounds & Budget */}
-                    <div className="space-y-1.5">
-                      <span className="text-[9px] text-gray-400 uppercase font-bold block">2. ROUNDS & BUDGET</span>
+                    <div className="space-y-1">
+                      {/* Rounds */}
                       <div className="flex items-center gap-1">
                         {[3, 5, 10].map((r) => (
                           <button
@@ -915,10 +922,10 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                               sound.playClick();
                               setAutoRounds(r);
                             }}
-                            className={`flex-1 py-1 text-center text-[10px] font-bold border transition-colors cursor-pointer ${
+                            className={`flex-1 py-1 text-center text-[10px] font-bold border transition-colors cursor-pointer rounded-sm ${
                               autoRounds === r
                                 ? "bg-violet-600 text-white border-violet-400/80"
-                                : "bg-[#07070A] text-gray-400 border-white/[0.05] hover:text-white"
+                                : "bg-[#06070B] text-gray-400 border-white/[0.05] hover:text-white"
                             }`}
                           >
                             {r} Rnds
@@ -926,7 +933,8 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         ))}
                       </div>
 
-                      <div className="flex items-center gap-1 pt-0.5">
+                      {/* Budget */}
+                      <div className="flex items-center gap-1">
                         {[10, 25, 50, 100].map((amt) => (
                           <button
                             key={amt}
@@ -935,10 +943,10 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                               sound.playClick();
                               setAutoBudget(amt);
                             }}
-                            className={`flex-1 py-0.5 text-center text-[9px] font-bold border transition-colors cursor-pointer ${
+                            className={`flex-1 py-0.5 text-center text-[9px] font-bold border transition-colors cursor-pointer rounded-sm ${
                               autoBudget === amt
-                                ? "bg-cyan-950/70 text-cyan-300 border-cyan-500/80"
-                                : "bg-[#07070A] text-gray-400 border-white/[0.05] hover:text-white"
+                                ? "bg-cyan-950/80 text-cyan-300 border-cyan-500/80"
+                                : "bg-[#06070B] text-gray-400 border-white/[0.05] hover:text-white"
                             }`}
                           >
                             ${amt}
@@ -946,64 +954,49 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         ))}
                       </div>
                     </div>
-
-                    {/* 3. Action */}
-                    <div className="space-y-1.5 flex flex-col justify-between">
-                      <span className="text-[9px] text-gray-400 uppercase font-bold block">3. DEPLOY ON-CHAIN</span>
-                      {botSession.isActive && (botSession.status === "EXECUTING" || botSession.status === "WAITING_NEXT") ? (
-                        <button
-                          type="button"
-                          onClick={handleAbortSession}
-                          className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-rose-400/40 cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.4)]"
-                        >
-                          <Square className="w-3.5 h-3.5 fill-white text-white" />
-                          <span>STOP SESSION (RND {botSession.currentRound}/{botSession.totalRounds})</span>
-                        </button>
-                      ) : botSession.isActive && (botSession.status === "COMPLETED" || botSession.status === "ABORTED") ? (
-                        <button
-                          type="button"
-                          onClick={handleResetSession}
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.35)]"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5 text-white" />
-                          <span>RESET / NEW RUN</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleLaunchAutoRun}
-                          className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs font-mono transition-all flex items-center justify-center gap-1.5 border border-violet-400/40 cursor-pointer shadow-[0_0_15px_rgba(124,58,237,0.35)]"
-                        >
-                          <Play className="w-3.5 h-3.5 fill-white text-white" />
-                          <span>DISPATCH {autoRounds}-RND RUN (${autoBudget})</span>
-                        </button>
-                      )}
-                      <div className="flex items-center justify-between text-[8px] text-gray-400">
-                        <span title={realPool}>Pool: {realPool.slice(0, 8)}...</span>
-                        {onTradeSignal && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              sound.playClick();
-                              const pick = activeStrategy === "MOMENTUM" ? (bullConfidence >= 50 ? "YES" : "NO") : (bullConfidence >= 50 ? "NO" : "YES");
-                              const price = pick === "YES" ? targetBullOdds : targetBearOdds;
-                              onTradeSignal(activeMarket?.symbol || `${selectedSymbol}-5M`, pick, price, "Prefilled in Terminal");
-                            }}
-                            className="text-cyan-400 hover:underline cursor-pointer"
-                          >
-                            Prefill Terminal ↗
-                          </button>
-                        )}
-                      </div>
-                    </div>
                   </div>
-                );
-              })()}
 
-              {/* Live Session HUD */}
+                  {/* 3. Launch Action Button */}
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] text-gray-400 uppercase font-bold block">
+                      3. EXECUTION
+                    </span>
+                    {botSession.isActive && (botSession.status === "EXECUTING" || botSession.status === "WAITING_NEXT") ? (
+                      <button
+                        type="button"
+                        onClick={handleAbortSession}
+                        className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-rose-400/40 cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.35)]"
+                      >
+                        <Square className="w-3.5 h-3.5 fill-white text-white" />
+                        <span>STOP (RND {botSession.currentRound}/{botSession.totalRounds})</span>
+                      </button>
+                    ) : botSession.isActive && (botSession.status === "COMPLETED" || botSession.status === "ABORTED") ? (
+                      <button
+                        type="button"
+                        onClick={handleResetSession}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-emerald-400/40 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 text-white" />
+                        <span>NEW AUTO-PILOT RUN</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleLaunchAutoRun}
+                        className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-violet-400/40 cursor-pointer shadow-[0_0_15px_rgba(124,58,237,0.35)]"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-white text-white" />
+                        <span>START RUN ({autoRounds} Rnds · ${autoBudget})</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Session Progress HUD */}
               {botSession.isActive && (
-                <div className="p-3 bg-[#080911] border border-cyan-500/30 font-mono shadow-[0_0_20px_rgba(6,182,212,0.15)] space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-2">
+                <div className="p-3 bg-[#080911] border border-cyan-500/30 rounded-sm shadow-[0_0_20px_rgba(6,182,212,0.12)] space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2.5 h-2.5 rounded-full ${
@@ -1016,85 +1009,31 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                             : "bg-rose-500"
                         }`}
                       />
-                      <span className="text-xs font-bold tracking-wider text-white">
-                        {botSession.status === "EXECUTING" && `EXECUTING · ROUND ${botSession.currentRound}/${botSession.totalRounds}`}
-                        {botSession.status === "WAITING_NEXT" && `ACTIVE · WAITING NEXT ROUND (${botSession.currentRound}/${botSession.totalRounds})`}
-                        {botSession.status === "COMPLETED" && `SESSION COMPLETED (${botSession.totalRounds}/${botSession.totalRounds} ROUNDS)`}
-                        {botSession.status === "ABORTED" && `SESSION ABORTED`}
-                      </span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-violet-950/80 border border-violet-500/40 text-violet-300 font-bold">
-                        STRATEGY: {botSession.strategy}
+                      <span className="text-xs font-bold text-white">
+                        {botSession.status === "EXECUTING" && `Executing Round ${botSession.currentRound} of ${botSession.totalRounds}...`}
+                        {botSession.status === "WAITING_NEXT" && `Round ${botSession.currentRound}/${botSession.totalRounds} complete`}
+                        {botSession.status === "COMPLETED" && `Session Completed (${botSession.totalRounds} Rounds)`}
+                        {botSession.status === "ABORTED" && `Session Stopped`}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {botSession.status === "WAITING_NEXT" && (
-                        <div className="flex items-center gap-1 text-[11px] text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 px-2 py-0.5 font-bold">
-                          <Timer className="w-3.5 h-3.5" />
-                          <span>NEXT ORDER: {botSession.countdownToNextSec}s</span>
-                        </div>
-                      )}
-
-                      {botSession.status === "EXECUTING" && (
-                        <div className="flex items-center gap-1 text-[11px] text-amber-300 bg-amber-950/40 border border-amber-500/30 px-2 py-0.5 font-bold">
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>BROADCASTING ON-CHAIN...</span>
-                        </div>
-                      )}
-
-                      {botSession.status === "EXECUTING" || botSession.status === "WAITING_NEXT" ? (
-                        <button
-                          type="button"
-                          onClick={handleAbortSession}
-                          className="px-2.5 py-1 bg-rose-600/90 hover:bg-rose-500 text-white text-[10px] font-bold tracking-wider border border-rose-400/50 cursor-pointer flex items-center gap-1 transition-all"
-                        >
-                          <Square className="w-2.5 h-2.5 fill-white text-white" />
-                          <span>STOP</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleResetSession}
-                          className="px-2.5 py-1 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 text-[10px] font-bold tracking-wider border border-cyan-500/50 cursor-pointer flex items-center gap-1 transition-all"
-                        >
-                          <RotateCcw className="w-2.5 h-2.5" />
-                          <span>RESET</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] bg-[#06070E] p-2 border border-white/[0.05]">
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">PROGRESS</span>
-                      <span className="text-white font-bold">
-                        {botSession.currentRound} of {botSession.totalRounds} Rounds
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">CAPITAL ALLOCATED</span>
-                      <span className="text-cyan-400 font-bold">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-cyan-300 font-bold text-[11px]">
                         ${(botSession.currentRound * botSession.budgetPerRound).toFixed(1)} / ${botSession.totalBudget} tUSDC
                       </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">CADENCE</span>
-                      <span className="text-emerald-400 font-bold">
-                        ~12s (DreamDEX CLOB)
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">NETWORK</span>
-                      <span className="text-violet-300 font-bold truncate block">
-                        Somnia Shannon
-                      </span>
+                      {botSession.status === "WAITING_NEXT" && (
+                        <div className="flex items-center gap-1 text-[10px] text-cyan-300 bg-cyan-950/60 border border-cyan-500/40 px-1.5 py-0.5 rounded font-bold">
+                          <Timer className="w-3 h-3" />
+                          <span>Next: {botSession.countdownToNextSec}s</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="w-full bg-gray-900 h-1.5 overflow-hidden border border-white/[0.08]">
+                  <div className="w-full bg-gray-900/80 h-1.5 rounded-full overflow-hidden border border-white/[0.08]">
                     <div
-                      className={`h-full transition-all duration-500 ${
+                      className={`h-full transition-all duration-500 rounded-full ${
                         botSession.status === "COMPLETED"
                           ? "bg-emerald-400"
                           : botSession.status === "ABORTED"
@@ -1107,105 +1046,123 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                     />
                   </div>
 
-                  {/* Live Execution Log Terminal */}
-                  <div className="bg-[#030407] border border-white/[0.08] p-2.5 rounded-none font-mono text-[10px] space-y-1 max-h-36 overflow-y-auto">
-                    <div className="text-[9px] text-gray-500 uppercase font-bold border-b border-white/[0.05] pb-1 mb-1 flex items-center justify-between">
-                      <span>EXECUTION SESSION LOGS</span>
-                      <span className="text-[8px] text-gray-400">{botSession.logs.length} events</span>
-                    </div>
-                    {botSession.logs.map((log) => (
-                      <div key={log.id} className="flex items-start gap-2 leading-relaxed font-mono">
-                        <span className="text-gray-500 shrink-0 text-[9px]">[{log.time}]</span>
-                        <span
-                          className={`flex-1 break-words ${
-                            log.type === "trade"
-                              ? "text-cyan-300"
-                              : log.type === "success"
-                              ? "text-emerald-300 font-bold"
-                              : log.type === "warning"
-                              ? "text-rose-300"
-                              : "text-gray-300"
-                          }`}
-                        >
-                          {log.message}
-                          {log.txHash && (
-                            <a
-                              href={`https://shannon-explorer.somnia.network/tx/${log.txHash}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="ml-2 text-cyan-400 underline hover:text-cyan-200 inline-flex items-center gap-0.5"
-                            >
-                              <span>Explorer</span>
-                              <ExternalLink className="w-2.5 h-2.5 inline" />
-                            </a>
-                          )}
-                        </span>
+                  {/* Latest Activity Strip */}
+                  {botSession.logs.length > 0 && (
+                    <div className="flex items-center justify-between text-[10px] p-2 bg-[#040408] border border-white/[0.06] rounded-sm gap-2">
+                      <div className="flex items-center gap-2 truncate flex-1">
+                        <span className="text-gray-500 shrink-0">[{botSession.logs[0]?.time}]</span>
+                        <span className="text-gray-300 truncate">{botSession.logs[0]?.message}</span>
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {botSession.logs[0]?.txHash && (
+                          <a
+                            href={`https://shannon-explorer.somnia.network/tx/${botSession.logs[0].txHash}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 underline"
+                          >
+                            <span>Explorer</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setShowSessionLogs((prev) => !prev)}
+                          className="text-gray-400 hover:text-white flex items-center gap-0.5 cursor-pointer pl-1.5 border-l border-white/[0.1]"
+                        >
+                          <span>{showSessionLogs ? "Hide" : `Logs (${botSession.logs.length})`}</span>
+                          {showSessionLogs ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expandable Full Activity Logs */}
+                  {showSessionLogs && botSession.logs.length > 0 && (
+                    <div className="bg-[#030407] border border-white/[0.08] p-2 rounded-sm text-[10px] space-y-1 max-h-32 overflow-y-auto">
+                      {botSession.logs.map((log) => (
+                        <div key={log.id} className="flex items-start gap-2 leading-relaxed">
+                          <span className="text-gray-500 shrink-0 text-[9px]">[{log.time}]</span>
+                          <span
+                            className={`flex-1 break-words ${
+                              log.type === "trade"
+                                ? "text-cyan-300"
+                                : log.type === "success"
+                                ? "text-emerald-300 font-bold"
+                                : log.type === "warning"
+                                ? "text-rose-300"
+                                : "text-gray-300"
+                            }`}
+                          >
+                            {log.message}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Live Execution Stream & Streak History */}
-              <div className="p-2.5 rounded-none bg-[#0B0B14] border border-white/[0.06] space-y-1.5 font-mono">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-400 font-bold uppercase flex items-center gap-1.5">
+              {/* Recent Track Record */}
+              <div className="p-2.5 rounded-sm bg-[#090A12] border border-white/[0.06] space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400 font-bold uppercase flex items-center gap-1.5 text-[10px]">
                     <History className="w-3 h-3 text-cyan-400" />
-                    VERIFIED ON-CHAIN EXECUTION LEDGER · SOMNIA TESTNET
+                    RECENT EXECUTION TRACK RECORD
                   </span>
-                  <span className="text-emerald-400 font-bold">
-                    WIN RATE: {winRate}% ({winsCount}W - {Math.max(0, totalSettled - winsCount)}L)
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400">
+                      {winsCount}W - {Math.max(0, totalSettled - winsCount)}L
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                      {winRate}% WIN RATE
+                    </span>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-5 gap-1.5 text-[10px]">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-[10px]">
                   {streakHistory.map((s, idx) => (
                     <div
                       key={idx}
-                      className={`p-2 border flex flex-col justify-between font-mono ${
+                      className={`p-2 rounded-sm border flex flex-col justify-between transition-colors ${
                         s.isRefund
-                          ? "bg-blue-950/30 border-blue-500/40 text-blue-300"
+                          ? "bg-blue-950/20 border-blue-500/30 text-blue-300"
                           : s.status === "IN FLIGHT"
-                          ? "bg-amber-950/25 border-amber-500/40 text-amber-300"
+                          ? "bg-amber-950/20 border-amber-500/30 text-amber-300"
                           : s.win
-                          ? "bg-emerald-950/30 border-emerald-500/40 text-emerald-300"
-                          : "bg-rose-950/30 border-rose-500/40 text-rose-300"
+                          ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-300"
+                          : "bg-rose-950/20 border-rose-500/30 text-rose-300"
                       }`}
                     >
                       <div className="flex items-center justify-between text-[9px]">
-                        <span className="font-bold truncate max-w-[100px] text-white" title={s.round}>
+                        <span className="font-bold truncate max-w-[70px] text-white" title={s.round}>
                           {s.round}
                         </span>
-                        <span className="font-bold">
-                          {s.isRefund ? "REFUND" : s.status === "IN FLIGHT" ? "IN FLIGHT" : s.win ? "WIN" : "LOSS"}
+                        <span className="font-bold text-[8px] px-1 py-0.2 rounded bg-black/40">
+                          {s.isRefund ? "REFUND" : s.status === "IN FLIGHT" ? "PENDING" : s.win ? "WIN" : "LOSS"}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between text-[9px] pt-1">
-                        <span className="text-gray-300">{s.pick}</span>
+                        <span className="text-gray-400">{s.pick}</span>
                         <span className={s.isRefund ? "text-blue-300 font-bold" : s.win ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
                           {s.payout}
                         </span>
                       </div>
 
-                      <div className="text-[8px] text-gray-400 pt-1 flex items-center justify-between border-t border-white/[0.04] mt-1">
-                        {s.txHash ? (
+                      {s.txHash && (
+                        <div className="pt-1 mt-1 border-t border-white/[0.04] text-[8px] flex justify-end">
                           <a
                             href={`https://shannon-explorer.somnia.network/tx/${s.txHash}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-cyan-400 hover:underline flex items-center gap-0.5"
-                            title={`Somnia TxHash: ${s.txHash}`}
+                            className="text-cyan-400/80 hover:text-cyan-300 flex items-center gap-0.5"
                           >
-                            <span>{s.txHash.slice(0, 6)}...{s.txHash.slice(-4)}</span>
+                            <span>Tx {s.txHash.slice(0, 4)}...{s.txHash.slice(-3)}</span>
                             <ExternalLink className="w-2 h-2" />
                           </a>
-                        ) : s.poolAddress ? (
-                          <span className="text-gray-500">Pool {s.poolAddress.slice(0, 6)}...</span>
-                        ) : (
-                          <span className="text-gray-500">DreamDEX CLOB</span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

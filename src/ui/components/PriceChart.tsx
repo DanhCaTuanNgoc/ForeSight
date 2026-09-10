@@ -1081,14 +1081,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             }`}>
               {radarMetrics.isAbove ? "+" : ""}{radarMetrics.deltaPct.toFixed(3)}% ({radarMetrics.isAbove ? "+" : ""}{radarMetrics.bps} bps)
             </span>
-
-            <span className={`text-[9px] font-bold px-1.5 py-0.5 ${
-              radarMetrics.isSafe
-                ? "text-emerald-400 bg-emerald-950/30 border border-emerald-500/30"
-                : "text-amber-400 bg-amber-950/30 border border-amber-500/30 animate-pulse"
-            }`}>
-              {radarMetrics.isSafe ? "🟢 SAFE ZONE" : "⚠️ PIN-RISK / FLIP ZONE"}
-            </span>
           </div>
 
           {/* Mini Visual Gauge (Strike in center) */}
