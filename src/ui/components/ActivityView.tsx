@@ -345,7 +345,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
             </span>
           </button>
 
-          {onResetPositions && userPositions.length > 0 && (
+          {/* {onResetPositions && userPositions.length > 0 && (
             <button
               onClick={() => {
                 if (window.confirm("Clear all recorded positions from ledger memory?")) {
@@ -358,7 +358,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
               <Trash2 className="w-3.5 h-3.5 text-rose-400" />
               <span>CLEAR LEDGER</span>
             </button>
-          )}
+          )} */}
         </div>
       </div>
 

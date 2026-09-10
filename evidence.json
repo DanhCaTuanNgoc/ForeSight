@@ -1,4 +1,4 @@
-﻿{
+{
   "project": "ForeSight",
   "version": "1.0.0",
   "tagline": "The Precision Trading & Cognitive Intelligence Terminal for DreamDEX on Somnia L1",
@@ -22,7 +22,7 @@
     "totalTests": 124,
     "testSuites": 11,
     "passingRate": "100%",
-    "runner": "Vitest v3.2.4",
+    "runner": "Vitest v4.1.11",
     "zeroAnyTypes": true,
     "coverageAreas": [
       "Chebyshev Black-Scholes Rational Approximation Φ(d₂)",
@@ -35,21 +35,25 @@
   },
   "proofTrails": {
     "trailA_1ClickMultiCallSweeper": {
-      "name": "Trail A: 1-Click MultiCall Batch Settlement Claim (Capital Recirculation)",
-      "description": "Recovers 100% of stranded capital across multiple expired binary market pools in a single atomic transaction via ForeSightBatchSweeper.sol.",
+      "name": "Trail A: Custom Smart Contract Deployment & MultiCall Batch Settlement",
+      "description": "Recovers stranded capital across matured binary pools in 1-click atomic execution via ForeSightBatchSweeper.sol on Somnia Shannon Testnet.",
       "contractAddress": "0x0df05851d944bfd01e6bc772e27738c23b6e30f9",
-      "targetPoolsCount": 3,
-      "payoutAmountUsdc": 75.50,
-      "settlementStatus": "CONFIRMED",
-      "txHash": "0x0df05851d944bfd01e6bc772e27738c23b6e30f9a1b2c3d4e5f67890abcdef12",
-      "explorerUrl": "https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9",
+      "contractExplorerUrl": "https://shannon-explorer.somnia.network/address/0x0df05851d944bfd01e6bc772e27738c23b6e30f9",
+      "deploymentTxHash": "0x0042f7f304e036493b529d2cd6e77e359f0952db358e33799912d9e0a19cf275",
+      "deploymentBlockNumber": 480492425,
+      "deploymentExplorerUrl": "https://shannon-explorer.somnia.network/tx/0x0042f7f304e036493b529d2cd6e77e359f0952db358e33799912d9e0a19cf275",
+      "settlementClaimTxHash": "0xf4caf3577f52428af2ce7d6ec87b11428b403008b21ab4bce6d3c50fc22519b6",
+      "settlementBlockNumber": 484521336,
+      "settlementExplorerUrl": "https://shannon-explorer.somnia.network/tx/0xf4caf3577f52428af2ce7d6ec87b11428b403008b21ab4bce6d3c50fc22519b6",
+      "settlementStatus": "CONFIRMED_ON_CHAIN",
       "ecosystemImpact": "Eliminates manual per-pool claim fatigue; recycles idle liquidity back into Somnia L1 active trading rounds."
     },
     "trailB_AntiBlackBoxQuantRejection": {
-      "name": "Trail B: Deterministic Anti-Black-Box Trade Rejection (Capital Protection)",
+      "name": "Trail B: Deterministic Anti-Black-Box Trade Rejection (Capital Protection Test)",
       "description": "When emotional FOMO drives market implied odds to 72% and AI Bull is enthusiastic, the deterministic Quant Engine steps in, computes negative model edge (-1800 bps) and infeasible Velocity Coverage (VC = 0.27x), and automatically flags/rejects the trade.",
       "marketId": "0x00000000000000000000000000000000000000000000000000000000000103cd",
       "symbol": "BTC/USD 5m",
+      "verificationType": "AUTOMATED_INVARIANT_TEST",
       "scenario": {
         "currentSpot": 100000,
         "strikePrice": 100500,
@@ -66,17 +70,18 @@
       "capitalSavedUsdc": 100.00,
       "proofSignificance": "Proves that ForeSight protects capital by subordinating subjective AI to mathematical physics."
     },
-    "trailC_HighFrequencyCLOBLimitExecution": {
-      "name": "Trail C: Sub-Second CLOB Limit Order Dispatch (Liquidity Provision)",
-      "description": "Autonomous Titan Market Maker quotes tight two-sided limit orders on DreamDEX CLOB scaled to real-time Black-Scholes implied volatility.",
-      "orderType": "LIMIT",
-      "direction": "BUY_YES",
-      "lotSize": 10,
-      "price": 0.485,
-      "totalCostUsdc": 4.85,
-      "orderTxHash": "0x8afc4dbfb7dd19b4315d6e2e7adacfc9b45338e72d25ab113c8ee2a0aa7270fd",
-      "orderExplorerUrl": "https://shannon-explorer.somnia.network/tx/0x8afc4dbfb7dd19b4315d6e2e7adacfc9b45338e72d25ab113c8ee2a0aa7270fd",
-      "status": "FILLED"
+    "trailC_100PercentCollateralRefundProtection": {
+      "name": "Trail C: 100% Collateral Principal Refund on Unfilled Limit Orders (Investor Protection)",
+      "description": "When a limit order rests on the orderbook without matching a counterparty before round cutoff window, DreamDEX contract automatically cancels the order and refunds 100% of collateral back to wallet.",
+      "symbol": "BTC-7872505-09SEP26-1710/tUSDC",
+      "orderTxHash": "0x58f77beab8dc966f8faca8f71c2f529dee14f06e6fc3105471695598d8a48ef0",
+      "orderBlockNumber": 484005732,
+      "orderExplorerUrl": "https://shannon-explorer.somnia.network/tx/0x58f77beab8dc966f8faca8f71c2f529dee14f06e6fc3105471695598d8a48ef0",
+      "walletAddress": "0x7f5c82b75b61a33640c12c6e79fb49ce23e335de",
+      "collateralInvestedUsdc": 50.00,
+      "refundedPayoutUsdc": 50.00,
+      "realizedPnl": 0.00,
+      "status": "REFUNDED"
     }
   }
 }
