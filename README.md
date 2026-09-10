@@ -376,7 +376,7 @@ ForeSight is designed as a **cognitive and execution infrastructure layer** solv
 graph TD
     A["🚀 0-Barrier Sandbox & Verifiable Alpha Cards"] -->|"Onboards New Traders"| B["👥 Active User Participation"]
     B -->|"Understand Market First (VC + Dual AI RAG)"| C["📊 Disciplined CLOB Order Flow"]
-    C -->|"Bootstrapped by Titan MM & Oracle Bots"| D["🌊 Deeper Liquidity & Tighter Spreads"]
+    C -->|"Bootstrapped by Sentinel MM & Vector Bots"| D["🌊 Deeper Liquidity & Tighter Spreads"]
     D -->|"Markets Mature & Settle on Somnia L1"| E["🧹 1-Click ForeSight Batch Sweeper"]
     E -->|"Recovers Stranded Capital (O(1) Gas)"| B
 ```
@@ -393,7 +393,7 @@ graph TD
 
 3. **🌊 Pillar 3: Open-Source Liquidity & Strategy Framework:**
    * *The Bottleneck:* CLOB prediction markets require active market makers to maintain narrow spreads and sufficient depth.
-   * *ForeSight Solution:* ForeSight provides 4 modular, open-source strategy bots (`Titan` market maker, `Oracle` arbitrageur, `Volt` momentum tracker, `Sweeper` automated claimer) ready to run directly with `@somnia-chain/markets-sdk`.
+   * *ForeSight Solution:* ForeSight provides 4 modular, open-source strategy bots (`Sentinel` market maker, `Vector` arbitrageur, `Volt` momentum tracker, `Sweeper` automated claimer) ready to run directly with `@somnia-chain/markets-sdk`.
 
 4. **⚡ Pillar 4: Zero-Friction Web3 Onboarding & Organic Social Proof:**
    * *The Bottleneck:* Faucet configurations and wallet friction cause drop-offs for new users exploring prediction markets.
@@ -485,8 +485,8 @@ For DevOps engineers, institutional liquidity providers, and headless market ope
 | Strategy CLI | Bot Persona | Strategy Description & Execution Logic |
 | :--- | :--- | :--- |
 | `npm run agent:starter` | **Baseline Validator** | Submits baseline limit orders and validates ERC-20 approvals and pool connectivity on Somnia Shannon |
-| `npm run agent:maker` | **🛡️ Titan (Market Maker)** | Continuously quotes dynamic two-sided bid-ask spreads around fair probability $\Phi(d2)$, tightening CLOB liquidity |
-| `npm run agent:oracle` | **🔮 Oracle (Arbitrageur)** | Evaluates spot oracle drift (Binance feeds) vs CLOB implied odds to snipe mispriced stale orders |
+| `npm run agent:maker` | **🛡️ Sentinel (Market Maker)** | Continuously quotes dynamic two-sided bid-ask spreads around fair probability $\Phi(d2)$, tightening CLOB liquidity |
+| `npm run agent:oracle` | **🎯 Vector (Arbitrageur)** | Evaluates spot oracle drift (Binance feeds) vs CLOB implied odds to snipe mispriced stale orders |
 | `npm run agent:copilot` | **⚡ Volt (AI Copilot)** | Executes conditional on-chain orders based on Dual AI Arena conviction thresholds and risk filters |
 
 ---
@@ -592,8 +592,8 @@ ForeSight organizes all trading and quantitative operations into **5 specialized
 ├────────────────────────────────┼───────────────────────────────┼────────────────────────────────┤
 │ • ⚡ Auto-Pilot (Momentum)      │ Bull/Bear Conviction ≥ 50%    │ Trend-following CLOB dispatch  │
 │ • 🛡️ Auto-Pilot (Reversal)     │ Mean-reversion counter pick   │ Fades overextended skew        │
-│ • 🔮 Oracle (Arbitrageur)      │ Implied odds lag (<35% in 5m) │ Exploits spot vs CLOB drift    │
-│ • 🛡️ Titan (Market Maker)      │ Continuous quoting loop       │ Quotes two-sided spread (±3%)  │
+│ • 🎯 Vector (Arbitrageur)      │ Implied odds lag (<35% in 5m) │ Exploits spot vs CLOB drift    │
+│ • 🛡️ Sentinel (Market Maker)  │ Continuous quoting loop       │ Quotes two-sided spread (±3%)  │
 │ • 🧹 Sweeper (Claim Bot)       │ Expiry < Now & Claimable > 0  │ Automated batch payout sweeps  │
 └────────────────────────────────┴───────────────────────────────┴────────────────────────────────┘
 
@@ -769,8 +769,8 @@ npm run claim             # Scan finalized markets and execute batch settlement 
 npm run contracts:compile # Compile ForeSightBatchSweeper.sol smart contract
 npm run contracts:deploy  # Deploy ForeSightBatchSweeper to Somnia Shannon Testnet
 npm run agent:starter     # Launch Baseline Starter Bot
-npm run agent:maker       # Launch Two-Sided Market Maker Bot
-npm run agent:oracle      # Launch Oracle Momentum Follower Bot
+npm run agent:maker       # Launch Sentinel Two-Sided Market Maker Bot
+npm run agent:oracle      # Launch Vector Spot Arbitrageur Bot
 npm run agent:copilot     # Launch Autonomous AI Copilot Bot
 ```
 
@@ -780,7 +780,7 @@ npm run agent:copilot     # Launch Autonomous AI Copilot Bot
 
 | Phase & Milestone | Target Timeline | Strategic Focus | Core Technical Deliverables | Ecosystem Impact on Somnia | Status |
 | :--- | :--- | :--- | :--- | :--- | :---: |
-| **Phase 1: Testnet & Terminal Launch** | **Q3 2026**<br/>*(Current)* | • Shannon Testnet MVP<br/>• Core Decision Loop<br/>• Automated Strategy Suite | • 5-Tab Bento Trading Terminal<br/>• Dual AI Adversarial Debate Arena with RAG<br/>• Deterministic Velocity Coverage ($VC$) Modeling<br/>• In-Terminal Auto-Pilot + 4 CLI Bot Runners (Volt, Oracle, Titan, Sweeper)<br/>• 1200×675 HD Proof-of-Thesis Alpha Card Studio | • Proves sub-second trading viability on Somnia<br/>• Ingests active rolling DreamDEX event contracts<br/>• Eliminates stranded capital via Settlement Sweeper | **🟢 Complete & Live** |
+| **Phase 1: Testnet & Terminal Launch** | **Q3 2026**<br/>*(Current)* | • Shannon Testnet MVP<br/>• Core Decision Loop<br/>• Automated Strategy Suite | • 5-Tab Bento Trading Terminal<br/>• Dual AI Adversarial Debate Arena with RAG<br/>• Deterministic Velocity Coverage ($VC$) Modeling<br/>• In-Terminal Auto-Pilot + 4 CLI Bot Runners (Volt, Vector, Sentinel, Sweeper)<br/>• 1200×675 HD Proof-of-Thesis Alpha Card Studio | • Proves sub-second trading viability on Somnia<br/>• Ingests active rolling DreamDEX event contracts<br/>• Eliminates stranded capital via Settlement Sweeper | **🟢 Complete & Live** |
 | **Phase 2: Somnia Mainnet & Reactive Agents** | **Q4 2026** | • Mainnet Deployment<br/>• Native Reactive VM<br/>• Institutional API | • Deployment on Somnia Mainnet with full SOMI token support<br/>• Integration with **Somnia Native Reactive Agents** for on-chain trigger execution without off-chain keepers<br/>• Institutional REST API & typed WebSocket SDK<br/>• Mobile-optimized Progressive Web App (PWA) | • Drives continuous on-chain transaction volume<br/>• First prediction terminal leveraging Somnia Native Reactivity | **🔵 Planned** |
 | **Phase 3: Cross-Venue Prediction Aggregator** | **2027+** | • Prediction Aggregation<br/>• Social Copy-Trading<br/>• Decentralized Swarms | • Smart Order Routing (SOR) across multi-venue prediction pools<br/>• Non-custodial Social Copy-Trading Vaults with verifiable Proof-of-Alpha<br/>• Community-staked Autonomous Agent Swarm Arenas<br/>• Multi-asset index and basket event contracts | • Establishes ForeSight as the primary liquidity and intelligence router for the Somnia ecosystem | **🔵 Planned** |
 

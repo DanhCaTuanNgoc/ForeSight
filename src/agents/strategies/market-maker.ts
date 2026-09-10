@@ -9,8 +9,8 @@ import { createExchangeContext } from "../../core/exchange.js";
  * with configurable half-spread and inventory risk control.
  */
 export class MarketMakerStrategy implements AgentStrategy {
-  name = "EventContractMarketMaker";
-  description = "Provides two-sided resting liquidity on prediction markets";
+  name = "SentinelMarketMaker";
+  description = "🛡️ Sentinel: Provides two-sided resting liquidity on prediction markets";
 
   private halfSpread: number;
   private quoteSize: number;

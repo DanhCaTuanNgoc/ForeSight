@@ -10,8 +10,8 @@ import { createExchangeContext } from "../../core/exchange.js";
  * to detect mispriced binary contracts and capture delta edge.
  */
 export class OracleFollowerStrategy implements AgentStrategy {
-  name = "OracleFollower";
-  description = "Directional trading based on real-time spot oracle movements";
+  name = "VectorArbitrageur";
+  description = "🎯 Vector: Directional arbitrage based on spot oracle drift";
 
   async evaluate(market: EventContractMarket): Promise<TradingSignal | null> {
     if (!market.strikePrice || !market.bestAsk || !market.bestBid) {
@@ -30,7 +30,7 @@ export class OracleFollowerStrategy implements AgentStrategy {
         confidence: 0.80,
         targetPrice: market.bestAsk,
         recommendedSize: 10,
-        rationale: `Oracle delta indicates UP outcome underpriced at ${impliedUp.toFixed(2)} with ${market.timeRemainingSec}s left`,
+        rationale: `Vector delta indicates UP outcome underpriced at ${impliedUp.toFixed(2)} with ${market.timeRemainingSec}s left`,
         timestamp: Date.now(),
       };
     }
