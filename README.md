@@ -69,9 +69,34 @@
 
 ## 🔄 2. The Core Problem & The 4-Stage Decision Loop
 
-In rapid rolling event contracts (5m, 15m, 1h), retail traders face **unexplained odds spikes**, **blind gambling without trajectory context**, and **funds stranded across dozens of expired pools**.
+Across active rolling binary event contracts on DreamDEX (1m, 5m, 15m, 1h contracts), retail traders face three structural friction points that turn trading into high-churn speculation:
 
-ForeSight structures trading into an evidence-grounded **4-Stage Decision Loop**:
+### The 3 Critical Trading Bottlenecks & How ForeSight Solves Them
+
+1. **Contextless Flash Odds Spikes (The "Casino Mode" Trap):**
+   * **The Bottleneck:** Implied probabilities on rolling pools swing wildly (e.g. from 30% to 75%) within seconds. Retail traders react with emotional FOMO without knowing whether spikes stem from true spot momentum, temporary CLOB orderbook thinness, or theta decay approaching expiration.
+   * **ForeSight Solution (`DETECT`):** The **Mini Strike Radar** computes real-time distance to the strike price in basis points ($bps$), while the **Orderbook Imbalance ($OI\%$)** meter reveals real-time bid-ask depth dominance directly on the candlestick chart, providing instant physical context.
+
+2. **The "Black-Box AI" Trap & Latency Mismatch:**
+   * **The Bottleneck:** Generic prediction bots spit out arbitrary, ungrounded probability numbers without verifiable sources or transparent reasoning. Furthermore, relying on 2-4s LLM generation cycles creates a latency trap that misses sub-second block opportunities on Somnia L1.
+   * **ForeSight Solution (`CHALLENGE`):** ForeSight strictly **separates narrative reasoning from mathematical physics**. Qualitative macro analysis is conducted via an adversarial **Dual AI Bull vs. Bear Debate** (Gemini 2.5 Flash + Meta LLaMA 3.3) backed by clickable, verified `[View Evidence]` news links. Concurrently, sub-millisecond deterministic client math powers **0ms Fast-Pick triggers** (`⚡ MOMENTUM` / `🛡️ REVERSAL`) for zero-latency execution.
+
+3. **Non-Linear Payoffs, Volatility Traps & Stranded Capital:**
+   * **The Bottleneck:** Binary event contracts settle discontinuously ($1.00 or $0.00). Traders cannot assess whether current price drift can physically bridge the strike gap before cutoff. Moreover, winning payouts and unfilled orders get scattered across dozens of expired pools, resulting in high manual claiming friction and trapped liquidity.
+   * **ForeSight Solution (`SIMULATE` & `EXECUTE / SWEEP`):** ForeSight introduces **Velocity Coverage ($VC$)** and **Closed-Form Black-Scholes $\Phi(d2)$** to reject unfeasible trades before entry. Near expiry, **Trading Cutoff Protection** prevents `TradingNotActive` transaction reverts. Finally, [`ForeSightBatchSweeper.sol`](contracts/ForeSightBatchSweeper.sol) executes **1-click atomic multi-pool batch redemptions** ($O(1)$ gas), and guarantees **100% Principal Collateral Refunds** for unfilled limit orders.
+
+### 🥊 Casino Speculation vs. ForeSight Structured Decision Terminal
+
+| Trading Dimension | Traditional / Naive Prediction Slip | ForeSight Structured Decision Terminal |
+| :--- | :--- | :--- |
+| **User Mindset** | **Casino Mode:** Blind FOMO, gut feeling, reactive gambling | **Informed Mode:** *"Understand the market before you trade it"* |
+| **Cognitive Loop** | Speculate blindly $\rightarrow$ Lose on theta decay $\rightarrow$ Platform churn | **DETECT $\rightarrow$ CHALLENGE $\rightarrow$ SIMULATE $\rightarrow$ EXECUTE & SWEEP** |
+| **Microstructure Context** | Static odds percentage, zero distance telemetry | **Mini Strike Radar** ($bps$ distance) & **Orderbook Imbalance ($OI\%$)** |
+| **AI Architecture** | Hallucinatory, ungrounded black-box prediction | **Evidence-Grounded Dual Bull/Bear Debate** with verified news RAG |
+| **Quantitative Guardrails** | Guesswork and emotional bet sizing | **Velocity Coverage ($VC$)**, **Black-Scholes $\Phi(d2)$**, **Half-Kelly Sizing** |
+| **Order Execution** | Clunky manual ticket; frequent cutoff reverts | **Polymarket Ticket** + **Autonomous Multi-Round Runner** with Cutoff Guard |
+| **Capital Efficiency** | Manual 1-by-1 claim; winnings stranded in dozens of pools | **1-Click Batch Sweeper** (`ForeSightBatchSweeper.sol`) atomic capital recovery |
+| **Unmatched Orders** | Unclear fund status upon round expiration | **100% Collateral Principal Refund** returned directly to wallet |
 
 ```text
 [ 1. DETECT ]       ──► [ 2. CHALLENGE ] ──► [ 3. SIMULATE ] ──► [ 4. EXECUTE & SWEEP ]
