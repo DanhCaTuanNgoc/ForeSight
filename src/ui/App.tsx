@@ -17,7 +17,7 @@ import { CryptoIcon } from "./components/CryptoIcon.js";
 import { sound } from "./utils/sound-fx.js";
 import { apiUrl } from "./utils/api.js";
 import { sanitizeMarketQuestion } from "./utils/market-format.js";
-import { Search, ArrowUpDown, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { Search, ArrowUpDown, CheckCircle2, AlertTriangle, Info, X, ChevronDown } from "lucide-react";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 export interface Market {
@@ -129,6 +129,10 @@ function ForeSightTerminalApp() {
   const [toastMessage, setToastMessage] = useState<{ msg: string; type: "success" | "error" | "info" } | null>(null);
   const [timelineData, setTimelineData] = useState<any[]>([]);
   const [tickers, setTickers] = useState<any[]>([]);
+
+  // Binance-Grade Mobile & Responsive Terminal States
+  const [terminalViewMode, setTerminalViewMode] = useState<"chart" | "orderbook" | "trade" | "positions">("chart");
+  const [isMarketsDrawerOpen, setIsMarketsDrawerOpen] = useState<boolean>(false);
 
   const wallet = useWallet();
 
@@ -827,11 +831,118 @@ function ForeSightTerminalApp() {
 
       {activeTab === "markets" && (
         <>
-          <div className="flex-1 flex min-h-0 overflow-hidden bg-[#07070A]">
-            {/* ── LEFT COLUMN: Markets Navigator ── */}
-            <aside className="w-60 xl:w-64 border-r border-white/[0.07] bg-[#0A0A10] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
+          {/* ── MOBILE / TABLET TOP TOOLBAR (Binance Standard) ── */}
+          <div className="lg:hidden bg-[#0A0A12] border-b border-white/[0.08] px-2.5 py-1.5 flex items-center justify-between gap-2 flex-shrink-0 z-20">
+            {/* Pair Switcher Drawer Button */}
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setIsMarketsDrawerOpen(true);
+              }}
+              className="flex items-center gap-1.5 bg-[#12121C] hover:bg-[#181826] active:scale-95 border border-white/[0.08] text-white px-2 py-1 rounded-none text-xs font-mono font-bold transition-all cursor-pointer shrink-0"
+              title="Open Market Pairs Navigator"
+            >
+              <CryptoIcon symbol={activeMarket.underlyingAsset || activeMarket.symbol} size={16} />
+              <span>{activeMarket.underlyingAsset || activeMarket.symbol}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+            </button>
+
+            {/* Binance-style Segmented View Tabs */}
+            <div className="flex items-center bg-[#07070C] border border-white/[0.08] p-0.5 rounded-none font-mono text-[11px] shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playClick();
+                  setTerminalViewMode("chart");
+                }}
+                className={`px-2 py-0.5 font-bold transition-all cursor-pointer ${
+                  terminalViewMode === "chart"
+                    ? "bg-violet-600 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Chart
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playClick();
+                  setTerminalViewMode("orderbook");
+                }}
+                className={`px-2 py-0.5 font-bold transition-all cursor-pointer ${
+                  terminalViewMode === "orderbook"
+                    ? "bg-violet-600 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Book
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playClick();
+                  setTerminalViewMode("trade");
+                }}
+                className={`px-2 py-0.5 font-bold transition-all cursor-pointer ${
+                  terminalViewMode === "trade"
+                    ? "bg-violet-600 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Trade
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playClick();
+                  setTerminalViewMode("positions");
+                }}
+                className={`px-2 py-0.5 font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  terminalViewMode === "positions"
+                    ? "bg-violet-600 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                <span>Orders</span>
+                {positions.length > 0 && (
+                  <span className="text-[9px] bg-violet-950 text-violet-300 px-1 py-0 rounded-none border border-violet-500/40">
+                    {positions.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Quick Coin Switchers */}
+            <div className="hidden sm:flex items-center gap-1 overflow-x-auto no-scrollbar shrink-0">
+              {["BTC", "ETH", "SOL", "SOMI"].map((coin) => {
+                const isActive = (activeMarket.underlyingAsset || activeMarket.symbol).toUpperCase() === coin;
+                return (
+                  <button
+                    key={coin}
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      handleSelectSymbolGlobal(coin);
+                    }}
+                    className={`px-1.5 py-0.5 text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                      isActive
+                        ? "bg-violet-500/25 border-violet-500/60 text-violet-300"
+                        : "bg-[#0E0E17] border-white/[0.06] text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    {coin}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex-1 flex min-h-0 overflow-hidden bg-[#07070A] relative">
+            {/* ── LEFT COLUMN: Markets Navigator (Visible on Desktop xl+) ── */}
+            <aside className="w-60 xl:w-64 border-r border-white/[0.07] bg-[#0A0A10] hidden xl:flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
               {/* Search Bar & Categories */}
-              <div className="p-2 border-b border-white/[0.07] bg-[#07070C] space-y-1.5">
+              <div className="p-2 border-b border-white/[0.07] bg-[#07070C] space-y-1.5 shrink-0">
                 <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] focus-within:border-violet-500/60 rounded-none px-2 py-1 gap-2 transition-colors">
                   <Search className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                   <input
@@ -865,7 +976,7 @@ function ForeSightTerminalApp() {
               </div>
 
               {/* Markets Header with Count and Sort */}
-              <div className="px-2.5 py-1.5 border-b border-white/[0.07] bg-[#07080C] flex items-center justify-between">
+              <div className="px-2.5 py-1.5 border-b border-white/[0.07] bg-[#07080C] flex items-center justify-between shrink-0">
                 <span className="text-[10px] text-zinc-400 flex items-center gap-1.5 font-mono">
                   <span className="inline-block w-2 h-2 bg-violet-400 rounded-full animate-pulse" />
                   MARKETS
@@ -889,7 +1000,7 @@ function ForeSightTerminalApp() {
               </div>
 
               {/* Market List */}
-              <div className="flex-1 overflow-y-auto divide-y divide-white/[0.03] custom-scrollbar">
+              <div className="flex-1 overflow-y-auto divide-y divide-white/[0.03] custom-scrollbar min-h-0">
                 {filteredMarkets.map((m) => {
                   const isSelected = activeMarket.id === m.id;
                   const prob = m.probability ?? 50;
@@ -953,7 +1064,7 @@ function ForeSightTerminalApp() {
               </div>
 
               {/* Market Navigator Footer Summary */}
-              <div className="p-2 bg-[#07070C] border-t border-white/[0.07] flex items-center justify-between text-[9px] font-mono text-zinc-500">
+              <div className="p-2 bg-[#07070C] border-t border-white/[0.07] flex items-center justify-between text-[9px] font-mono text-zinc-500 shrink-0">
                 <span className="flex items-center gap-1 text-zinc-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   SOMNIA TESTNET
@@ -962,16 +1073,126 @@ function ForeSightTerminalApp() {
               </div>
             </aside>
 
-            {/* ── CENTER COLUMN: Price Chart & Order Placement ── */}
-            <main className="flex-1 flex flex-col min-w-0 bg-[#07070A] overflow-hidden">
-              {/* Header Stats Bar */}
+            {/* ── MOBILE / TABLET SLIDE-OVER MARKETS DRAWER (Binance Market Selector) ── */}
+            {isMarketsDrawerOpen && (
+              <div className="fixed inset-0 z-50 flex lg:hidden animate-in fade-in duration-150">
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+                  onClick={() => setIsMarketsDrawerOpen(false)}
+                />
+                {/* Drawer Panel */}
+                <div className="relative w-80 max-w-[85vw] h-full bg-[#0A0A10] border-r border-white/[0.1] shadow-2xl z-10 flex flex-col">
+                  {/* Drawer Header */}
+                  <div className="p-2.5 border-b border-white/[0.08] bg-[#07070C] flex items-center justify-between shrink-0">
+                    <span className="font-mono text-xs font-bold text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+                      SELECT MARKET PAIR
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsMarketsDrawerOpen(false)}
+                      className="p-1 text-zinc-400 hover:text-white cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Search Bar & Categories */}
+                  <div className="p-2 border-b border-white/[0.07] bg-[#07070C] space-y-1.5 shrink-0">
+                    <div className="flex items-center bg-[#0E0E17] border border-white/[0.08] focus-within:border-violet-500/60 rounded-none px-2 py-1 gap-2 transition-colors">
+                      <Search className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="SEARCH MARKETS..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-transparent text-[11px] text-gray-200 placeholder-gray-600 outline-none w-full font-mono uppercase tracking-wider"
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-1">
+                      {(["ALL", "TOP", "SOMNIA", "VOL"] as const).map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setCategoryFilter(cat);
+                          }}
+                          className={`text-[9px] font-mono py-0.5 rounded-none font-bold uppercase transition-colors border cursor-pointer ${
+                            categoryFilter === cat
+                              ? "bg-violet-500/20 text-violet-300 border-violet-500/50 shadow-[0_0_8px_rgba(139,92,246,0.15)]"
+                              : "bg-[#0B0D13] text-zinc-400 border-white/[0.06] hover:text-white hover:bg-[#11131C]"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Market List */}
+                  <div className="flex-1 overflow-y-auto divide-y divide-white/[0.03] custom-scrollbar min-h-0">
+                    {filteredMarkets.map((m) => {
+                      const isSelected = activeMarket.id === m.id;
+                      const prob = m.probability ?? 50;
+                      const isYes = prob >= 50;
+
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setSelectedMarket(m);
+                            setIsMarketsDrawerOpen(false);
+                          }}
+                          className={`w-full text-left p-2.5 transition-colors flex flex-col gap-1 rounded-none border-l-2 cursor-pointer ${
+                            isSelected
+                              ? "bg-[#0F0E1A] border-violet-500 text-white"
+                              : "border-transparent bg-[#08090E] hover:bg-[#0E1018] text-zinc-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between font-mono">
+                            <span className="text-xs font-bold flex items-center gap-1.5 truncate text-white">
+                              <CryptoIcon symbol={m.underlyingAsset || m.symbol} size={16} />
+                              <span>{m.symbol}</span>
+                            </span>
+                            <span
+                              className={`text-[11px] font-bold font-mono px-1.5 py-0.2 border shrink-0 rounded-none tabular-nums ${
+                                isYes
+                                  ? "text-emerald-400 bg-emerald-950/40 border-emerald-500/40"
+                                  : "text-rose-400 bg-rose-950/40 border-rose-500/40"
+                              }`}
+                            >
+                              {prob.toFixed(1)}%
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-zinc-400 line-clamp-1">{m.question}</p>
+                          <div className="flex items-center justify-between text-[9px] text-zinc-500 font-mono">
+                            <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</span>
+                            <span>Ask: ${m.bestAsk ? m.bestAsk.toFixed(2) : "0.52"}</span>
+                            <span className="text-zinc-400 font-bold">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── DESKTOP MAIN TERMINAL (lg+): Chart + Simulator + Orderbook ── */}
+            <main className="hidden lg:flex flex-1 min-w-0 bg-[#07070A] overflow-hidden flex-col">
               <MarketStats
                 market={activeMarket}
                 serverMode={health?.mode}
                 onOpenDebate={() => setIsDebateModalOpen(true)}
+                onOpenMarketsDrawer={() => setIsMarketsDrawerOpen(true)}
               />
 
-              {/* Trading Workspace Board */}
               <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2.5 space-y-2.5 custom-scrollbar">
                 {/* Top Half: Multi-Mode Chart Canvas */}
                 <div className="flex-shrink-0">
@@ -1015,8 +1236,8 @@ function ForeSightTerminalApp() {
               </div>
             </main>
 
-            {/* ── RIGHT COLUMN: Somnia CLOB Orderbook ────── */}
-            <aside className="w-72 xl:w-80 border-l border-white/[0.07] bg-[#0A0A10] flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
+            {/* ── DESKTOP RIGHT COLUMN: Somnia CLOB Orderbook (lg+) ── */}
+            <aside className="w-72 xl:w-80 border-l border-white/[0.07] bg-[#0A0A10] hidden lg:flex flex-col flex-shrink-0 min-h-0 overflow-hidden">
               <ContextPanel
                 symbol={activeSymbol}
                 midPrice={activeMarket?.midPrice || 0.50}
@@ -1028,15 +1249,172 @@ function ForeSightTerminalApp() {
                 onViewDebate={() => setIsDebateModalOpen(true)}
               />
             </aside>
+
+            {/* ── MOBILE / COMPACT SCREEN VIEW (< lg): CONTROLLED BY terminalViewMode ── */}
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 lg:hidden overflow-hidden bg-[#07070A] relative">
+              <MarketStats
+                market={activeMarket}
+                serverMode={health?.mode}
+                onOpenDebate={() => setIsDebateModalOpen(true)}
+                onOpenMarketsDrawer={() => setIsMarketsDrawerOpen(true)}
+              />
+
+              {/* View 1: CHART */}
+              {terminalViewMode === "chart" && (
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2 pb-20 custom-scrollbar space-y-2">
+                  <PriceChart
+                    symbol={activeSymbol}
+                    data={timelineData}
+                    timeRange={timeRange}
+                    onTimeRangeChange={setTimeRange}
+                    currentPrice={activeMarket.probability}
+                    strikePrice={activeMarket.strikePrice}
+                    activeVisualMode={visualMode}
+                    onVisualModeChange={setVisualMode}
+                    entryPrice={prefillEntryPrice}
+                    targetExitPrice={prefillTargetExit}
+                    onSetEntryPrice={(p) => setPrefillEntryPrice(p)}
+                    onSetTargetExitPrice={(p) => setPrefillTargetExit(p)}
+                    showToast={showToast}
+                    timeRemainingSec={activeMarket.timeRemainingSec}
+                    expirationTime={activeMarket.expirationTime}
+                    expiresAt={activeMarket.expiresAt}
+                    marketInterval={activeMarket.interval}
+                  />
+
+                  {/* Compact Quick Trade Switcher Card */}
+                  <div className="bg-[#0A0A10] border border-white/[0.08] p-2.5 flex items-center justify-between text-xs font-mono">
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-400">Target Strike:</span>
+                      <span className="text-white font-bold">
+                        {activeMarket.strikePrice ? `$${activeMarket.strikePrice.toLocaleString()}` : "Open Price"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setTerminalViewMode("trade");
+                      }}
+                      className="text-[11px] text-violet-300 hover:text-white bg-violet-950/60 border border-violet-500/40 px-2 py-1 flex items-center gap-1 font-bold cursor-pointer"
+                    >
+                      <span>Open Trade Ticket</span>
+                      <ArrowUpDown className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* View 2: ORDERBOOK */}
+              {terminalViewMode === "orderbook" && (
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pb-20 custom-scrollbar">
+                  <ContextPanel
+                    symbol={activeSymbol}
+                    midPrice={activeMarket?.midPrice || 0.50}
+                    onSetEntryPrice={(price) => {
+                      setPrefillEntryPrice(price);
+                      showToast(`Selected $${price.toFixed(3)} from Orderbook!`, "success");
+                    }}
+                    onViewInsights={() => setActiveTab("insights")}
+                    onViewDebate={() => setIsDebateModalOpen(true)}
+                  />
+                </div>
+              )}
+
+              {/* View 3: TRADE / SIMULATOR */}
+              {terminalViewMode === "trade" && (
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2 custom-scrollbar pb-6">
+                  <ScenarioSimulator
+                    market={activeMarket}
+                    prefillOutcome={prefillOutcome}
+                    prefillEntryPrice={prefillEntryPrice}
+                    prefillTargetExit={prefillTargetExit}
+                    onOutcomeChange={(o) => setPrefillOutcome(o)}
+                    onEntryPriceChange={(p) => setPrefillEntryPrice(p)}
+                    onTargetExitPriceChange={(p) => setPrefillTargetExit(p)}
+                    onTrade={handleExecuteTrade}
+                    isSubmitting={isSubmittingOrder}
+                    submitStep={submitStep}
+                    showToast={showToast}
+                  />
+                </div>
+              )}
+
+              {/* View 4: POSITIONS & ORDERS */}
+              {terminalViewMode === "positions" && (
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-2 custom-scrollbar pb-6 space-y-2">
+                  <div className="bg-[#0A0A10] border border-white/[0.08] p-2.5 flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      MY POSITIONS & ON-CHAIN ORDERS
+                    </span>
+                    <span className="text-[11px] font-mono text-violet-300">
+                      {positions.length} Orders
+                    </span>
+                  </div>
+                  <ThesisHealthMonitor
+                    positions={positions}
+                    onClaimAll={handleClaimAll}
+                    isClaiming={isClaiming}
+                    activeSymbol={activeSymbol}
+                    forceExpanded={true}
+                  />
+                </div>
+              )}
+
+              {/* ── STICKY BOTTOM ACTION BAR ON MOBILE (Binance / Polymarket Standard) ── */}
+              {(terminalViewMode === "chart" || terminalViewMode === "orderbook") && (
+                <div className="absolute bottom-0 left-0 right-0 z-30 bg-[#08080E]/95 backdrop-blur-md border-t border-white/[0.09] px-3 py-2 flex items-center justify-between gap-2.5 shadow-2xl">
+                  <div className="flex flex-col font-mono shrink-0">
+                    <span className="text-[9px] text-zinc-500 uppercase">Live Odds</span>
+                    <div className="flex items-center gap-1.5 text-xs font-bold">
+                      <span className="text-emerald-400">YES {(activeMarket.probability ?? 50).toFixed(0)}¢</span>
+                      <span className="text-zinc-600">|</span>
+                      <span className="text-rose-400">NO {(100 - (activeMarket.probability ?? 50)).toFixed(0)}¢</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 flex-1 max-w-xs font-mono">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setPrefillOutcome("YES");
+                        setTerminalViewMode("trade");
+                      }}
+                      className="py-2 px-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-black uppercase tracking-wider rounded-none shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <span>BUY YES</span>
+                      <span className="text-[10px] opacity-80">{(activeMarket.probability ?? 50).toFixed(0)}%</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setPrefillOutcome("NO");
+                        setTerminalViewMode("trade");
+                      }}
+                      className="py-2 px-2.5 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-black uppercase tracking-wider rounded-none shadow-[0_0_12px_rgba(244,63,94,0.3)] transition-all flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <span>BUY NO</span>
+                      <span className="text-[10px] opacity-80">{(100 - (activeMarket.probability ?? 50)).toFixed(0)}%</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* 4. Bottom Dock: Order Positions & Settlement Monitor */}
-          <ThesisHealthMonitor
-            positions={positions}
-            onClaimAll={handleClaimAll}
-            isClaiming={isClaiming}
-            activeSymbol={activeSymbol}
-          />
+          {/* 4. Bottom Dock: Order Positions & Settlement Monitor (Visible on Desktop lg+) */}
+          <div className="hidden lg:block">
+            <ThesisHealthMonitor
+              positions={positions}
+              onClaimAll={handleClaimAll}
+              isClaiming={isClaiming}
+              activeSymbol={activeSymbol}
+            />
+          </div>
         </>
       )}
 

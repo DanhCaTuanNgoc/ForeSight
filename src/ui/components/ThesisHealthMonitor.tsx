@@ -43,6 +43,7 @@ interface ThesisHealthMonitorProps {
   onClaimAll: () => void;
   isClaiming: boolean;
   activeSymbol: string;
+  forceExpanded?: boolean;
 }
 
 export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
@@ -50,8 +51,15 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
   onClaimAll,
   isClaiming = false,
   activeSymbol = "BTC",
+  forceExpanded = false,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(forceExpanded);
+
+  useEffect(() => {
+    if (forceExpanded) {
+      setIsExpanded(true);
+    }
+  }, [forceExpanded]);
 
   // Live 1-second interval ticker for exact contract countdown & settlement updates
   const [nowSec, setNowSec] = useState<number>(() => Math.floor(Date.now() / 1000));
