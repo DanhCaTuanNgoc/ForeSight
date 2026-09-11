@@ -273,7 +273,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                         </span>
                       ) : p.status === "RESOLVING" ? (
                         <span className="inline-flex items-center gap-1.5 text-[9px] text-amber-300 bg-amber-950/70 border border-amber-500/40 px-2 py-0.5 rounded-none font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" />
                           <span>RESOLVING</span>
                         </span>
                       ) : p.status === "CLAIMED" ? (
@@ -289,7 +288,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                       ) : isSettledWin ? (
                         <span className="inline-flex items-center gap-1 text-[9px] text-emerald-300 bg-emerald-950/80 border border-emerald-500/50 px-2 py-0.5 rounded-none font-bold shadow-sm">
                           <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                          <span>WON</span>
+                          <span>WIN</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[9px] text-gray-400 bg-[#12121C] border border-white/[0.08] px-2 py-0.5 rounded-none font-bold">
@@ -301,17 +300,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                     {/* 7. Compact Actions (Tx Audit & Alpha Card) */}
                     <td className="py-3 px-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
-                        {isSettledWin && onClaim && (
-                          <button
-                            onClick={onClaim}
-                            disabled={isClaiming}
-                            className="px-2 py-1 rounded-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9px] inline-flex items-center gap-1 border border-emerald-400/50 cursor-pointer transition-colors"
-                            title="Claim winning payout directly to wallet"
-                          >
-                            <Coins className="w-2.5 h-2.5" />
-                            <span>CLAIM</span>
-                          </button>
-                        )}
 
                         {explorerLink ? (
                           <a

@@ -111,7 +111,6 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
                   </>
                 ) : pos.status === "RESOLVING" ? (
                   <>
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" />
                     <span className="text-amber-400">RESOLVING</span>
                   </>
                 ) : pos.status === "REFUNDED" ? (

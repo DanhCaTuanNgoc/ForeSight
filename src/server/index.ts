@@ -22,6 +22,7 @@ import {
   insertPosition,
   updatePositionInDb,
   getPositionsByWalletFromDb,
+  getAllPositionsFromDb,
 } from "../db/repository.js";
 import path from "path";
 import fs from "fs";
@@ -187,6 +188,12 @@ app.get("/api/health", async (req, res) => {
       canTrade: ctx?.canTrade || false,
       walletAddress: ctx?.walletAddress || null,
       supabaseConnected: isSupabaseConfigured(),
+      supabaseDiagnostics: {
+        hasUrl: Boolean(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL),
+        hasAnonKey: Boolean(process.env.SUPABASE_ANON_KEY),
+        hasPublishableKey: Boolean(process.env.SUPABASE_PUBLISHABLE_KEY),
+        hasSecretKey: Boolean(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY),
+      },
       workers: {
         snapshots: snapshotWorker?.getStats() ?? null,
         news: newsWorker?.getStats() ?? null,
@@ -1062,9 +1069,30 @@ app.get("/api/positions", async (req, res) => {
   try {
     const wallet = req.query.wallet as string | undefined;
     if (!wallet || wallet.trim().length === 0) {
+      let dbPublic: any[] = [];
+      if (isSupabaseConfigured()) {
+        try {
+          dbPublic = await getAllPositionsFromDb(50);
+        } catch (err: any) {
+          console.warn("[Positions] Supabase public query notice:", err?.message);
+        }
+      }
+
+      const mergedMap = new Map<string, any>();
+      for (const item of dbPublic) {
+        if (item?.id) mergedMap.set(item.id, item);
+      }
+      for (const item of recordedPositions) {
+        if (item?.id) mergedMap.set(item.id, item);
+      }
+
+      const publicPositions = Array.from(mergedMap.values()).sort(
+        (a, b) => (b.timestamp || 0) - (a.timestamp || 0)
+      );
+
       return res.json({
-        count: recordedPositions.length,
-        positions: recordedPositions,
+        count: publicPositions.length,
+        positions: publicPositions,
         message: "Showing public on-chain execution ledger from Somnia Shannon Testnet.",
       });
     }

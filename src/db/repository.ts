@@ -357,3 +357,39 @@ export async function getPositionsByWalletFromDb(walletAddress: string): Promise
     return [];
   }
 }
+
+/** Fetch latest public positions across all users from Supabase */
+export async function getAllPositionsFromDb(limit = 50): Promise<any[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const sb = getSupabase();
+    const { data, error } = await (sb as any)
+      .from("user_positions")
+      .select("*")
+      .order("timestamp", { ascending: false })
+      .limit(limit);
+
+    if (error || !data) return [];
+    return data.map((r: any) => ({
+      id: r.id,
+      symbol: r.symbol,
+      outcome: r.outcome,
+      amount: Number(r.amount),
+      entryPrice: Number(r.entry_price),
+      timestamp: Number(r.timestamp),
+      status: r.status,
+      walletAddress: r.wallet_address || undefined,
+      orderId: r.order_id || undefined,
+      txHash: r.tx_hash || undefined,
+      isLiveOnChain: Boolean(r.is_live_on_chain),
+      exitPrice: r.exit_price !== null && r.exit_price !== undefined ? Number(r.exit_price) : undefined,
+      realizedPnl: r.realized_pnl !== null && r.realized_pnl !== undefined ? Number(r.realized_pnl) : undefined,
+      realizedRoiPercent: r.realized_roi_percent !== null && r.realized_roi_percent !== undefined ? Number(r.realized_roi_percent) : undefined,
+      closedAt: r.closed_at !== null && r.closed_at !== undefined ? Number(r.closed_at) : undefined,
+      closeTxHash: r.close_tx_hash || undefined,
+    }));
+  } catch {
+    return [];
+  }
+}
+

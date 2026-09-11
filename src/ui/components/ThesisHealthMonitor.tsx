@@ -313,7 +313,6 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
                           </span>
                         ) : pos.status === "RESOLVING" ? (
                           <span className="inline-flex items-center gap-1 text-[9px] text-amber-300 bg-amber-950/70 border border-amber-500/40 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" />
                             <span>RESOLVING</span>
                           </span>
                         ) : pos.status === "CLAIMED" ? (
