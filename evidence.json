@@ -19,8 +19,8 @@
     "testUsdc": "0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E"
   },
   "verificationSuite": {
-    "totalTests": 124,
-    "testSuites": 11,
+    "totalTests": 137,
+    "testSuites": 12,
     "passingRate": "100%",
     "runner": "Vitest v4.1.11",
     "zeroAnyTypes": true,
@@ -30,7 +30,8 @@
       "Dual AI Adversarial Bull vs Bear RAG Debate Engine",
       "ForeSightBatchSweeper MultiCall 1-Click Settlement",
       "Sub-Second CLOB Limit & Market Order Routing Engine",
-      "Spike Radar Anomaly Detection (ΔP ≥ 10%)"
+      "Spike Radar Anomaly Detection (ΔP ≥ 10%)",
+      "Analytics View Logic & 60s Round Expiry Lifecycle"
     ]
   },
   "proofTrails": {

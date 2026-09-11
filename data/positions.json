@@ -88,12 +88,16 @@
     "entryPrice": 0.52,
     "timestamp": 1789130595849,
     "expirationTime": 1789131600,
-    "status": "OPEN",
+    "status": "SETTLED_WIN",
     "walletAddress": "0x7f5c82b75b61a33640c12c6e79fb49ce23e335de",
     "orderId": "ord-eth--mtwy5uyx",
     "txHash": "0x33efa7256ffab847ef5dab06ed12b1bec107269e10d2d96a2a5a5c08313a9809",
     "isLiveOnChain": true,
-    "nonce": 72
+    "nonce": 72,
+    "winningOutcome": "YES",
+    "isWinner": true,
+    "realizedPnl": 46.15,
+    "realizedRoiPercent": 92.3
   },
   {
     "id": "pos-1789130106187-o25t",
