@@ -161,10 +161,17 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
       p.status === "CLOSED"
   );
 
-  const totalInvested = enrichedPositions.reduce(
+  const totalInvested = openPositions.reduce(
     (acc, p) => acc + (p.amount || 0) * (p.entryPrice || 0.5),
     0
   );
+
+  const totalRealizedPnl = settledPositions.reduce((acc, p) => {
+    if (p.realizedPnl !== undefined) {
+      return acc + Number(p.realizedPnl);
+    }
+    return acc;
+  }, 0);
 
   const totalClaimable = claimablePositions.reduce((acc, p) => {
     // Settled winning contracts pay $1.00 per share
@@ -215,11 +222,11 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           </div>
         </div>
 
-        {/* Center: High-Definition Ticker Matrix */}
+        {/* Center: Polymarket-Grade Financial Matrix */}
         <div className="flex items-center gap-3 sm:gap-6 bg-[#0E0E17] border border-white/[0.08] px-4 py-1.5 rounded-none shadow-inner">
           <div className="space-y-0.5">
             <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
-              Invested
+              Active Bet
             </span>
             <span className="text-sm sm:text-base font-bold font-mono text-white tracking-tight block">
               ${totalInvested.toFixed(2)}
@@ -228,10 +235,18 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           <div className="w-px h-6 bg-white/[0.08]" />
           <div className="space-y-0.5">
             <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
-              In Flight
+              Net PnL
             </span>
-            <span className="text-sm sm:text-base font-bold font-mono text-cyan-400 tracking-tight block">
-              {openPositions.length}
+            <span
+              className={`text-sm sm:text-base font-bold font-mono tracking-tight block ${
+                totalRealizedPnl > 0
+                  ? "text-emerald-400"
+                  : totalRealizedPnl < 0
+                  ? "text-rose-400"
+                  : "text-gray-400"
+              }`}
+            >
+              {totalRealizedPnl > 0 ? `+$${totalRealizedPnl.toFixed(2)}` : totalRealizedPnl < 0 ? `-$${Math.abs(totalRealizedPnl).toFixed(2)}` : "$0.00"}
             </span>
           </div>
           <div className="w-px h-6 bg-white/[0.08]" />
@@ -246,10 +261,10 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           <div className="w-px h-6 bg-white/[0.08]" />
           <div className="space-y-0.5">
             <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
-              tUSDC Wallet
+              tUSDC Cash
             </span>
             <span className="text-sm sm:text-base font-bold font-mono text-emerald-300 tracking-tight block">
-              {isConnected ? (wallet.tusdcBalance ? `${wallet.tusdcBalance} tUSDC` : "0.00 tUSDC") : "—"}
+              {isConnected ? (wallet.tusdcBalance ? `$${wallet.tusdcBalance}` : "$0.00") : "—"}
             </span>
           </div>
           <div className="w-px h-6 bg-white/[0.08]" />
@@ -258,7 +273,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
               STT Gas
             </span>
             <span className="text-sm sm:text-base font-bold font-mono text-amber-300 tracking-tight block">
-              {isConnected ? (activeBalance ? `${activeBalance} STT` : "0.0000 STT") : "—"}
+              {isConnected ? (activeBalance ? `${activeBalance}` : "0.00 STT") : "—"}
             </span>
           </div>
         </div>

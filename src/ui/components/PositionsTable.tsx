@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   CheckCircle2,
   Clock,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { CryptoIcon } from "./CryptoIcon.js";
 import { useWallet } from "../context/WalletContext.js";
+import { parseExpiryFromSymbol } from "./ActivityView.js";
 
 interface Position {
   id: string;
@@ -30,6 +31,7 @@ interface Position {
   realizedRoiPercent?: number;
   winningOutcome?: string;
   isWinner?: boolean;
+  expirationTime?: number;
 }
 
 interface PositionsTableProps {
@@ -69,6 +71,14 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
   onShareAlphaCard,
 }) => {
   const wallet = useWallet();
+  const [nowSec, setNowSec] = useState<number>(() => Math.floor(Date.now() / 1000));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowSec(Math.floor(Date.now() / 1000));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="rounded-none p-4 border border-white/[0.08] bg-[#0A0A12] space-y-3 font-mono">
@@ -82,9 +92,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
             <h3 className="font-bold text-white text-xs tracking-wider uppercase">
               POSITIONS & SETTLEMENT RECORD
             </h3>
-            <span className="text-[10px] px-1.5 py-0.2 bg-[#12121C] border border-white/[0.08] text-gray-400">
-              {positions.length}
-            </span>
           </div>
         </div>
 
@@ -163,6 +170,37 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
 
                 const marketInfo = formatMarketInfo(p.symbol);
 
+                const targetExpirySec =
+                  p.expirationTime && p.expirationTime > 0
+                    ? p.expirationTime
+                    : parseExpiryFromSymbol(p.symbol, p.timestamp) || Math.floor(p.timestamp / 1000) + 900;
+
+                const isOpenStatus = p.status === "OPEN" || p.status === "RESTING" || p.status === "PENDING";
+                let rowTimeText = "--";
+                let isRowUrgent = false;
+
+                if (targetExpirySec && isOpenStatus) {
+                  const diffSec = targetExpirySec - nowSec;
+                  if (diffSec > 0) {
+                    const hours = Math.floor(diffSec / 3600);
+                    const mins = Math.floor((diffSec % 3600) / 60);
+                    const secs = diffSec % 60;
+                    if (hours > 0) {
+                      rowTimeText = `${hours}h ${mins}m`;
+                    } else if (mins > 0) {
+                      rowTimeText = `${mins}m ${secs.toString().padStart(2, "0")}s`;
+                    } else {
+                      rowTimeText = `${secs}s`;
+                    }
+                    if (diffSec <= 180) {
+                      isRowUrgent = true;
+                    }
+                  } else {
+                    rowTimeText = "0s";
+                    isRowUrgent = true;
+                  }
+                }
+
                 return (
                   <tr key={p.id} className="hover:bg-[#12121C] transition-colors">
                     {/* 1. Market & Outcome */}
@@ -219,9 +257,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                         ${maxPayout}{" "}
                         <span className="text-[10px] text-gray-400 font-normal">USDC</span>
                       </div>
-                      <div className="text-[10px] text-gray-500">
-                        $1.00 / share
-                      </div>
                     </td>
 
                     {/* 5. PnL / Return */}
@@ -229,12 +264,10 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                       {p.status === "REFUNDED" ? (
                         <div>
                           <div className="text-blue-300 font-bold text-xs font-mono">$0.00 USDC</div>
-                          <div className="text-blue-400/80 text-[10px]">100% Refunded</div>
                         </div>
                       ) : isSettledLoss ? (
                         <div>
                           <div className="text-rose-400 font-bold text-xs font-mono">-${totalCost} USDC</div>
-                          <div className="text-rose-500 text-[10px] font-medium">-100.0%</div>
                         </div>
                       ) : isSettledWin ? (
                         <div>
@@ -294,6 +327,23 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                         <span className="inline-flex items-center gap-1 text-[9px] text-gray-400 bg-[#12121C] border border-white/[0.08] px-2 py-0.5 rounded-none font-bold">
                           <span>{p.status}</span>
                         </span>
+                      )}
+
+                      {/* Dynamic Real-time Expiry Countdown per contract */}
+                      {isOpenStatus && (
+                        <div className="mt-1 flex items-center justify-center">
+                          <span
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-mono font-bold ${
+                              isRowUrgent
+                                ? "bg-amber-950/80 text-amber-300 border border-amber-500/50 animate-pulse"
+                                : "bg-[#12121C] text-violet-300 border border-white/[0.08]"
+                            }`}
+                            title="Time remaining until contract settlement"
+                          >
+                            <Clock className={`w-2.5 h-2.5 ${isRowUrgent ? "text-amber-400" : "text-violet-400"}`} />
+                            <span>{rowTimeText}</span>
+                          </span>
+                        </div>
                       )}
                     </td>
 

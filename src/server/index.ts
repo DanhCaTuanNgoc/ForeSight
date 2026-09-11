@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import chalk from "chalk";
 import { createPublicClient, http, parseAbi } from "viem";
-import { marketKey, outcomeId } from "@somnia-chain/markets-sdk";
+import { marketKey, outcomeId, decodeOutcomeId } from "@somnia-chain/markets-sdk";
 import { createExchangeContext, shutdownExchange, type ExchangeContext } from "../core/exchange.js";
 import { MarketWatcher } from "../core/market-watcher.js";
 import { OrderEngine } from "../core/order-engine.js";
@@ -62,7 +62,7 @@ let newsWorker: NewsIngestionWorker;
 const copilotStrategy = new AICopilotStrategy();
 
 const somniaPublicClient = createPublicClient({
-  transport: http(process.env.SOMNIA_RPC_URL || "https://api.infra.testnet.somnia.network"),
+  transport: http(process.env.RPC_URL || process.env.SOMNIA_RPC_URL || "https://api.infra.testnet.somnia.network"),
 });
 
 // Disk persistence path for positions ledger
@@ -986,63 +986,148 @@ export function isPositionExpired(pos: any, nowSec = Math.floor(Date.now() / 100
   return false;
 }
 
-const resolutionCache = new Map<string, { status: string; winningOutcome?: string; isWinner?: boolean; realizedPnl?: number; realizedRoiPercent?: number }>();
+const resolutionCache = new Map<string, {
+  status: string;
+  winningOutcome?: string;
+  isWinner?: boolean;
+  realizedPnl?: number;
+  realizedRoiPercent?: number;
+  nonce?: number;
+  poolAddress?: string;
+}>();
 
-export async function resolvePositionOnChain(poolAddress?: string, outcome?: string, amount = 0, entryPrice = 0.5) {
-  if (!poolAddress || !outcome) return { status: "RESOLVING", isWinner: false };
-  const cacheKey = `${poolAddress.toLowerCase()}_${outcome}`;
+export async function resolvePositionOnChain(
+  poolAddress?: string,
+  outcome?: string,
+  amount = 0,
+  entryPrice = 0.5,
+  pos?: {
+    id?: string;
+    nonce?: number;
+    txHash?: string;
+    poolAddress?: string;
+    timestamp?: number;
+    status?: string;
+  }
+) {
+  if (!outcome) return { status: "RESOLVING", isWinner: false };
+
+  let targetPool = poolAddress || pos?.poolAddress;
+  let targetNonce: bigint | undefined = pos?.nonce ? BigInt(pos.nonce) : undefined;
+
+  // 1. Determine exact on-chain round nonce from transaction receipt & archive contract read
+  if (targetNonce === undefined && pos?.txHash) {
+    try {
+      const receipt = await somniaPublicClient.getTransactionReceipt({
+        hash: pos.txHash as `0x${string}`,
+      });
+
+      if (receipt) {
+        if (!targetPool && receipt.to) {
+          targetPool = receipt.to;
+        }
+
+        // Strategy A: Decode outcome token ID from receipt logs if minted directly
+        for (const log of receipt.logs) {
+          if (log.topics && log.topics[3]) {
+            try {
+              const rawId = BigInt(log.topics[3]);
+              const decoded = decodeOutcomeId(rawId);
+              if (
+                !targetPool ||
+                decoded.pool.toLowerCase() === targetPool.toLowerCase()
+              ) {
+                targetPool = decoded.pool;
+                targetNonce = decoded.nonce;
+                break;
+              }
+            } catch {}
+          }
+        }
+
+        // Strategy B: If resting maker order, query pool marketNonce at transaction blockNumber
+        if (targetNonce === undefined && targetPool && receipt.blockNumber) {
+          try {
+            const blockNonce = await somniaPublicClient.readContract({
+              address: targetPool as `0x${string}`,
+              abi: parseAbi(["function marketNonce() view returns (uint64)"]),
+              functionName: "marketNonce",
+              blockNumber: receipt.blockNumber,
+            });
+            if (blockNonce) {
+              targetNonce = BigInt(blockNonce);
+            }
+          } catch (archiveErr: any) {
+            console.warn(`[Resolution] Archive read notice for pool ${targetPool} at block ${receipt.blockNumber}:`, archiveErr?.message);
+          }
+        }
+      }
+    } catch (txErr: any) {
+      console.warn(`[Resolution] Tx receipt retrieval notice for ${pos.txHash}:`, txErr?.message);
+    }
+  }
+
+  if (!targetPool) {
+    return { status: "RESOLVING", isWinner: false };
+  }
+
+  // Fallback if neither nonce nor txHash yielded round (e.g. untracked test orders)
+  if (targetNonce === undefined) {
+    try {
+      const liveNonce = await somniaPublicClient.readContract({
+        address: targetPool as `0x${string}`,
+        abi: parseAbi(["function marketNonce() view returns (uint64)"]),
+        functionName: "marketNonce",
+      });
+      targetNonce = liveNonce > 1n ? liveNonce - 1n : liveNonce;
+    } catch {
+      return { status: "RESOLVING", isWinner: false };
+    }
+  }
+
+  const nonceNum = Number(targetNonce);
+  const normalizedOutcome = (outcome.toUpperCase() === "YES" || outcome.toUpperCase() === "UP") ? "YES" : "NO";
+  const cacheKey = `${targetPool.toLowerCase()}_nonce_${nonceNum}_${normalizedOutcome}`;
   if (resolutionCache.has(cacheKey)) {
     return resolutionCache.get(cacheKey)!;
   }
 
   try {
     const settlement = "0xbF4a49e0Dfd092e5FBE8E5761064C49533e6Ed23";
-    const rpcClient = createPublicClient({
-      transport: http(process.env.RPC_URL || "https://dream-rpc.somnia.network"),
-    });
-
-    const poolAbi = parseAbi([
-      "function marketNonce() view returns (uint64)",
-      "function finalized() view returns (bool)",
-    ]);
     const settlementAbi = parseAbi([
       "function getSettlement(uint256 marketKey) view returns ((address collateralToken, uint128 backing, bool finalized, bool voided, uint256 settlementFeeBpsTimes1k, address feeRecipient, address pool, uint64 nonce, uint256[] payoutNumerators))",
     ]);
 
-    const [nonce, fin] = await Promise.all([
-      rpcClient.readContract({ address: poolAddress as any, abi: poolAbi, functionName: "marketNonce" }).catch(() => 0n),
-      rpcClient.readContract({ address: poolAddress as any, abi: poolAbi, functionName: "finalized" }).catch(() => false),
-    ]);
-
-    if (!fin) {
-      return { status: "RESOLVING", isWinner: false };
-    }
-
-    // Check settlement for previous round (nonce - 1) or current nonce
-    const targetNonce = nonce > 1n ? nonce - 1n : nonce;
-    let s: any = null;
-    for (const n of [targetNonce, nonce]) {
-      const mKey = marketKey(outcomeId(poolAddress, n, 0));
-      const rec = await rpcClient.readContract({
-        address: settlement as any,
-        abi: settlementAbi,
-        functionName: "getSettlement",
-        args: [mKey],
-      }).catch(() => null);
-      if (rec && rec.finalized) {
-        s = rec;
-        break;
-      }
-    }
+    const mKey = marketKey(outcomeId(targetPool, targetNonce, 0));
+    const s = await somniaPublicClient.readContract({
+      address: settlement as `0x${string}`,
+      abi: settlementAbi,
+      functionName: "getSettlement",
+      args: [mKey],
+    }).catch(() => null);
 
     if (!s || !s.finalized) {
-      return { status: "RESOLVING", isWinner: false };
+      return { status: "RESOLVING", isWinner: false, nonce: nonceNum, poolAddress: targetPool };
+    }
+
+    if (s.voided) {
+      const res = {
+        status: "REFUNDED",
+        winningOutcome: "VOID",
+        isWinner: false,
+        realizedPnl: 0,
+        realizedRoiPercent: 0,
+        nonce: nonceNum,
+        poolAddress: targetPool,
+      };
+      resolutionCache.set(cacheKey, res);
+      return res;
     }
 
     const yesPay = BigInt(s.payoutNumerators?.[0] || 0);
     const noPay = BigInt(s.payoutNumerators?.[1] || 0);
     const winningOutcome = yesPay > noPay ? "YES" : noPay > yesPay ? "NO" : "TIE";
-    const isWinner = outcome === winningOutcome;
+    const isWinner = normalizedOutcome === winningOutcome;
     const totalCost = amount * entryPrice;
     const realizedPnl = isWinner ? Number((amount - totalCost).toFixed(2)) : -Number(totalCost.toFixed(2));
     const realizedRoiPercent = isWinner && totalCost > 0 ? Number(((amount - totalCost) / totalCost * 100).toFixed(1)) : -100;
@@ -1053,11 +1138,14 @@ export async function resolvePositionOnChain(poolAddress?: string, outcome?: str
       isWinner,
       realizedPnl,
       realizedRoiPercent,
+      nonce: nonceNum,
+      poolAddress: targetPool,
     };
     resolutionCache.set(cacheKey, res);
     return res;
   } catch (err) {
-    return { status: "RESOLVING", isWinner: false };
+    console.error("[Resolution] Exception resolving position on-chain:", err);
+    return { status: "RESOLVING", isWinner: false, nonce: nonceNum, poolAddress: targetPool };
   }
 }
 
@@ -1067,6 +1155,58 @@ export async function resolvePositionOnChain(poolAddress?: string, outcome?: str
  */
 app.get("/api/positions", async (req, res) => {
   try {
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    // Automatically transition expired market rounds and verify on-chain resolution with exact round nonce
+    let stateChanged = false;
+    for (const p of recordedPositions) {
+      const isExpired = isPositionExpired(p, nowSec);
+      const missingNonce = (p as any).nonce === undefined;
+      const needsResolution = isExpired && (
+        p.status === "OPEN" ||
+        p.status === "SETTLED" ||
+        p.status === "RESOLVING" ||
+        missingNonce
+      );
+
+      if (needsResolution) {
+        const res = await resolvePositionOnChain((p as any).poolAddress, p.outcome, p.amount, p.entryPrice, p);
+        if (res.nonce && !(p as any).nonce) {
+          (p as any).nonce = res.nonce;
+          stateChanged = true;
+        }
+        if (res.poolAddress && !(p as any).poolAddress) {
+          (p as any).poolAddress = res.poolAddress;
+          stateChanged = true;
+        }
+        if (res.status !== "RESOLVING" || p.status === "OPEN" || p.status === "SETTLED") {
+          if (
+            p.status !== res.status ||
+            (p as any).winningOutcome !== res.winningOutcome ||
+            (p as any).isWinner !== res.isWinner ||
+            p.realizedPnl !== res.realizedPnl
+          ) {
+            p.status = res.status as any;
+            (p as any).winningOutcome = res.winningOutcome;
+            (p as any).isWinner = res.isWinner;
+            p.realizedPnl = res.realizedPnl;
+            p.realizedRoiPercent = res.realizedRoiPercent;
+            stateChanged = true;
+            if (isSupabaseConfigured()) {
+              updatePositionInDb(p.id, {
+                status: res.status,
+                realized_pnl: res.realizedPnl,
+                realized_roi_percent: res.realizedRoiPercent,
+              }).catch(() => {});
+            }
+          }
+        }
+      }
+    }
+    if (stateChanged) {
+      savePersistedPositions(recordedPositions);
+    }
+
     const wallet = req.query.wallet as string | undefined;
     if (!wallet || wallet.trim().length === 0) {
       let dbPublic: any[] = [];
@@ -1098,35 +1238,6 @@ app.get("/api/positions", async (req, res) => {
     }
 
     const q = wallet.trim().toLowerCase();
-    const nowSec = Math.floor(Date.now() / 1000);
-
-    // Automatically transition expired market rounds and verify on-chain resolution
-    let stateChanged = false;
-    for (const p of recordedPositions) {
-      if (isPositionExpired(p, nowSec)) {
-        if (p.status === "OPEN" || p.status === "SETTLED" || p.status === "RESOLVING") {
-          const res = await resolvePositionOnChain((p as any).poolAddress, p.outcome, p.amount, p.entryPrice);
-          if (p.status !== res.status) {
-            p.status = res.status as any;
-            (p as any).winningOutcome = res.winningOutcome;
-            (p as any).isWinner = res.isWinner;
-            p.realizedPnl = res.realizedPnl;
-            p.realizedRoiPercent = res.realizedRoiPercent;
-            stateChanged = true;
-            if (isSupabaseConfigured()) {
-              updatePositionInDb(p.id, {
-                status: res.status,
-                realized_pnl: res.realizedPnl,
-                realized_roi_percent: res.realizedRoiPercent,
-              }).catch(() => {});
-            }
-          }
-        }
-      }
-    }
-    if (stateChanged) {
-      savePersistedPositions(recordedPositions);
-    }
 
     const memoryList = recordedPositions.filter(
       (p) => p.walletAddress && p.walletAddress.toLowerCase() === q
@@ -1348,6 +1459,20 @@ app.post("/api/orders", async (req, res) => {
     const expirySec = Number(expirationTime) || parseExpiryFromSymbol(effectiveSymbol, now) || (Math.floor(now / 1000) + 900);
     const isExpiredNow = isPositionExpired({ symbol: effectiveSymbol, timestamp: now, expirationTime: expirySec });
 
+    let orderNonce: number | undefined;
+    if (effectivePool) {
+      try {
+        const n = await somniaPublicClient.readContract({
+          address: effectivePool as `0x${string}`,
+          abi: parseAbi(["function marketNonce() view returns (uint64)"]),
+          functionName: "marketNonce",
+        });
+        orderNonce = Number(n);
+      } catch (nonceErr: any) {
+        console.warn(`[Orders] Could not pre-fetch marketNonce for pool ${effectivePool}:`, nonceErr?.message);
+      }
+    }
+
     const newPosition = {
       id: `pos-${now}-${Math.random().toString(36).slice(2, 6)}`,
       symbol: effectiveSymbol,
@@ -1362,6 +1487,7 @@ app.post("/api/orders", async (req, res) => {
       orderId,
       txHash,
       isLiveOnChain: true,
+      nonce: orderNonce,
     };
 
     recordedPositions.unshift(newPosition);

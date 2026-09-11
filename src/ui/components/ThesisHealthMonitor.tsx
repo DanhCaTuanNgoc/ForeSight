@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -6,6 +6,8 @@ import {
   Coins,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Gauge,
   CheckCircle2,
   RotateCcw,
@@ -13,7 +15,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
-import { isPositionExpired } from "./ActivityView.js";
+import { isPositionExpired, parseExpiryFromSymbol } from "./ActivityView.js";
 
 export interface PositionRecord {
   id: string;
@@ -51,8 +53,16 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Live 1-second interval ticker for exact contract countdown & settlement updates
+  const [nowSec, setNowSec] = useState<number>(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowSec(Math.floor(Date.now() / 1000));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Dynamic settlement evaluation matching ActivityView exactly
-  const nowSec = Math.floor(Date.now() / 1000);
   const enrichedPositions = positions.map((p) => {
     const expired = isPositionExpired(p, nowSec);
     let effectiveStatus = p.status;
@@ -88,15 +98,59 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
   const settledPositions = enrichedPositions.filter(
     (p) => p.status !== "OPEN" && p.status !== "RESTING"
   );
-  const activePos = openPositions[0] || null;
+
+  // Multi-position tracking: Sort active open positions by urgency (earliest expiry first)
+  const [selectedActiveIndex, setSelectedActiveIndex] = useState<number>(0);
+
+  const sortedOpenPositions = [...openPositions].sort((a, b) => {
+    const expA =
+      a.expirationTime && a.expirationTime > 0
+        ? a.expirationTime
+        : parseExpiryFromSymbol(a.symbol, a.timestamp) || Math.floor(a.timestamp / 1000) + 900;
+    const expB =
+      b.expirationTime && b.expirationTime > 0
+        ? b.expirationTime
+        : parseExpiryFromSymbol(b.symbol, b.timestamp) || Math.floor(b.timestamp / 1000) + 900;
+    return expA - expB;
+  });
+
+  const safeIndex = selectedActiveIndex < sortedOpenPositions.length ? selectedActiveIndex : 0;
+  const activePos = sortedOpenPositions[safeIndex] || null;
   const latestPos = enrichedPositions[0] || null;
 
-  // Quantitative health metrics dynamically derived from live position & current time
-  const now = Date.now();
-  const timeElapsedMin = activePos ? Math.max(1, Math.round((now - activePos.timestamp) / 60000)) : 0;
-  const timeRemainingMin = Math.max(1, 60 - (timeElapsedMin % 60));
-  const timeRemaining = `${timeRemainingMin}m`;
+  // Real-time dynamic expiry calculation from DreamDEX contract specifications
+  const targetExpirySec =
+    activePos?.expirationTime && activePos.expirationTime > 0
+      ? activePos.expirationTime
+      : parseExpiryFromSymbol(activePos?.symbol, activePos?.timestamp) ||
+        (activePos ? Math.floor(activePos.timestamp / 1000) + 900 : null);
 
+  let timeRemaining = "--";
+  let isExpiringSoon = false;
+
+  if (targetExpirySec) {
+    const diffSec = targetExpirySec - nowSec;
+    if (diffSec > 0) {
+      const hours = Math.floor(diffSec / 3600);
+      const mins = Math.floor((diffSec % 3600) / 60);
+      const secs = diffSec % 60;
+      if (hours > 0) {
+        timeRemaining = `${hours}h ${mins}m`;
+      } else if (mins > 0) {
+        timeRemaining = `${mins}m ${secs.toString().padStart(2, "0")}s`;
+      } else {
+        timeRemaining = `${secs}s`;
+      }
+      if (diffSec <= 180) {
+        isExpiringSoon = true;
+      }
+    } else {
+      timeRemaining = "0s (Resolving)";
+      isExpiringSoon = true;
+    }
+  }
+
+  const now = Date.now();
   const thesisScore = activePos
     ? Math.min(95, Math.max(55, Math.round(76 + (activePos.outcome === "YES" ? 7 : -4) + ((now / 15000) % 12))))
     : 78;
@@ -127,6 +181,29 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
 
           {activePos ? (
             <div className="flex items-center gap-2 overflow-hidden">
+              {/* Multi-position Switcher if trader holds multiple open contracts */}
+              {sortedOpenPositions.length > 1 && (
+                <div className="flex items-center gap-1 bg-[#12121C] border border-white/[0.12] px-1.5 py-0.5 text-[9px] shrink-0">
+                  <button
+                    onClick={() => setSelectedActiveIndex((prev) => (prev > 0 ? prev - 1 : sortedOpenPositions.length - 1))}
+                    className="text-gray-400 hover:text-white p-0.5 cursor-pointer"
+                    title="Previous active contract"
+                  >
+                    <ChevronLeft className="w-2.5 h-2.5" />
+                  </button>
+                  <span className="font-bold text-violet-300">
+                    {safeIndex + 1}/{sortedOpenPositions.length}
+                  </span>
+                  <button
+                    onClick={() => setSelectedActiveIndex((prev) => (prev < sortedOpenPositions.length - 1 ? prev + 1 : 0))}
+                    className="text-gray-400 hover:text-white p-0.5 cursor-pointer"
+                    title="Next active contract"
+                  >
+                    <ChevronRight className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+              )}
+
               <span className="font-bold text-white text-[11px] truncate">
                 {activePos.symbol}
               </span>
@@ -159,8 +236,14 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
               </div>
 
               {/* Time Remaining */}
-              <div className="hidden xl:flex items-center gap-1 bg-[#0E0E17] border border-white/[0.07] px-2 py-0.5 rounded-none text-[10px] text-gray-300">
-                <Clock className="w-3 h-3 text-violet-400" />
+              <div
+                className={`hidden xl:flex items-center gap-1 border px-2 py-0.5 rounded-none text-[10px] ${
+                  isExpiringSoon
+                    ? "bg-amber-950/70 border-amber-500/50 text-amber-300 font-bold animate-pulse"
+                    : "bg-[#0E0E17] border-white/[0.07] text-gray-300"
+                }`}
+              >
+                <Clock className={`w-3 h-3 ${isExpiringSoon ? "text-amber-400" : "text-violet-400"}`} />
                 <span>{timeRemaining} to Expiry</span>
               </div>
             </div>
