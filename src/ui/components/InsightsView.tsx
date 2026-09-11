@@ -19,6 +19,7 @@ import {
   Activity,
   ChevronDown,
   ChevronUp,
+  Wallet,
 } from "lucide-react";
 import { AICopilotFeed } from "./AICopilotFeed.js";
 import { CryptoIcon } from "./CryptoIcon.js";
@@ -34,6 +35,7 @@ interface InsightsViewProps {
   positions?: any[];
   publicPositions?: any[];
   walletAddress?: string;
+  onConnectWallet?: () => void;
   showToast?: (msg: string, type?: "success" | "error" | "info") => void;
 }
 
@@ -49,6 +51,7 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   positions: propPositions = [],
   publicPositions = [],
   walletAddress,
+  onConnectWallet,
   showToast,
 }) => {
   const [internalSymbol, setInternalSymbol] = useState<string>(
@@ -448,35 +451,97 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
         const errorLog = {
           id: `log-err-${Date.now()}`,
           time: timeStr,
-          message: `Round ${roundNum}/${totalRounds} Notice: ${errorMsg}`,
+          message: `Round ${roundNum}/${totalRounds} Skipped: ${errorMsg}`,
           type: "warning" as const,
         };
-        setBotSession((prev) => ({
-          ...prev,
-          logs: [errorLog, ...prev.logs],
-          status: "WAITING_NEXT",
-        }));
         if (showToast) {
-          showToast(`Round ${roundNum} notice: ${errorMsg}`, "error");
+          showToast(`Round ${roundNum} skipped: ${errorMsg}`, "error");
+        }
+
+        if (roundNum >= totalRounds) {
+          setBotSession((prev) => ({
+            ...prev,
+            status: "COMPLETED",
+            logs: [
+              errorLog,
+              {
+                id: `log-complete-${Date.now()}`,
+                time: new Date().toLocaleTimeString(),
+                message: `Session finished. Completed rounds were deployed; missed rounds preserved budget.`,
+                type: "info" as const,
+              },
+              ...prev.logs,
+            ],
+          }));
+        } else {
+          let countdown = 8;
+          setBotSession((prev) => ({
+            ...prev,
+            status: "WAITING_NEXT",
+            countdownToNextSec: countdown,
+            logs: [errorLog, ...prev.logs],
+          }));
+
+          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+          countdownTimerRef.current = setInterval(() => {
+            countdown -= 1;
+            setBotSession((prev) => ({
+              ...prev,
+              countdownToNextSec: Math.max(0, countdown),
+            }));
+            if (countdown <= 0) {
+              if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+              executeBotOrder(roundNum + 1, strat, budgetPerRound, totalRounds);
+            }
+          }, 1000);
         }
       }
     } catch (err: any) {
       const errorLog = {
         id: `log-err-${Date.now()}`,
         time: timeStr,
-        message: `Network error: ${err?.message || String(err)}`,
+        message: `Round ${roundNum}/${totalRounds} Network Error: ${err?.message || String(err)}`,
         type: "warning" as const,
       };
-      setBotSession((prev) => ({
-        ...prev,
-        logs: [errorLog, ...prev.logs],
-        status: "WAITING_NEXT",
-      }));
+
+      if (roundNum >= totalRounds) {
+        setBotSession((prev) => ({
+          ...prev,
+          status: "COMPLETED",
+          logs: [errorLog, ...prev.logs],
+        }));
+      } else {
+        let countdown = 8;
+        setBotSession((prev) => ({
+          ...prev,
+          status: "WAITING_NEXT",
+          countdownToNextSec: countdown,
+          logs: [errorLog, ...prev.logs],
+        }));
+
+        if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = setInterval(() => {
+          countdown -= 1;
+          setBotSession((prev) => ({
+            ...prev,
+            countdownToNextSec: Math.max(0, countdown),
+          }));
+          if (countdown <= 0) {
+            if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+            executeBotOrder(roundNum + 1, strat, budgetPerRound, totalRounds);
+          }
+        }, 1000);
+      }
     }
   };
 
   const handleLaunchAutoRun = () => {
     sound.playClick();
+    if (!walletAddress) {
+      if (onConnectWallet) onConnectWallet();
+      else if (showToast) showToast("Please connect your Web3 wallet (MetaMask) to start the Automated Order Runner.", "error");
+      return;
+    }
     if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     const budgetPerRound = Number((autoBudget / autoRounds).toFixed(2));
     const initLogs = [
@@ -978,6 +1043,19 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                       >
                         <RotateCcw className="w-3.5 h-3.5 text-white" />
                         <span>NEW EXECUTION RUN</span>
+                      </button>
+                    ) : !walletAddress ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          if (onConnectWallet) onConnectWallet();
+                          else if (showToast) showToast("Please connect your Web3 wallet (MetaMask) first", "info");
+                        }}
+                        className="w-full py-2.5 bg-[#131122] hover:bg-[#1C1832] text-violet-300 font-bold text-xs rounded-sm transition-all flex items-center justify-center gap-1.5 border border-violet-500/40 cursor-pointer shadow-[0_0_10px_rgba(139,92,246,0.15)]"
+                      >
+                        <Wallet className="w-3.5 h-3.5 text-violet-400" />
+                        <span>CONNECT WALLET TO RUN</span>
                       </button>
                     ) : (
                       <button

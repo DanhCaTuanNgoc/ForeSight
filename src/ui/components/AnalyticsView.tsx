@@ -416,7 +416,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div>
             <span className="text-[9px] text-gray-400 block uppercase tracking-wider flex items-center gap-1">
               Spot (Oracle)
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Live Oracle Feed" />
             </span>
             <span className="text-sm font-bold font-mono text-white">
               ${spotPrice > 10 ? spotPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : spotPrice.toFixed(4)}

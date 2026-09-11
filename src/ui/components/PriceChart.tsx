@@ -1049,7 +1049,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
 
             <span className="text-gray-400">
-              Strike: <b className="text-cyan-300 font-bold">${radarMetrics.strikePrice.toLocaleString()}</b>
+              Strike: <b className="text-white font-bold">${radarMetrics.strikePrice.toLocaleString()}</b>
             </span>
 
             <span className="text-gray-600">|</span>
@@ -1086,7 +1086,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             <span className="text-[8px] text-gray-500 font-bold">BEAR (NO)</span>
             <div className="w-28 sm:w-36 h-2.5 bg-[#0E0E17] border border-white/[0.1] relative rounded-none overflow-hidden">
               {/* Center Strike Marker */}
-              <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-cyan-400 z-10" />
+              <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-violet-400 z-10" />
               {/* Dynamic Spot Pointer */}
               <div
                 className={`absolute top-0 bottom-0 w-2.5 ${

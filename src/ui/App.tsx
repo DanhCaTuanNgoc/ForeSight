@@ -797,6 +797,7 @@ function ForeSightTerminalApp() {
           positions={positions}
           publicPositions={publicPositions}
           walletAddress={wallet.address || undefined}
+          onConnectWallet={() => wallet.openWalletModal()}
           showToast={showToast}
           onSelectSymbol={handleSelectSymbolGlobal}
           onTradeSignal={(sym, outcome, price, toastText) => {
@@ -852,8 +853,8 @@ function ForeSightTerminalApp() {
                       }}
                       className={`text-[9px] font-mono py-0.5 rounded-none font-bold uppercase transition-colors border cursor-pointer ${
                         categoryFilter === cat
-                          ? "bg-violet-600/25 text-violet-300 border-violet-500/50"
-                          : "bg-[#0E0E17] text-gray-400 border-white/[0.05] hover:text-gray-200 hover:bg-[#13131F]"
+                          ? "bg-violet-500/20 text-violet-300 border-violet-500/50 shadow-[0_0_8px_rgba(139,92,246,0.15)]"
+                          : "bg-[#0B0D13] text-zinc-400 border-white/[0.06] hover:text-white hover:bg-[#11131C]"
                       }`}
                     >
                       {cat}
@@ -863,9 +864,9 @@ function ForeSightTerminalApp() {
               </div>
 
               {/* Markets Header with Count and Sort */}
-              <div className="px-2.5 py-1.5 border-b border-white/[0.07] bg-[#08080E] flex items-center justify-between">
-                <span className="text-[10px] text-gray-400 flex items-center gap-1.5 font-mono">
-                  <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full" />
+              <div className="px-2.5 py-1.5 border-b border-white/[0.07] bg-[#07080C] flex items-center justify-between">
+                <span className="text-[10px] text-zinc-400 flex items-center gap-1.5 font-mono">
+                  <span className="inline-block w-2 h-2 bg-violet-400 rounded-full animate-pulse" />
                   MARKETS
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -874,13 +875,13 @@ function ForeSightTerminalApp() {
                       sound.playClick();
                       setMarketSort((s) => (s === "DEFAULT" ? "ODDS" : s === "ODDS" ? "VOL" : "DEFAULT"));
                     }}
-                    className="text-[9px] font-mono text-gray-400 hover:text-violet-300 flex items-center gap-0.5 px-1 py-0.5 border border-white/[0.06] rounded-none hover:border-violet-500/30 transition-colors cursor-pointer"
+                    className="text-[9px] font-mono text-zinc-400 hover:text-violet-300 flex items-center gap-0.5 px-1 py-0.5 border border-white/[0.06] rounded-none hover:border-violet-500/40 transition-colors cursor-pointer"
                     title="Toggle Sort: Default / Odds / Volume"
                   >
                     <ArrowUpDown className="w-2.5 h-2.5" />
                     <span>{marketSort === "DEFAULT" ? "SORT" : marketSort}</span>
                   </button>
-                  <span className="text-[10px] font-mono text-violet-300 bg-violet-950/40 border border-violet-500/30 px-1.5 py-0.2 rounded-none font-bold">
+                  <span className="text-[9px] font-mono text-violet-300 bg-violet-950/40 border border-violet-500/30 px-1.5 py-0.2 rounded-none font-bold">
                     {filteredMarkets.length} PAIRS
                   </span>
                 </div>
@@ -902,14 +903,14 @@ function ForeSightTerminalApp() {
                       }}
                       className={`w-full text-left p-2.5 transition-colors flex flex-col gap-1 rounded-none border-l-2 cursor-pointer ${
                         isSelected
-                          ? "bg-violet-950/25 border-violet-500 text-violet-200"
-                          : "border-transparent hover:bg-[#0F0F1A] text-gray-300"
+                          ? "bg-[#0F0E1A] border-violet-500 text-white"
+                          : "border-transparent bg-[#08090E] hover:bg-[#0E1018] text-zinc-300"
                       }`}
                     >
                       <div className="flex items-center justify-between font-mono">
                         <span
                           className={`text-xs font-bold flex items-center gap-1.5 truncate max-w-[155px] ${
-                            isSelected ? "text-violet-200" : "text-gray-200"
+                            isSelected ? "text-white" : "text-zinc-200"
                           }`}
                           title={m.symbol}
                         >
@@ -919,29 +920,30 @@ function ForeSightTerminalApp() {
                           </span>
                         </span>
                         <span
-                          className={`text-[11px] font-bold font-mono px-1.5 py-0.2 border shrink-0 rounded-none ${
+                          className={`text-[11px] font-bold font-mono px-1.5 py-0.2 border shrink-0 rounded-none tabular-nums ${
                             isYes
-                              ? "text-emerald-400 bg-emerald-950/30 border-emerald-500/30"
-                              : "text-rose-400 bg-rose-950/30 border-rose-500/30"
+                              ? "text-emerald-400 bg-emerald-950/40 border-emerald-500/40"
+                              : "text-rose-400 bg-rose-950/40 border-rose-500/40"
                           }`}
                         >
                           {prob.toFixed(1)}%
                         </span>
                       </div>
 
-                      <p className="text-[10px] text-gray-400 line-clamp-1 leading-tight font-sans">
+                      <p className="text-[10px] text-zinc-400 line-clamp-1 leading-tight font-sans">
                         {m.question}
                       </p>
 
-                      <div className="flex items-center justify-between text-[9px] text-gray-500 font-mono pt-0.5">
-                        <span>Bid: ${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</span>
-                        <span>Ask: ${m.bestAsk ? m.bestAsk.toFixed(2) : "0.52"}</span>
+                      <div className="flex items-center justify-between text-[9px] text-zinc-500 font-mono pt-0.5">
+                        <span>Bid: <b className="text-zinc-300 font-normal">${m.bestBid ? m.bestBid.toFixed(2) : "0.50"}</b></span>
+                        <span>Ask: <b className="text-zinc-300 font-normal">${m.bestAsk ? m.bestAsk.toFixed(2) : "0.52"}</b></span>
                         {m.timeRemainingSec ? (
-                          <span className="text-cyan-400 font-bold">
+                          <span className="text-zinc-300 font-bold tabular-nums flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-violet-400 rounded-full inline-block animate-pulse" />
                             {Math.floor(m.timeRemainingSec / 60)}:{(m.timeRemainingSec % 60).toString().padStart(2, "0")}
                           </span>
                         ) : (
-                          <span className="text-gray-400 font-bold">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
+                          <span className="text-zinc-400 font-bold">Vol ${((m.volume24h || 100000) / 1000).toFixed(0)}K</span>
                         )}
                       </div>
                     </button>
@@ -950,12 +952,12 @@ function ForeSightTerminalApp() {
               </div>
 
               {/* Market Navigator Footer Summary */}
-              <div className="p-2 bg-[#07070C] border-t border-white/[0.07] flex items-center justify-between text-[9px] font-mono text-gray-500">
-                <span className="flex items-center gap-1 text-gray-400">
+              <div className="p-2 bg-[#07070C] border-t border-white/[0.07] flex items-center justify-between text-[9px] font-mono text-zinc-500">
+                <span className="flex items-center gap-1 text-zinc-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   SOMNIA TESTNET
                 </span>
-                <span className="text-gray-400 font-bold">24H VOL: ${(total24hVol / 1000).toFixed(0)}K</span>
+                <span className="text-zinc-400 font-bold">24H VOL: ${(total24hVol / 1000).toFixed(0)}K</span>
               </div>
             </aside>
 

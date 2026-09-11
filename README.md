@@ -384,6 +384,7 @@ ForeSight provides an auditable, machine-readable evidence trail located in [`ev
 | **Settlement Payout Claim** | Matured ETH Event Pool | [`0xf4caf3577f52428af2ce7d6ec87b11428b403008b21ab4bce6d3c50fc22519b6`](https://shannon-explorer.somnia.network/tx/0xf4caf3577f52428af2ce7d6ec87b11428b403008b21ab4bce6d3c50fc22519b6) | `CONFIRMED` | On-chain settlement payout claim (+44.9% ROI) verified in Block `484521336`. |
 | **100% Collateral Refund** | BTC/USD Event Contract | [`0x58f77beab8dc966f8faca8f71c2f529dee14f06e6fc3105471695598d8a48ef0`](https://shannon-explorer.somnia.network/tx/0x58f77beab8dc966f8faca8f71c2f529dee14f06e6fc3105471695598d8a48ef0) | `REFUNDED` | Unfilled resting limit order verified: 100% principal ($50.00 tUSDC) refunded back to wallet in Block `484005732`. |
 | **Anti-Black-Box Quant Guard** | BTC/USD 5m Binary Pool | [Deterministic Simulation & Rejection Engine](src/core/quantitative-pricing.ts) | `VERIFIED` | Invariant test: When market FOMO pushes odds to 72% and AI Bull is enthusiastic, Quant Engine computes $VC = 0.27x$ and Edge $= -1,800\text{ bps}$, rejecting the trade to protect capital. |
+| **Automated Order Runner** | Somnia CLOB BinaryPool | [`0x87a36ce4c647a6a836e0f13b021386d87dbb5603928b093f06f0490ffa51da0b`](https://shannon-explorer.somnia.network/tx/0x87a36ce4c647a6a836e0f13b021386d87dbb5603928b093f06f0490ffa51da0b) | `EXECUTED` | Multi-round autonomous session execution placing on-chain limit orders into DreamDEX CLOB on Somnia Shannon (Order ID: `55340232221128654852`). |
 
 ---
 
@@ -472,10 +473,16 @@ Traders can deploy multi-round automated execution campaigns directly from the *
 * **Execution Engine & 12-Second Pacing:**
   * Orders are dispatched on-chain with `signerType: "AutonomousSessionAgent (Somnia L1)"`.
   * After each fill, an automated **12-second countdown cooldown** paces execution, preventing rapid slippage and allowing the market to register block state updates.
+* **Backend Smart Auto-Routing & Active Pool Resiliency:**
+  * If the targeted market pool has expired or has `< 15s` remaining before cutoff, the backend automatically scans and routes the order to the next valid active contract of the underlying asset (`timeRemainingSec > 15s`), ensuring seamless multi-round execution without interrupted loops.
+* **Auto-Skip & 8-Second Error Recovery:**
+  * If an order cannot be placed due to CLOB orderbook rejection, liquidity constraints, or RPC hiccups, the runner marks the round as **Skipped**, logs the exact diagnostic reason in the terminal, and initiates an **8-second recovery countdown** to smoothly transition to the next round rather than stalling the session.
+* **Non-Custodial Capital Preservation (Zero-Loss Invariant):**
+  * Because trades interact directly with on-chain Smart Contracts, **unfilled or skipped rounds never deduct user funds**. Unused budget remains safely in the trader's Web3 wallet.
 * **Live Session Progress HUD & Emergency Stop:**
   * Live status state machine: `EXECUTING` $\to$ `WAITING_NEXT` $\to$ `COMPLETED` (or `ABORTED`).
   * One-click manual abort button (`STOP (RND X/Y)`) allows the trader to kill the session instantly at any point.
-  * Full real-time audit log with clickable [Shannon Explorer](https://shannon-explorer.somnia.network/) transaction hash verification for every deployed round.
+  * Full real-time audit log with clickable [Shannon Explorer](https://shannon-explorer.somnia.network/) transaction hash verification for every deployed round (e.g. Verified Tx: [`0x87a36ce4...da0b`](https://shannon-explorer.somnia.network/tx/0x87a36ce4c647a6a836e0f13b021386d87dbb5603928b093f06f0490ffa51da0b)).
 * **Recent Execution Track Record & Live Streak Metrics:**
   * Real-time streak visualizer displaying round outcomes: `WIN`, `LOSS`, `REFUND`, and `PENDING`.
   * Live aggregate scorecard: Wins vs. Losses (e.g. `4W - 1L`) and calibrated Win Rate percentage (e.g. `80.0% WIN RATE`).

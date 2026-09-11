@@ -176,8 +176,8 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       {/* ─── Top Bar: Cyber Terminal Header & Mode Switch ─── */}
       <div className="flex items-center justify-between pb-2 border-b border-white/[0.07]">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#0C0E14] border border-cyan-500/30 text-[10px] text-cyan-300 font-bold uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 bg-cyan-400 animate-pulse" />
+          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#0E0F1A] border border-violet-500/30 text-[10px] text-violet-300 font-bold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
             <span>DREAMDEX // BINARY_POOL</span>
           </div>
           <span className="text-[10px] text-zinc-500 hidden sm:inline">
@@ -198,7 +198,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             }}
             className={`px-2.5 py-0.5 font-bold uppercase transition-all cursor-pointer ${
               orderMode === "MARKET"
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.2)]"
+                ? "bg-violet-500/20 text-violet-300 border border-violet-500/50 shadow-[0_0_8px_rgba(139,92,246,0.2)]"
                 : "text-zinc-500 hover:text-zinc-300 border border-transparent"
             }`}
           >
@@ -212,7 +212,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
             }}
             className={`px-2.5 py-0.5 font-bold uppercase transition-all cursor-pointer ${
               orderMode === "LIMIT"
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.2)]"
+                ? "bg-violet-500/20 text-violet-300 border border-violet-500/50 shadow-[0_0_8px_rgba(139,92,246,0.2)]"
                 : "text-zinc-500 hover:text-zinc-300 border border-transparent"
             }`}
           >
@@ -246,7 +246,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-1.5">
                     <span
-                      className={`w-1.5 h-1.5 transition-all ${
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${
                         outcome === "YES"
                           ? "bg-emerald-400"
                           : "bg-zinc-600 group-hover:bg-emerald-500/60"
@@ -298,7 +298,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-1.5">
                     <span
-                      className={`w-1.5 h-1.5 transition-all ${
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${
                         outcome === "NO"
                           ? "bg-rose-400"
                           : "bg-zinc-600 group-hover:bg-rose-500/60"
@@ -351,7 +351,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                   <button
                     type="button"
                     onClick={() => wallet.openWalletModal()}
-                    className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                    className="text-violet-400 hover:text-violet-300 underline cursor-pointer"
                   >
                     CONNECT
                   </button>
@@ -359,7 +359,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
               </div>
             </div>
 
-            <div className="bg-[#0A0B10] border border-white/[0.08] focus-within:border-cyan-500/70 p-2 flex items-center justify-between transition-colors">
+            <div className="bg-[#0A0B10] border border-white/[0.08] focus-within:border-violet-500/70 p-2 flex items-center justify-between transition-colors">
               <div className="flex items-center gap-2 flex-1">
                 <span className="text-zinc-500 font-bold text-base select-none">$</span>
                 <input
@@ -376,7 +376,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 />
               </div>
               <div className="flex items-center gap-1.5 bg-[#0F1118] px-2 py-0.5 border border-white/[0.08]">
-                <span className="w-1.5 h-1.5 bg-emerald-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span className="text-[10px] font-bold text-zinc-300">tUSDC</span>
               </div>
             </div>
@@ -388,7 +388,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                   key={amt}
                   type="button"
                   onClick={() => handleQuickAdd(amt)}
-                  className="flex-1 py-0.5 text-[10px] font-bold bg-[#0A0B10] hover:bg-[#11131C] text-zinc-400 hover:text-zinc-200 border border-white/[0.06] hover:border-cyan-500/40 transition-colors cursor-pointer"
+                  className="flex-1 py-0.5 text-[10px] font-bold bg-[#0A0B10] hover:bg-[#11131C] text-zinc-400 hover:text-zinc-200 border border-white/[0.06] hover:border-violet-500/40 transition-colors cursor-pointer"
                 >
                   +{amt}
                 </button>
@@ -396,7 +396,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
               <button
                 type="button"
                 onClick={handleMax}
-                className="px-2.5 py-0.5 text-[10px] font-bold bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/40 transition-colors cursor-pointer"
+                className="px-2.5 py-0.5 text-[10px] font-bold bg-violet-950/40 hover:bg-violet-900/60 text-violet-300 border border-violet-500/40 transition-colors cursor-pointer"
               >
                 MAX
               </button>
@@ -420,7 +420,7 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                 >
                   <Minus className="w-3 h-3" />
                 </button>
-                <span className="font-bold text-cyan-300 min-w-[70px] text-center tabular-nums text-xs">
+                <span className="font-bold text-violet-300 min-w-[70px] text-center tabular-nums text-xs">
                   ${entryPrice.toFixed(2)} ({Math.round(entryPrice * 100)}¢)
                 </span>
                 <button
@@ -488,18 +488,18 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                   sound.playClick();
                   wallet.openWalletModal();
                 }}
-                className="w-full py-2.5 font-mono font-bold text-xs uppercase tracking-wider bg-[#10131E] hover:bg-[#161B2B] text-cyan-300 hover:text-cyan-200 transition-all flex items-center justify-center gap-1.5 border border-cyan-500/40 hover:border-cyan-400 cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+                className="w-full py-2.5 font-mono font-bold text-xs uppercase tracking-wider bg-[#131122] hover:bg-[#1C1832] text-violet-300 hover:text-violet-200 transition-all flex items-center justify-center gap-1.5 border border-violet-500/40 hover:border-violet-400 cursor-pointer shadow-[0_0_12px_rgba(139,92,246,0.15)]"
               >
-                <Wallet className="w-3.5 h-3.5 text-cyan-400" />
+                <Wallet className="w-3.5 h-3.5 text-violet-400" />
                 <span>[ CONNECT WALLET // TRADE ]</span>
               </button>
             ) : isSubmitting ? (
               <button
                 type="button"
                 disabled
-                className="w-full py-2.5 font-mono font-bold text-xs uppercase tracking-wider bg-[#0C0E17] border border-cyan-500/50 text-cyan-300 transition-all flex items-center justify-center gap-2 cursor-wait"
+                className="w-full py-2.5 font-mono font-bold text-xs uppercase tracking-wider bg-[#0E0C1A] border border-violet-500/50 text-violet-300 transition-all flex items-center justify-center gap-2 cursor-wait"
               >
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-400" />
                 <span className="text-[11px]">
                   {submitStep === "approving"
                     ? "[ 1/2: APPROVING tUSDC... ]"

@@ -39,12 +39,12 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode, on
       <div className="flex items-center gap-4 xl:gap-5 flex-wrap divide-x divide-white/[0.06] pl-2">
         {/* Probability */}
         <div className="flex flex-col">
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
-            <TrendingUp className="w-3 h-3 text-violet-400" />
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+            <TrendingUp className="w-3 h-3 text-zinc-400" />
             YES Odds
           </span>
           <span
-            className={`text-base font-mono font-bold ${
+            className={`text-base font-mono font-black tabular-nums ${
               isYesFavored ? "text-emerald-400" : "text-rose-400"
             }`}
           >
@@ -54,62 +54,62 @@ export const MarketStats: React.FC<MarketStatsProps> = ({ market, serverMode, on
 
         {/* Best Bid */}
         <div className="flex flex-col pl-3 xl:pl-4">
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider">
             Bid
           </span>
-          <span className="text-xs font-mono font-bold text-emerald-400">
+          <span className="text-xs font-mono font-bold text-emerald-400/90 tabular-nums">
             ${market.bestBid !== undefined ? market.bestBid.toFixed(3) : "—"}
           </span>
         </div>
 
         {/* Best Ask */}
         <div className="flex flex-col pl-3 xl:pl-4">
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider">
             Ask
           </span>
-          <span className="text-xs font-mono font-bold text-rose-400">
+          <span className="text-xs font-mono font-bold text-rose-400/90 tabular-nums">
             ${market.bestAsk !== undefined ? market.bestAsk.toFixed(3) : "—"}
           </span>
         </div>
 
         {/* Spread */}
         <div className="flex flex-col pl-3 xl:pl-4">
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
-            <ArrowUpDown className="w-2.5 h-2.5 text-gray-500" />
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+            <ArrowUpDown className="w-2.5 h-2.5 text-zinc-600" />
             Spread
           </span>
-          <span className="text-xs font-mono font-bold text-violet-300">
+          <span className="text-xs font-mono font-bold text-zinc-200 tabular-nums">
             ${spread}
           </span>
         </div>
 
-        {/* Strike Target Price */}
+        {/* Strike Target Price - Highlighted by bold white weight, not rainbow color */}
         <div className="flex flex-col pl-3 xl:pl-4">
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider">
             Strike Target
           </span>
-          <span className="text-xs font-mono font-bold text-cyan-300">
+          <span className="text-xs font-mono font-black text-white tabular-nums tracking-tight">
             {market.strikePrice && market.strikePrice > 0 ? `$${market.strikePrice.toLocaleString()}` : "Open Price"}
           </span>
         </div>
 
         {/* Cadence / Round */}
         <div className="flex flex-col pl-3 xl:pl-4">
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider">
             Round
           </span>
-          <span className="text-xs font-mono font-bold text-amber-300">
+          <span className="text-xs font-mono font-bold text-zinc-300">
             {market.interval || "5m"}
           </span>
         </div>
 
         {/* 24h Vol */}
         <div className="flex flex-col pl-3 xl:pl-4">
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider flex items-center gap-1">
-            <BarChart3 className="w-3 h-3 text-gray-500" />
+          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+            <BarChart3 className="w-3 h-3 text-zinc-600" />
             24h Volume
           </span>
-          <span className="text-xs font-mono font-bold text-white">
+          <span className="text-xs font-mono font-bold text-zinc-300 tabular-nums">
             ${market.volume24h ? `${(market.volume24h / 1000).toFixed(0)}K` : "$100K"}
           </span>
         </div>
