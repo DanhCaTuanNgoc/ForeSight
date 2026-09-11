@@ -216,7 +216,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     if (activeMarket?.strikePrice && typeof activeMarket.strikePrice === "number" && activeMarket.strikePrice > 0) {
       return activeMarket.strikePrice;
     }
-    const mult = isUp ? 1.004 : 0.996;
+    const mult = isUp ? 0.996 : 1.004;
     return Number((spotPrice * mult).toFixed(spotPrice > 10 ? 1 : 4));
   }, [activeMarket, spotPrice, isUp]);
 
@@ -304,10 +304,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       strikePrice,
       timeRemainingSeconds: Math.max(30, countdownSec),
       asset: activeSymbol,
-      isCall: isUp,
+      isCall: true,
       marketPrice: prob / 100,
     });
-  }, [spotPrice, strikePrice, countdownSec, activeSymbol, isUp, prob]);
+  }, [spotPrice, strikePrice, countdownSec, activeSymbol, prob]);
 
   const fairProb = quantResult.fairProbabilityPercent;
   const quantEdgeBps = quantResult.edgeBps ?? 0;
@@ -315,25 +315,28 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const kellyPercent = ((quantResult.halfKellyFraction ?? 0.05) * 100).toFixed(1);
 
   // H. Velocity Physics & Trajectory Math (Dynamic per second)
+  const isAboveSpot = spotPrice >= strikePrice;
   const distDollar = Math.abs(strikePrice - spotPrice);
   const distPercent = (distDollar / Math.max(1, spotPrice)) * 100;
-  const reqVelocityPerMin = (distPercent / remainingMinutes);
+  const reqVelocityPerMin = isAboveSpot ? 0 : (distPercent / remainingMinutes);
   const dailyAbsChange = Math.abs(liveSpotMap[activeSymbol]?.change ?? 1.8);
   const observedVelocityPerMin = Math.max(0.015, (dailyAbsChange / 1440) * 18);
-  const velocityCoverage = Number((observedVelocityPerMin / Math.max(0.001, reqVelocityPerMin)).toFixed(2));
+  const velocityCoverage = isAboveSpot
+    ? Number(Math.max(1.5, 1 + distPercent).toFixed(2))
+    : Number((observedVelocityPerMin / Math.max(0.001, reqVelocityPerMin)).toFixed(2));
   const isVcSufficient = velocityCoverage >= 1.0;
 
   // I. Invalidation Price Level
   const invalidationPrice = isUp
-    ? Number((spotPrice * 0.994).toFixed(spotPrice > 10 ? 0 : 4))
-    : Number((spotPrice * 1.006).toFixed(spotPrice > 10 ? 0 : 4));
+    ? Number((spotPrice * 0.994).toFixed(spotPrice > 10 ? 2 : 4))
+    : Number((spotPrice * 1.006).toFixed(spotPrice > 10 ? 2 : 4));
 
   // Live Orderbook Rows
   const displayBids: [number, number][] = orderbook?.bids?.length
     ? orderbook.bids
     : [[bestBid, 1250], [bestBid - 0.01, 840], [bestBid - 0.02, 620], [bestBid - 0.03, 490], [bestBid - 0.04, 310]];
   const displayAsks: [number, number][] = orderbook?.asks?.length
-    ? orderbook.asks
+    ? [...orderbook.asks].sort((a, b) => b[0] - a[0])
     : [[bestAsk + 0.04, 340], [bestAsk + 0.03, 510], [bestAsk + 0.02, 730], [bestAsk + 0.01, 920], [bestAsk, 1400]];
 
   const maxBidSize = Math.max(...displayBids.map(([, s]) => s), 1);
@@ -689,7 +692,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               {/* Mid Price Divider */}
               <div className="flex items-center justify-center gap-2 py-0.5 my-0.5 bg-[#0E0E17] rounded-none border border-white/[0.06] text-mono">
                 <span className="text-[10px] text-gray-400 font-mono">Mid Equilibrium:</span>
-                <span className="text-xs font-bold text-white font-mono">${(activeMarket?.midPrice || 0.50).toFixed(3)}</span>
+                <span className="text-xs font-bold text-white font-mono">${((orderbook?.midPrice ?? activeMarket?.midPrice ?? (prob / 100)) || 0.50).toFixed(3)}</span>
                 <span className={`text-[9px] font-bold font-mono ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
                   ({prob.toFixed(1)}% Implied)
                 </span>
@@ -759,7 +762,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   {quantEdgeBps >= 0 ? `+${quantEdgeBps} bps` : `${quantEdgeBps} bps`}
                 </span>
                 <span className="text-[9px] text-gray-500 block">
-                  {quantEdgeBps > 0 ? `+${(quantEdgeBps / 100).toFixed(1)}% Model Edge` : `${(quantEdgeBps / 100).toFixed(1)}% Discount`}
+                  {quantEdgeBps > 0 ? `+${(quantEdgeBps / 100).toFixed(1)}% Model Edge` : `${Math.abs(quantEdgeBps / 100).toFixed(1)}% Discount`}
                 </span>
               </div>
             </div>
@@ -812,7 +815,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <div>
                   <span className="text-[9px] text-gray-400 uppercase block">INVALIDATION LEVEL</span>
                   <span className="text-xs font-bold text-rose-400">
-                    ${invalidationPrice > 10 ? invalidationPrice.toLocaleString() : invalidationPrice.toFixed(4)}
+                    ${invalidationPrice > 10 ? invalidationPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : invalidationPrice.toFixed(4)}
                   </span>
                 </div>
                 <span className="text-[9px] text-rose-400/80 bg-rose-950/40 border border-rose-500/30 px-1.5 py-0.5 font-bold">Stop</span>

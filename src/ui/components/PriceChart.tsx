@@ -6,7 +6,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
@@ -18,7 +17,8 @@ import {
   CandlestickChart,
   Split,
   RotateCcw,
-  Crosshair,
+  ZoomIn,
+  ZoomOut,
   MoveHorizontal,
   Activity,
   Timer,
@@ -161,10 +161,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const [mcVolatility, setMcVolatility] = useState<VolatilityLevel>("normal");
   const [showEMA, setShowEMA] = useState<boolean>(true); // Trend Indicators Toggle
 
-  // ─── Crosshair & Interactive Hover State ─────────────────────────────────────
-  const [hoveredPoint, setHoveredPoint] = useState<ChartDataPoint | null>(null);
-  const [crosshairPos, setCrosshairPos] = useState<{ x: number; y: number } | null>(null);
-
   // ─── Real-time Bar Countdown Timer (TradingView style ⏱ 02:45) ─────────────
   const [countdown, setCountdown] = useState<string>("00:00");
   useEffect(() => {
@@ -198,24 +194,22 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
   const chartWrapperRef = useRef<HTMLDivElement>(null);
 
-  // ─── Native Wheel Listener (Ctrl + Wheel Zoom without Browser Page Zoom) ───
+  // ─── Native Wheel Listener (Mouse Wheel Zoom In / Out) ─────────────────────
   useEffect(() => {
     const el = chartWrapperRef.current;
     if (!el) return;
 
     const onNativeWheel = (e: WheelEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.deltaY < 0) {
-          setZoomLevel((prev) => Math.min(5, Number((prev + 0.3).toFixed(2))));
-        } else if (e.deltaY > 0) {
-          setZoomLevel((prev) => {
-            const next = Math.max(1, Number((prev - 0.3).toFixed(2)));
-            if (next === 1) setPanOffset(0);
-            return next;
-          });
-        }
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.deltaY < 0) {
+        setZoomLevel((prev) => Math.min(6, Number((prev + 0.25).toFixed(2))));
+      } else if (e.deltaY > 0) {
+        setZoomLevel((prev) => {
+          const next = Math.max(1, Number((prev - 0.25).toFixed(2)));
+          if (next === 1) setPanOffset(0);
+          return next;
+        });
       }
     };
 
@@ -304,10 +298,9 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     setPanOffset(0);
   };
 
-  // ─── Drag to Pan Handlers (Active when Ctrl / Meta is held) ─────────────────
+  // ─── Drag to Pan Timeline Handlers (Left-click & drag horizontally) ─────────
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0 || visualMode !== "probability") return;
-    if (!e.ctrlKey && !e.metaKey) return;
 
     setIsDragging(true);
     setDragStartX(e.clientX);
@@ -315,17 +308,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = chartWrapperRef.current?.getBoundingClientRect();
-    if (rect) {
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      setCrosshairPos({ x: mouseX, y: mouseY });
-    }
-
     if (!isDragging || visualMode !== "probability") return;
     const deltaX = e.clientX - dragStartX;
 
-    if (Math.abs(deltaX) > 4) {
+    if (Math.abs(deltaX) > 2) {
       const visibleCount = rawData.length / zoomLevel;
       const chartWidth = chartWrapperRef.current?.clientWidth || 500;
       const pointsPerPixel = visibleCount / chartWidth;
@@ -339,8 +325,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
   const handleMouseLeave = () => {
     setIsDragging(false);
-    setCrosshairPos(null);
-    setHoveredPoint(null);
   };
 
   const handleMouseUp = () => {
@@ -366,22 +350,11 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
   const maxVol = Math.max(...data.map((d) => d.volume ?? 0), 1);
 
-  // Active Point for the TradingView-style Legend (defaults to latest bar)
-  const activePoint = hoveredPoint || data[data.length - 1] || data[0];
+  // Active Point for the TradingView-style Legend (always latest visible bar)
+  const activePoint = data[data.length - 1] || data[0];
   const activeChange = activePoint?.open
     ? (((activePoint.close ?? activePoint.price) - activePoint.open) / activePoint.open) * 100
     : 0;
-
-  // Crosshair Price & Probability projection
-  const currentHoverPrice = useMemo(() => {
-    if (!crosshairPos || !chartWrapperRef.current) return null;
-    const h = chartWrapperRef.current.clientHeight || 240;
-    const normalized = Math.max(0, Math.min(1, 1 - (crosshairPos.y - 10) / (h - 40)));
-    return {
-      pct: (normalized * 100).toFixed(1),
-      price: normalized.toFixed(2),
-    };
-  }, [crosshairPos]);
 
   // ─── Mini Strike Radar Calculation (0ms Math Reflex) ────────────────────────
   const radarMetrics = useMemo(() => {
@@ -459,21 +432,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               {isUp ? "+" : ""}{change.toFixed(1)}%
             </span>
 
-            {strikePrice && strikePrice > 0 && (
-              <span className="text-cyan-300 text-[10px] hidden sm:inline border border-cyan-500/30 px-1 py-0.2 bg-cyan-950/30">
-                Strike: ${strikePrice.toLocaleString()}
-              </span>
-            )}
-
-            {/* Countdown Badge */}
-            <div
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded-none bg-[#0E0E17] border border-white/[0.08] text-[10px] text-violet-300 font-mono"
-              title="Time left in current candle"
-            >
-              <Timer className="w-3 h-3 text-violet-400 animate-pulse" />
-              <span>{countdown}</span>
-            </div>
-
             {!isSpotMode && curveMode === "dual" && visualMode === "probability" && (
               <span className="text-rose-400/80 text-[10px] hidden sm:inline">NO {(lastNo * 100).toFixed(0)}%</span>
             )}
@@ -482,16 +440,44 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
         {/* Right: Pro Toggles (EMA, Render, Timeframe) */}
         <div className="flex items-center gap-1.5">
-          {/* Zoom Reset */}
-          {visualMode === "probability" && (zoomLevel > 1 || panOffset > 0) && (
-            <button
-              onClick={handleResetZoom}
-              title="Reset Zoom & Pan (1x)"
-              className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#0E0E17] text-violet-300 hover:text-white hover:bg-violet-600/30 border border-violet-500/40 rounded-none transition flex items-center gap-1 cursor-pointer"
-            >
-              <RotateCcw className="w-2.5 h-2.5" />
-              <span>{zoomLevel.toFixed(1)}x Reset</span>
-            </button>
+          {/* Zoom Controls */}
+          {visualMode === "probability" && (
+            <div className="flex items-center gap-0.5 bg-[#0E0E17] border border-white/[0.08] px-1 py-0.5">
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setZoomLevel((prev) => Math.min(6, Number((prev + 0.25).toFixed(2))));
+                }}
+                title="Zoom In (or use mouse wheel)"
+                className="p-1 text-gray-400 hover:text-white cursor-pointer transition rounded-none"
+              >
+                <ZoomIn className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setZoomLevel((prev) => {
+                    const next = Math.max(1, Number((prev - 0.25).toFixed(2)));
+                    if (next === 1) setPanOffset(0);
+                    return next;
+                  });
+                }}
+                title="Zoom Out (or use mouse wheel)"
+                className="p-1 text-gray-400 hover:text-white cursor-pointer transition rounded-none"
+              >
+                <ZoomOut className="w-3 h-3" />
+              </button>
+              {(zoomLevel > 1 || panOffset > 0) && (
+                <button
+                  onClick={handleResetZoom}
+                  title="Reset Zoom & Pan (1x)"
+                  className="px-1.5 py-0.5 text-[9px] font-mono font-bold text-violet-300 hover:text-white hover:bg-violet-600/30 border-l border-white/[0.08] transition flex items-center gap-1 cursor-pointer"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  <span>{zoomLevel.toFixed(1)}x Reset</span>
+                </button>
+              )}
+            </div>
           )}
 
           {/* EMA 9/21 Indicator Toggle */}
@@ -548,13 +534,13 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
             <span className="text-gray-600">|</span>
 
-            <span>O <b className="text-gray-200">{(activePoint?.open ?? activePoint?.price ?? 0.5).toFixed(2)}</b></span>
-            <span>H <b className="text-emerald-400">{(activePoint?.high ?? activePoint?.price ?? 0.5).toFixed(2)}</b></span>
-            <span>L <b className="text-rose-400">{(activePoint?.low ?? activePoint?.price ?? 0.5).toFixed(2)}</b></span>
-            <span>C <b className={(activePoint?.close ?? activePoint?.price ?? 0) >= (activePoint?.open ?? activePoint?.price ?? 0) ? "text-emerald-400" : "text-rose-400"}>{(activePoint?.close ?? activePoint?.price ?? 0.5).toFixed(2)}</b></span>
+            <span>O <b className="text-gray-200">{isSpotMode ? ((activePoint?.open ?? activePoint?.price ?? 0) >= 1000 ? Math.round(activePoint?.open ?? activePoint?.price ?? 0).toLocaleString() : (activePoint?.open ?? activePoint?.price ?? 0).toFixed(2)) : `${((activePoint?.open ?? activePoint?.price ?? 0.5) * 100).toFixed(1)}%`}</b></span>
+            <span>H <b className="text-emerald-400">{isSpotMode ? ((activePoint?.high ?? activePoint?.price ?? 0) >= 1000 ? Math.round(activePoint?.high ?? activePoint?.price ?? 0).toLocaleString() : (activePoint?.high ?? activePoint?.price ?? 0).toFixed(2)) : `${((activePoint?.high ?? activePoint?.price ?? 0.5) * 100).toFixed(1)}%`}</b></span>
+            <span>L <b className="text-rose-400">{isSpotMode ? ((activePoint?.low ?? activePoint?.price ?? 0) >= 1000 ? Math.round(activePoint?.low ?? activePoint?.price ?? 0).toLocaleString() : (activePoint?.low ?? activePoint?.price ?? 0).toFixed(2)) : `${((activePoint?.low ?? activePoint?.price ?? 0.5) * 100).toFixed(1)}%`}</b></span>
+            <span>C <b className={(activePoint?.close ?? activePoint?.price ?? 0) >= (activePoint?.open ?? activePoint?.price ?? 0) ? "text-emerald-400" : "text-rose-400"}>{isSpotMode ? ((activePoint?.close ?? activePoint?.price ?? 0) >= 1000 ? Math.round(activePoint?.close ?? activePoint?.price ?? 0).toLocaleString() : (activePoint?.close ?? activePoint?.price ?? 0).toFixed(2)) : `${((activePoint?.close ?? activePoint?.price ?? 0.5) * 100).toFixed(1)}%`}</b></span>
             
             <span className={`font-bold ${activeChange >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-              {activeChange >= 0 ? "+" : ""}{activeChange.toFixed(1)}%
+              {activeChange >= 0 ? "+" : ""}{activeChange.toFixed(2)}%
             </span>
 
             {activePoint?.volume && (
@@ -566,64 +552,29 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             {/* EMA Readout when active */}
             {showEMA && activePoint?.ema9 && (
               <span className="hidden sm:inline text-violet-400/90">
-                EMA9 <b className="text-violet-300">{(activePoint.ema9 * 100).toFixed(1)}%</b>
+                EMA9 <b className="text-violet-300">{isSpotMode ? `$${activePoint.ema9.toFixed(2)}` : `${(activePoint.ema9 * 100).toFixed(1)}%`}</b>
               </span>
             )}
             {showEMA && activePoint?.ema21 && (
               <span className="hidden sm:inline text-purple-400/90">
-                EMA21 <b className="text-purple-300">{(activePoint.ema21 * 100).toFixed(1)}%</b>
+                EMA21 <b className="text-purple-300">{isSpotMode ? `$${activePoint.ema21.toFixed(2)}` : `${(activePoint.ema21 * 100).toFixed(1)}%`}</b>
               </span>
             )}
           </div>
         </div>
       )}
 
-      {/* ─── 3. Main Chart Canvas with Crosshair & Pan Engine ─────────── */}
+      {/* ─── 3. Main Chart Canvas & Drag Pan Engine ─────────────────── */}
       <div
         ref={chartWrapperRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        className={`px-2 pt-1 pb-0 relative min-h-[220px] ${
-          isDragging ? "cursor-grabbing" : zoomLevel > 1 ? "cursor-grab" : "cursor-crosshair"
+        className={`px-2 pt-1 pb-0 relative min-h-[220px] select-none ${
+          isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
       >
-        {/* Full TradingView Crosshair Overlay Lines */}
-        {crosshairPos && visualMode === "probability" && (
-          <>
-            {/* Horizontal Line */}
-            <div
-              className="pointer-events-none absolute left-0 right-10 border-b border-dashed border-gray-500/40 z-20"
-              style={{ top: crosshairPos.y }}
-            />
-            {/* Vertical Line */}
-            <div
-              className="pointer-events-none absolute top-0 bottom-6 border-r border-dashed border-gray-500/40 z-20"
-              style={{ left: crosshairPos.x }}
-            />
-            {/* Right Y-Axis Dynamic Price Badge */}
-            {currentHoverPrice && (
-              <div
-                className="pointer-events-none absolute right-1 px-1.5 py-0.5 bg-violet-600 text-white font-mono text-[9px] font-bold rounded shadow-lg z-30 transform -translate-y-1/2 transition-transform flex items-center gap-1"
-                style={{ top: crosshairPos.y }}
-              >
-                <span>{currentHoverPrice.pct}%</span>
-                <span className="text-violet-200 text-[8px]">(${currentHoverPrice.price})</span>
-              </div>
-            )}
-            {/* Bottom X-Axis Dynamic Time Badge */}
-            {hoveredPoint?.time && (
-              <div
-                className="pointer-events-none absolute bottom-1 px-1.5 py-0.5 bg-[#171726] border border-violet-500/60 text-violet-300 font-mono text-[8px] font-bold rounded shadow-lg z-30 transform -translate-x-1/2"
-                style={{ left: crosshairPos.x }}
-              >
-                {hoveredPoint.time} UTC
-              </div>
-            )}
-          </>
-        )}
-
         {/* Mode 1A: Probability Area with Dual YES/NO & Distinct Colors */}
         {visualMode === "probability" && renderType === "area" && (
           <div>
@@ -632,11 +583,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 <AreaChart
                   data={data}
                   margin={{ top: 8, right: 20, left: 0, bottom: 0 }}
-                  onMouseMove={(state: any) => {
-                    if (state && state.activePayload && state.activePayload[0]) {
-                      setHoveredPoint(state.activePayload[0].payload);
-                    }
-                  }}
                 >
                   <defs>
                     <linearGradient id="yesGrad" x1="0" y1="0" x2="0" y2="1">
@@ -698,11 +644,11 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                     }}
                   />
 
-                  {/* YES Curve (Emerald Green Area) */}
+                  {/* YES / Main Curve (Emerald Green Area) */}
                   <Area
                     type="monotone"
                     dataKey="price"
-                    name="YES"
+                    name={isSpotMode ? symbol : "YES"}
                     stroke="#10B981"
                     strokeWidth={2}
                     fill="url(#yesGrad)"
@@ -744,11 +690,11 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
                       return null;
                     }}
-                    activeDot={{ r: 5, fill: "#10B981", stroke: "#fff", strokeWidth: 2 }}
+                    activeDot={false}
                   />
 
-                  {/* NO Curve (Clean Rose Line without opaque fill overlap) */}
-                  {curveMode === "dual" && (
+                  {/* NO Curve (Clean Rose Line) - active only for binary probability mode */}
+                  {!isSpotMode && curveMode === "dual" && (
                     <Line
                       type="monotone"
                       dataKey="priceNo"
@@ -758,7 +704,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                       strokeDasharray="3 3"
                       isAnimationActive={false}
                       dot={false}
-                      activeDot={{ r: 4, fill: "#F43F5E", stroke: "#fff", strokeWidth: 1.5 }}
+                      activeDot={false}
                     />
                   )}
 
@@ -772,6 +718,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                       strokeWidth={1.2}
                       strokeOpacity={0.8}
                       dot={false}
+                      activeDot={false}
                       isAnimationActive={false}
                     />
                   )}
@@ -786,6 +733,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                       strokeWidth={1.2}
                       strokeOpacity={0.8}
                       dot={false}
+                      activeDot={false}
                       isAnimationActive={false}
                     />
                   )}
@@ -814,143 +762,147 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         )}
 
         {/* Mode 1B: Normalized Candlestick OHLC with Pro Y Coordinates */}
-        {visualMode === "probability" && renderType === "candles" && (
-          <div>
-            <div className="h-48 sm:h-56 w-full bg-[#07070C] rounded-none border border-white/[0.06] p-2 relative">
-              <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
-                {/* SVG Coordinate Scaling: plot Top = 16, Bottom = 180, Height = 164 */}
-                {/* Grid Line 75% (y = 180 - 0.75 * 164 = 57) */}
-                <line x1="0" y1={57} x2="470" y2={57} stroke="#161624" strokeDasharray="3 3" />
-                <text x="495" y={60} fill="#4B5563" fontSize="8" textAnchor="end">75% ($0.75)</text>
+        {visualMode === "probability" && renderType === "candles" && (() => {
+          const [yMin, yMax] = yDomain;
+          const scaleY = (val: number) => {
+            if (yMax <= yMin) return 100;
+            const ratio = (val - yMin) / (yMax - yMin);
+            return 180 - Math.max(0, Math.min(1, ratio)) * 164;
+          };
 
-                {/* Grid Line 50% (y = 180 - 0.50 * 164 = 98) */}
-                <line x1="0" y1={98} x2="470" y2={98} stroke="#2D2D42" strokeDasharray="3 3" strokeWidth="1" />
-                <text x="495" y={101} fill="#6B7280" fontSize="8" fontWeight="bold" textAnchor="end">50% ($0.50)</text>
+          return (
+            <div>
+              <div className="h-48 sm:h-56 w-full bg-[#07070C] rounded-none border border-white/[0.06] p-2 relative">
+                <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+                  {/* Grid Line 75% */}
+                  <line x1="0" y1={scaleY(yMin + (yMax - yMin) * 0.75)} x2="470" y2={scaleY(yMin + (yMax - yMin) * 0.75)} stroke="#161624" strokeDasharray="3 3" />
+                  <text x="495" y={scaleY(yMin + (yMax - yMin) * 0.75) + 3} fill="#4B5563" fontSize="8" textAnchor="end">{formatY(yMin + (yMax - yMin) * 0.75)}</text>
 
-                {/* Grid Line 25% (y = 180 - 0.25 * 164 = 139) */}
-                <line x1="0" y1={139} x2="470" y2={139} stroke="#161624" strokeDasharray="3 3" />
-                <text x="495" y={142} fill="#4B5563" fontSize="8" textAnchor="end">25% ($0.25)</text>
+                  {/* Grid Line 50% */}
+                  <line x1="0" y1={scaleY(yMin + (yMax - yMin) * 0.5)} x2="470" y2={scaleY(yMin + (yMax - yMin) * 0.5)} stroke="#2D2D42" strokeDasharray="3 3" strokeWidth="1" />
+                  <text x="495" y={scaleY(yMin + (yMax - yMin) * 0.5) + 3} fill="#6B7280" fontSize="8" fontWeight="bold" textAnchor="end">{formatY(yMin + (yMax - yMin) * 0.5)}</text>
 
-                {/* TP Line Overlay on SVG */}
-                {targetExitPrice && (
-                  <line
-                    x1="0"
-                    y1={180 - targetExitPrice * 164}
-                    x2="500"
-                    y2={180 - targetExitPrice * 164}
-                    stroke="#F59E0B"
-                    strokeDasharray="6 3"
-                    strokeWidth="1.2"
-                    strokeOpacity={0.8}
-                  />
-                )}
+                  {/* Grid Line 25% */}
+                  <line x1="0" y1={scaleY(yMin + (yMax - yMin) * 0.25)} x2="470" y2={scaleY(yMin + (yMax - yMin) * 0.25)} stroke="#161624" strokeDasharray="3 3" />
+                  <text x="495" y={scaleY(yMin + (yMax - yMin) * 0.25) + 3} fill="#4B5563" fontSize="8" textAnchor="end">{formatY(yMin + (yMax - yMin) * 0.25)}</text>
 
-                {/* Entry Line Overlay on SVG */}
-                {entryPrice && (
-                  <line
-                    x1="0"
-                    y1={180 - entryPrice * 164}
-                    x2="500"
-                    y2={180 - entryPrice * 164}
-                    stroke="#06B6D4"
-                    strokeDasharray="4 4"
-                    strokeWidth="1.2"
-                    strokeOpacity={0.8}
-                  />
-                )}
+                  {/* TP Line Overlay on SVG */}
+                  {targetExitPrice && (
+                    <line
+                      x1="0"
+                      y1={scaleY(targetExitPrice)}
+                      x2="500"
+                      y2={scaleY(targetExitPrice)}
+                      stroke="#F59E0B"
+                      strokeDasharray="6 3"
+                      strokeWidth="1.2"
+                      strokeOpacity={0.8}
+                    />
+                  )}
 
-                {/* Candles */}
+                  {/* Entry Line Overlay on SVG */}
+                  {entryPrice && (
+                    <line
+                      x1="0"
+                      y1={scaleY(entryPrice)}
+                      x2="500"
+                      y2={scaleY(entryPrice)}
+                      stroke="#06B6D4"
+                      strokeDasharray="4 4"
+                      strokeWidth="1.2"
+                      strokeOpacity={0.8}
+                    />
+                  )}
+
+                  {/* Candles */}
+                  {data.map((d, i) => {
+                    const stepX = 460 / Math.max(1, data.length);
+                    const x = i * stepX + stepX * 0.15;
+                    const candleW = Math.max(3.5, stepX * 0.7);
+
+                    const openVal = d.open ?? d.price;
+                    const closeVal = d.close ?? d.price;
+                    const highVal = d.high ?? Math.max(openVal, closeVal);
+                    const lowVal = d.low ?? Math.min(openVal, closeVal);
+
+                    const openY = scaleY(openVal);
+                    const closeY = scaleY(closeVal);
+                    const highY = scaleY(highVal);
+                    const lowY = scaleY(lowVal);
+                    const up = closeVal >= openVal;
+                    const color = up ? "#10B981" : "#F43F5E";
+
+                    return (
+                      <g key={i}>
+                        {/* Wick */}
+                        <line x1={x + candleW / 2} y1={highY} x2={x + candleW / 2} y2={lowY} stroke={color} strokeWidth="1.2" />
+                        {/* Body */}
+                        <rect
+                          x={x}
+                          y={Math.min(openY, closeY)}
+                          width={candleW}
+                          height={Math.max(2.5, Math.abs(closeY - openY))}
+                          fill={color}
+                          rx="0.5"
+                        />
+                      </g>
+                    );
+                  })}
+
+                  {/* EMA 9 Curve Overlay on SVG */}
+                  {showEMA && (
+                    <path
+                      d={data.reduce((acc, d, i) => {
+                        const stepX = 460 / Math.max(1, data.length);
+                        const x = i * stepX + stepX * 0.5;
+                        const y = scaleY(d.ema9 || d.price);
+                        return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
+                      }, "")}
+                      fill="none"
+                      stroke="#FB923C"
+                      strokeWidth="1.3"
+                      strokeOpacity="0.85"
+                    />
+                  )}
+
+                  {/* EMA 21 Curve Overlay on SVG */}
+                  {showEMA && (
+                    <path
+                      d={data.reduce((acc, d, i) => {
+                        const stepX = 460 / Math.max(1, data.length);
+                        const x = i * stepX + stepX * 0.5;
+                        const y = scaleY(d.ema21 || d.price);
+                        return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
+                      }, "")}
+                      fill="none"
+                      stroke="#818CF8"
+                      strokeWidth="1.3"
+                      strokeOpacity="0.85"
+                    />
+                  )}
+                </svg>
+              </div>
+
+              {/* Volume bars for candle mode */}
+              <div className="flex items-end gap-px h-5 px-1 mt-1">
                 {data.map((d, i) => {
-                  const stepX = 460 / Math.max(1, data.length);
-                  const x = i * stepX + stepX * 0.15;
-                  const candleW = Math.max(3.5, stepX * 0.7);
-
-                  const openVal = d.open ?? d.price;
-                  const closeVal = d.close ?? d.price;
-                  const highVal = d.high ?? Math.max(openVal, closeVal);
-                  const lowVal = d.low ?? Math.min(openVal, closeVal);
-
-                  const openY = 180 - openVal * 164;
-                  const closeY = 180 - closeVal * 164;
-                  const highY = 180 - highVal * 164;
-                  const lowY = 180 - lowVal * 164;
-                  const up = closeVal >= openVal;
-                  const color = up ? "#10B981" : "#F43F5E";
-
+                  const h = ((d.volume ?? 0) / maxVol) * 100;
+                  const up = (d.close ?? d.price) >= (d.open ?? d.price);
                   return (
-                    <g
+                    <div
                       key={i}
-                      className="cursor-pointer hover:opacity-80"
-                      onMouseEnter={() => setHoveredPoint(d)}
-                    >
-                      {/* Wick */}
-                      <line x1={x + candleW / 2} y1={highY} x2={x + candleW / 2} y2={lowY} stroke={color} strokeWidth="1.2" />
-                      {/* Body */}
-                      <rect
-                        x={x}
-                        y={Math.min(openY, closeY)}
-                        width={candleW}
-                        height={Math.max(2.5, Math.abs(closeY - openY))}
-                        fill={color}
-                        rx="0.5"
-                      />
-                    </g>
+                      className="flex-1 rounded-t-[1px]"
+                      style={{
+                        height: `${Math.max(8, h)}%`,
+                        background: up ? "rgba(16,185,129,0.32)" : "rgba(244,63,94,0.28)",
+                      }}
+                    />
                   );
                 })}
-
-                {/* EMA 9 Curve Overlay on SVG */}
-                {showEMA && (
-                  <path
-                    d={data.reduce((acc, d, i) => {
-                      const stepX = 460 / Math.max(1, data.length);
-                      const x = i * stepX + stepX * 0.5;
-                      const y = 180 - (d.ema9 || d.price) * 164;
-                      return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
-                    }, "")}
-                    fill="none"
-                    stroke="#FB923C"
-                    strokeWidth="1.3"
-                    strokeOpacity="0.85"
-                  />
-                )}
-
-                {/* EMA 21 Curve Overlay on SVG */}
-                {showEMA && (
-                  <path
-                    d={data.reduce((acc, d, i) => {
-                      const stepX = 460 / Math.max(1, data.length);
-                      const x = i * stepX + stepX * 0.5;
-                      const y = 180 - (d.ema21 || d.price) * 164;
-                      return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
-                    }, "")}
-                    fill="none"
-                    stroke="#818CF8"
-                    strokeWidth="1.3"
-                    strokeOpacity="0.85"
-                  />
-                )}
-              </svg>
+              </div>
             </div>
-
-            {/* Volume bars for candle mode */}
-            <div className="flex items-end gap-px h-5 px-1 mt-1">
-              {data.map((d, i) => {
-                const h = ((d.volume ?? 0) / maxVol) * 100;
-                const up = (d.close ?? d.price) >= (d.open ?? d.price);
-                return (
-                  <div
-                    key={i}
-                    className="flex-1 rounded-t-[1px]"
-                    style={{
-                      height: `${Math.max(8, h)}%`,
-                      background: up ? "rgba(16,185,129,0.32)" : "rgba(244,63,94,0.28)",
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Panning / Time Horizon Indicator */}
         {(zoomLevel > 1 || panOffset > 0) && (
@@ -1023,6 +975,17 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             </span>
 
             <span className="text-gray-600">|</span>
+
+                        {/* Countdown Badge */}
+            <div
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-none bg-[#0E0E17] border border-white/[0.08] text-[10px] text-violet-300 font-mono"
+              title="Time left in current candle"
+            >
+              <Timer className="w-3 h-3 text-violet-400 animate-pulse" />
+              <span>{countdown}</span>
+            </div>
+
+<span className="text-gray-600">|</span>
 
             <span className="text-gray-400">
               Spot: <b className={radarMetrics.isAbove ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
