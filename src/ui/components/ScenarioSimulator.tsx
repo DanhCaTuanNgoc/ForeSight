@@ -142,6 +142,10 @@ export const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       await wallet.switchToSomnia();
       return;
     }
+    if (wallet.tusdcBalance !== null && investment > realBalanceNum) {
+      showToast(`Insufficient balance: you have ${realBalanceNum.toFixed(2)} tUSDC, but order requires ${investment.toFixed(2)} tUSDC.`, "error");
+      return;
+    }
     await onTrade(
       market.symbol,
       outcome,

@@ -138,8 +138,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const formattedToken = parseFloat(formatUnits(rawTokenBal as bigint, 6)).toFixed(2);
       setTusdcBalance(formattedToken);
     } catch (err) {
-      console.warn("Error fetching tUSDC balance, using fallback:", err);
-      setTusdcBalance("500.00");
+      console.warn("Error fetching tUSDC balance:", err);
+      setTusdcBalance("0.00");
     }
   }, [address]);
 
@@ -349,11 +349,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const contractsCount = Math.max(0.01, params.amount);
 
         // 1. Calculate required collateral to escrow in tUSDC (6 decimals)
-        // BUY YES cost = contractsCount * price
-        // BUY NO cost = contractsCount * (1 - price)
-        const orderCostUsdc = params.outcome === "YES"
-          ? contractsCount * entryOdds
-          : contractsCount * (1 - entryOdds);
+        // entryOdds is the exact price of the chosen outcome passed from UI
+        const orderCostUsdc = contractsCount * entryOdds;
         const requiredCollateralRaw = BigInt(Math.max(1, Math.ceil(orderCostUsdc * 1e6)));
 
         // 2. Check and approve tUSDC allowance for the DreamDEX BinaryPool if needed
@@ -529,6 +526,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
+      if (!pools || pools.length === 0) {
+        return { success: false, error: "No winning pool addresses provided for batch sweep." };
+      }
+
       try {
         const calldata = encodeBatchSweepCall(pools as Address[]);
 
@@ -546,7 +547,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
 
         if (txHash && typeof txHash === "string") {
-          return { success: true, txHash };
+          // Wait for on-chain block receipt confirmation on Somnia L1
+          try {
+            const receipt = await somniaPublicClient.waitForTransactionReceipt({
+              hash: txHash as Address,
+              timeout: 15_000,
+            });
+
+            if (receipt.status === "reverted") {
+              return {
+                success: false,
+                txHash,
+                error: "Batch sweep transaction reverted on Somnia L1. Winnings were not claimed.",
+              };
+            }
+
+            return { success: true, txHash };
+          } catch (waitErr: any) {
+            console.warn("[WalletContext] Claim receipt wait notice:", waitErr);
+            return { success: true, txHash };
+          }
         }
         return { success: false, error: "No transaction hash returned from wallet provider." };
       } catch (err: any) {

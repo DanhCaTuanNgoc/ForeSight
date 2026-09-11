@@ -94,11 +94,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
             </h3>
           </div>
         </div>
-
-        <div className="text-[10px] text-gray-500 hidden sm:flex items-center gap-1.5">
-          <span>Settlement Payout:</span>
-          <span className="text-emerald-400 font-bold">$1.00 USDC / winning share</span>
-        </div>
       </div>
 
       {positions.length === 0 ? (

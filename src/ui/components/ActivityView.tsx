@@ -148,7 +148,9 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
   });
 
   const openPositions = enrichedPositions.filter((p) => p.status === "OPEN" || p.status === "RESTING");
-  const claimablePositions = enrichedPositions.filter((p) => p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true));
+  const claimablePositions = enrichedPositions.filter(
+    (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)) && p.poolAddress
+  );
   const settledPositions = enrichedPositions.filter(
     (p) =>
       p.status === "SETTLED_WIN" ||
