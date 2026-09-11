@@ -85,7 +85,7 @@ const TECH_STACK_ROW_1 = [
     name: "ForeSight Batch Sweeper",
     techKey: "sweeper",
     badge: "1-Click Claim",
-    desc: "Custom smart contract claiming multiple expired winning pools in a single batch",
+    desc: "Custom smart contract claiming multiple expired winning pools in 1 atomic transaction",
     badgeBg: "bg-emerald-950/80 text-emerald-300 border-emerald-500/30",
   },
 ];
@@ -95,7 +95,7 @@ const TECH_STACK_ROW_2 = [
     name: "Dual AI Thesis Arena",
     techKey: "dual ai",
     badge: "Bull vs Bear",
-    desc: "Alpha Momentum vs Mean Reversal agents with Consensus Bias metrics",
+    desc: "Gemini 2.5 Flash vs Meta LLaMA 3.3 adversarial debate with verified RAG citations",
     badgeBg: "bg-fuchsia-950/80 text-fuchsia-300 border-fuchsia-500/30",
   },
   {
@@ -106,17 +106,17 @@ const TECH_STACK_ROW_2 = [
     badgeBg: "bg-amber-950/80 text-amber-300 border-amber-500/30",
   },
   {
-    name: "AI Auto-Pilot Runner",
+    name: "Autonomous Order Runner",
     techKey: "bot",
-    badge: "Autonomous",
-    desc: "Browser-driven multi-round session runner executing automated trades with live logs",
+    badge: "Auto-Pilot",
+    desc: "Multi-round session runner on Somnia CLOB with smart auto-routing & 8s recovery",
     badgeBg: "bg-teal-950/80 text-teal-300 border-teal-500/30",
   },
   {
     name: "Activity Ledger & Studio",
     techKey: "supabase",
-    badge: "6-State Lifecycle",
-    desc: "Real-time order tracking with 1200×675 HD Alpha Card export",
+    badge: "7-State Lifecycle",
+    desc: "Full 7-state order lifecycle with 100% refund tracking and 1200×675 Alpha Card export",
     badgeBg: "bg-emerald-950/80 text-emerald-300 border-emerald-500/30",
   },
   {
@@ -138,41 +138,41 @@ const TECH_STACK_ROW_2 = [
 const DECISION_WORKFLOW = [
   {
     step: "01",
-    phase: "MARKETS",
-    subtitle: "Discovery & Order Terminal",
-    title: "Real-Time Market Scanner",
-    desc: "Track active Somnia binary pools with sub-second price updates, interactive charts, and direct Market or Limit order execution on DreamDEX CLOB.",
-    highlights: ["Sub-Second Market Ticker", "Market & Limit CLOB Orders", "Interactive Multi-Timeframe Chart"],
+    phase: "DETECT",
+    subtitle: "Microstructure & Proximity",
+    title: "Spot Radar & Orderbook Imbalance",
+    desc: "Detect real-time spot momentum and proximity to on-chain strike targets with Mini Strike Radar (bps distance) and live CLOB Orderbook Imbalance (OI%).",
+    highlights: ["Spot Candlesticks & Strike Line", "Mini Strike Radar (bps Distance)", "Live CLOB Orderbook Imbalance (OI%)"],
     accentColor: "text-cyan-400",
     badgeBg: "bg-cyan-950/60 border-cyan-500/30 text-cyan-300",
   },
   {
     step: "02",
-    phase: "ANALYTICS",
-    subtitle: "Quantitative Physics",
-    title: "Tactical Strike & Greeks Radar",
-    desc: "Analyze the 60-second 3-phase execution cycle (Accumulation, Momentum, Cutoff), Black-Scholes binary fair value Φ(d2), and Velocity Coverage (VC).",
-    highlights: ["60s 3-Phase Execution Cycle", "Black-Scholes Φ(d2) Edge bps", "Velocity Coverage (VC) Gauge"],
+    phase: "CHALLENGE",
+    subtitle: "Dual AI & Fast-Pick Reflex",
+    title: "Evidence-Grounded Regime Debate",
+    desc: "Cross-examine Gemini 2.5 Flash (Bull Catalyst) vs Meta LLaMA 3.3 (Macro Bear) backed by verified news RAG, or fire 0ms Fast-Pick triggers.",
+    highlights: ["Dual AI Arena (Gemini vs LLaMA)", "Clickable [View Evidence] Citations", "0ms Momentum & Reversal Fast-Pick"],
     accentColor: "text-rose-400",
     badgeBg: "bg-rose-950/60 border-rose-500/30 text-rose-300",
   },
   {
     step: "03",
-    phase: "INSIGHTS",
-    subtitle: "Adversarial AI & Automation",
-    title: "Dual Thesis & Auto-Pilot",
-    desc: "Cross-examine Alpha Momentum vs Mean Reversal theses with cited RAG evidence, or run automated multi-round sessions with the AI Auto-Pilot Runner.",
-    highlights: ["Dual-Model Consensus Bias", "Cited News RSS Citations", "Autonomous Session Auto-Pilot"],
-    accentColor: "text-fuchsia-400",
-    badgeBg: "bg-fuchsia-950/60 border-fuchsia-500/30 text-fuchsia-300",
+    phase: "SIMULATE",
+    subtitle: "Mathematical Trajectory Feasibility",
+    title: "Velocity Coverage & Fair Value",
+    desc: "Model physical price drift feasibility via Velocity Coverage (VC = v_obs / v_req), Chebyshev Black-Scholes Φ(d2) fair probability, and Half-Kelly sizing.",
+    highlights: ["Velocity Coverage (VC) Trajectory", "Chebyshev Black-Scholes Φ(d2)", "Half-Kelly Sizing & Edge bps"],
+    accentColor: "text-violet-400",
+    badgeBg: "bg-violet-950/60 border-violet-500/30 text-violet-300",
   },
   {
     step: "04",
-    phase: "ACTIVITY",
-    subtitle: "Ledger & Batch Sweeper",
-    title: "Portfolio Management & Settlement",
-    desc: "Monitor your 6-state order lifecycle, share verified performance with 1200×675 HD Alpha Cards, and batch claim winnings via ForeSightBatchSweeper.",
-    highlights: ["6-State Order Lifecycle", "1-Click Batch Settlement", "HD Alpha Card Studio"],
+    phase: "EXECUTE & SWEEP",
+    subtitle: "Autonomous Execution & Settlement",
+    title: "CLOB Runner & Batch Sweeper",
+    desc: "Deploy multi-round autonomous campaigns on Somnia CLOB with auto-routing & recovery, or batch claim winnings in 1 click via ForeSightBatchSweeper.sol.",
+    highlights: ["Multi-Round Autonomous Runner", "Trading Cutoff Revert Protection", "1-Click MultiCall Batch Sweeper"],
     accentColor: "text-emerald-400",
     badgeBg: "bg-emerald-950/60 border-emerald-500/30 text-emerald-300",
   },
@@ -391,7 +391,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-zinc-400 font-normal leading-relaxed max-w-xl">
-              An interactive decision & execution terminal for Somnia binary markets. Analyze 60s tactical cycles, evaluate Black-Scholes Greeks, cross-examine dual AI theses, and execute CLOB orders with 1-click batch settlement.
+              Trade Somnia prediction markets with clarity, not guesswork. See real-time price distance to the strike, weigh Bull vs. Bear AI arguments with verified proof, and deploy automated multi-round strategies with 1-click payout claims.
             </p>
 
             {/* Action Row */}
@@ -419,16 +419,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
             {/* Technical Chips */}
             <div className="pt-4 border-t border-white/[0.06] grid grid-cols-3 gap-3 text-[11px] font-mono text-zinc-400">
               <div className="bg-[#0B0B14] p-2.5 border border-white/[0.06] rounded-none">
-                <div className="text-white font-semibold">Market & Limit</div>
-                <div className="text-zinc-500 text-[10px]">Dual-mode CLOB</div>
+                <div className="text-white font-semibold">Mini Strike Radar</div>
+                <div className="text-zinc-500 text-[10px]">Real-time bps distance</div>
               </div>
               <div className="bg-[#0B0B14] p-2.5 border border-white/[0.06] rounded-none">
-                <div className="text-white font-semibold">Tactical Radar</div>
-                <div className="text-zinc-500 text-[10px]">60s cycle & VC math</div>
+                <div className="text-white font-semibold">Velocity Coverage</div>
+                <div className="text-zinc-500 text-[10px]">VC trajectory physics</div>
               </div>
               <div className="bg-[#0B0B14] p-2.5 border border-white/[0.06] rounded-none">
                 <div className="text-white font-semibold">Batch Sweeper</div>
-                <div className="text-zinc-500 text-[10px]">1-click payout claim</div>
+                <div className="text-zinc-500 text-[10px]">1-Click MultiCall claim</div>
               </div>
             </div>
           </div>
@@ -785,7 +785,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
               The 4-Stage Decision Architecture
             </h2>
             <p className="text-sm text-zinc-400 mt-3 font-normal max-w-2xl mx-auto leading-relaxed">
-              ForeSight converts volatile prediction market noise into an institutional decision loop before committing capital.
+              Transform volatile sub-second prediction market noise into an actionable, verifiable 4-step decision loop: <span className="text-violet-300 font-mono">DETECT &rarr; CHALLENGE &rarr; SIMULATE &rarr; EXECUTE & SWEEP</span>.
             </p>
           </div>
         </RevealOnScroll>
@@ -919,23 +919,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Order Execution</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                    Market & Limit orderbook on DreamDEX CLOB
+                    Market & Limit on DreamDEX CLOB with Cutoff Protection
                   </td>
-                  <td className="p-3.5 sm:p-4 text-zinc-500">AMM swap only, high slippage</td>
+                  <td className="p-3.5 sm:p-4 text-zinc-500">AMM swap only, high slippage & revert risk</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition">
                   <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Quantitative Modeling</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                    Black-Scholes Φ(d2), VC physics & Edge bps (&lt;1ms)
+                    Black-Scholes Φ(d2), Velocity Coverage (VC) & Half-Kelly
                   </td>
-                  <td className="p-3.5 sm:p-4 text-zinc-500">No math modeling or risk curves</td>
+                  <td className="p-3.5 sm:p-4 text-zinc-500">No math modeling or trajectory risk curves</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition">
                   <td className="p-3.5 sm:p-4 font-medium text-zinc-200">AI Validation</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                    Dual Momentum vs Reversal debate + Verified RSS citations
+                    Dual Bull vs Bear Debate (Gemini + LLaMA) + Verified RAG URLs
                   </td>
                   <td className="p-3.5 sm:p-4 text-zinc-500">Ungrounded sentiment or zero analysis</td>
                 </tr>
@@ -943,7 +943,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Autonomous Execution</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                    Browser-driven Multi-Round Auto-Pilot Runner + 4 Bot loops
+                    Multi-Round Order Runner with Smart Auto-Routing & 8s Recovery
                   </td>
                   <td className="p-3.5 sm:p-4 text-zinc-500">Manual clicking per round only</td>
                 </tr>
@@ -951,7 +951,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchTerminal }) =>
                   <td className="p-3.5 sm:p-4 font-medium text-zinc-200">Payout Recovery</td>
                   <td className="p-3.5 sm:p-4 text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                    1-Click ForeSightBatchSweeper smart contract
+                    1-Click ForeSightBatchSweeper (O(1) Gas) & 100% Principal Refund
                   </td>
                   <td className="p-3.5 sm:p-4 text-zinc-500">Tedious round-by-round manual claiming</td>
                 </tr>
