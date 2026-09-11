@@ -138,14 +138,6 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Settings button */}
-        <button
-          className="p-1 text-gray-400 hover:text-gray-200 hover:bg-[#12121C] rounded-none border border-transparent hover:border-white/[0.07] transition-colors"
-          title="Settings"
-        >
-          <Settings className="w-3.5 h-3.5" />
-        </button>
-
         {/* Mobile Menu Toggle */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
