@@ -167,11 +167,34 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
   );
 
   const totalRealizedPnl = settledPositions.reduce((acc, p) => {
-    if (p.realizedPnl !== undefined) {
-      return acc + Number(p.realizedPnl);
+    if (typeof p.realizedPnl === "number" && !isNaN(p.realizedPnl)) {
+      return acc + p.realizedPnl;
+    }
+    const cost = (p.amount || 0) * (p.entryPrice || 0.5);
+    const isWin = p.status === "SETTLED_WIN" || p.status === "CLAIMED" || (p.status === "SETTLED" && p.isWinner === true);
+    const isLoss = p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false);
+    if (isWin) {
+      return acc + ((p.amount || 0) - cost);
+    }
+    if (isLoss) {
+      return acc - cost;
     }
     return acc;
   }, 0);
+
+  const totalWagered = userPositions.reduce(
+    (acc, p) => acc + (p.amount || 0) * (p.entryPrice || 0.5),
+    0
+  );
+
+  const wonPositionsCount = settledPositions.filter(
+    (p) => p.status === "SETTLED_WIN" || p.status === "CLAIMED" || (p.status === "SETTLED" && p.isWinner === true)
+  ).length;
+  const lostPositionsCount = settledPositions.filter(
+    (p) => p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false)
+  ).length;
+  const totalSettledCount = wonPositionsCount + lostPositionsCount;
+  const winRatePercent = totalSettledCount > 0 ? ((wonPositionsCount / totalSettledCount) * 100).toFixed(0) : "0";
 
   const totalClaimable = claimablePositions.reduce((acc, p) => {
     // Settled winning contracts pay $1.00 per share
@@ -225,7 +248,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
         {/* Center: Polymarket-Grade Financial Matrix */}
         <div className="flex items-center gap-3 sm:gap-6 bg-[#0E0E17] border border-white/[0.08] px-4 py-1.5 rounded-none shadow-inner">
           <div className="space-y-0.5">
-            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
+            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider" title="USDC actively locked in unresolved positions">
               Active Bet
             </span>
             <span className="text-sm sm:text-base font-bold font-mono text-white tracking-tight block">
@@ -234,20 +257,31 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
           </div>
           <div className="w-px h-6 bg-white/[0.08]" />
           <div className="space-y-0.5">
-            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
+            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider" title="Total USDC wagered across all lifetime positions">
+              Total Wagered
+            </span>
+            <span className="text-sm sm:text-base font-bold font-mono text-gray-300 tracking-tight block">
+              ${totalWagered.toFixed(2)}
+            </span>
+          </div>
+          <div className="w-px h-6 bg-white/[0.08]" />
+          <div className="space-y-0.5">
+            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider" title="Realized profit/loss from settled rounds">
               Net PnL
             </span>
-            <span
-              className={`text-sm sm:text-base font-bold font-mono tracking-tight block ${
-                totalRealizedPnl > 0
-                  ? "text-emerald-400"
-                  : totalRealizedPnl < 0
-                  ? "text-rose-400"
-                  : "text-gray-400"
-              }`}
-            >
-              {totalRealizedPnl > 0 ? `+$${totalRealizedPnl.toFixed(2)}` : totalRealizedPnl < 0 ? `-$${Math.abs(totalRealizedPnl).toFixed(2)}` : "$0.00"}
-            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span
+                className={`text-sm sm:text-base font-bold font-mono tracking-tight block ${
+                  totalRealizedPnl > 0
+                    ? "text-emerald-400"
+                    : totalRealizedPnl < 0
+                    ? "text-rose-400"
+                    : "text-gray-400"
+                }`}
+              >
+                {totalRealizedPnl > 0 ? `+$${totalRealizedPnl.toFixed(2)}` : totalRealizedPnl < 0 ? `-$${Math.abs(totalRealizedPnl).toFixed(2)}` : "$0.00"}
+              </span>
+            </div>
           </div>
           <div className="w-px h-6 bg-white/[0.08]" />
           <div className="space-y-0.5">

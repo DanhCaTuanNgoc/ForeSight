@@ -137,10 +137,10 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
             <thead>
               <tr className="border-b border-white/[0.08] text-gray-400 uppercase text-[9px] tracking-wider bg-[#0E0E17]">
                 <th className="py-2.5 px-3">Market / Outcome</th>
-                <th className="py-2.5 px-3">Position</th>
+                <th className="py-2.5 px-3">Total Bet</th>
                 <th className="py-2.5 px-3 text-right">Avg Price</th>
-                <th className="py-2.5 px-3 text-right">Est. Payout</th>
-                <th className="py-2.5 px-3 text-right">PnL / Return</th>
+                <th className="py-2.5 px-3 text-right">Payout</th>
+                <th className="py-2.5 px-3 text-right">Net PnL</th>
                 <th className="py-2.5 px-3 text-center">Status</th>
                 <th className="py-2.5 px-3 text-right">Actions</th>
               </tr>
@@ -230,14 +230,13 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                       </div>
                     </td>
 
-                    {/* 2. Position Size & Capital */}
+                    {/* 2. Total Bet / Wagered */}
                     <td className="py-3 px-3 whitespace-nowrap">
-                      <div className="text-white font-bold text-xs">
-                        {p.amount.toLocaleString()}{" "}
-                        <span className="text-[10px] text-gray-400 font-normal">Shares</span>
+                      <div className="text-white font-bold text-xs font-mono">
+                        ${totalCost} <span className="text-[10px] text-gray-400 font-normal">USDC</span>
                       </div>
                       <div className="text-[10px] text-gray-400 font-mono">
-                        ${totalCost} USDC
+                        {p.amount.toLocaleString()} shares
                       </div>
                     </td>
 
@@ -251,12 +250,26 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                       </div>
                     </td>
 
-                    {/* 4. Est. Payout */}
+                    {/* 4. Payout (Thu về) */}
                     <td className="py-3 px-3 text-right whitespace-nowrap">
-                      <div className="text-white font-bold text-xs">
-                        ${maxPayout}{" "}
-                        <span className="text-[10px] text-gray-400 font-normal">USDC</span>
-                      </div>
+                      {isSettledLoss ? (
+                        <div>
+                          <div className="text-gray-500 font-bold text-xs font-mono">$0.00 USDC</div>
+                        </div>
+                      ) : isSettledWin || p.status === "CLAIMED" ? (
+                        <div>
+                          <div className="text-emerald-400 font-bold text-xs font-mono">${maxPayout} USDC</div>
+                        </div>
+                      ) : p.status === "REFUNDED" ? (
+                        <div>
+                          <div className="text-blue-300 font-bold text-xs font-mono">${totalCost} USDC</div>
+                          <div className="text-[10px] text-blue-400/80 font-mono">Refunded</div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="text-gray-200 font-bold text-xs font-mono">${maxPayout} USDC</div>
+                        </div>
+                      )}
                     </td>
 
                     {/* 5. PnL / Return */}
