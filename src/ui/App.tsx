@@ -16,6 +16,7 @@ import { WalletProvider, useWallet } from "./context/WalletContext.js";
 import { CryptoIcon } from "./components/CryptoIcon.js";
 import { sound } from "./utils/sound-fx.js";
 import { apiUrl } from "./utils/api.js";
+import { sanitizeMarketQuestion } from "./utils/market-format.js";
 import { Search, ArrowUpDown, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
@@ -161,7 +162,7 @@ function ForeSightTerminalApp() {
               id: m.id || m.marketId || m.symbol,
               symbol: m.symbol || `${underlyingAsset}/tUSDC`,
               underlyingAsset,
-              question: m.question || `Will ${underlyingAsset} reach target?`,
+              question: sanitizeMarketQuestion(m.question, underlyingAsset, m.strikePrice),
               bestBid: m.bestBid ?? 0.50,
               bestAsk: m.bestAsk ?? 0.52,
               probability: prob,
