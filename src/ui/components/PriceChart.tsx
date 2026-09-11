@@ -26,6 +26,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { sound } from "../utils/sound-fx.js";
+import { parseExpiryFromSymbol } from "./ActivityView.js";
 
 type TimeRange = "15m" | "1H" | "4H" | "1D";
 export type CanvasVisualMode = "probability" | "montecarlo";
@@ -61,6 +62,10 @@ interface PriceChartProps {
   onSetEntryPrice?: (p: number) => void;
   onSetTargetExitPrice?: (p: number) => void;
   showToast?: (msg: string, type?: "success" | "error") => void;
+  timeRemainingSec?: number;
+  expirationTime?: number;
+  expiresAt?: string;
+  marketInterval?: string;
 }
 
 // ─── Deterministic Exponential Moving Average (EMA) Calculation ───────────────
@@ -151,6 +156,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   onSetEntryPrice,
   onSetTargetExitPrice,
   showToast,
+  timeRemainingSec,
+  expirationTime,
+  expiresAt,
+  marketInterval = "5m",
 }) => {
   const [internalMode, setInternalMode] = useState<CanvasVisualMode>("probability");
   const visualMode = externalMode || internalMode;
@@ -161,10 +170,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const [mcVolatility, setMcVolatility] = useState<VolatilityLevel>("normal");
   const [showEMA, setShowEMA] = useState<boolean>(true); // Trend Indicators Toggle
 
-  // ─── Real-time Bar Countdown Timer (TradingView style ⏱ 02:45) ─────────────
-  const [countdown, setCountdown] = useState<string>("00:00");
+  // ─── 1. Real-time Bar / Candle Countdown Timer (TradingView style ⏱ 02:45) ─────────────
+  const [candleCountdown, setCandleCountdown] = useState<string>("00:00");
   useEffect(() => {
-    const updateCountdown = () => {
+    const updateCandleCountdown = () => {
       const now = Date.now();
       const intervalMsMap: Record<TimeRange, number> = {
         "15m": 15 * 60 * 1000,
@@ -177,13 +186,74 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       const totalSec = Math.floor(remainingMs / 1000);
       const m = Math.floor(totalSec / 60);
       const s = totalSec % 60;
-      setCountdown(`${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`);
+      setCandleCountdown(`${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`);
     };
 
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    updateCandleCountdown();
+    const interval = setInterval(updateCandleCountdown, 1000);
     return () => clearInterval(interval);
   }, [timeRange]);
+
+  // ─── 2. Real-time PAIR / Round Expiry Countdown Timer ───────────────────────────
+  const [pairCountdown, setPairCountdown] = useState<string>("00:00");
+  const targetExpirySecRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const nowSec = Math.floor(Date.now() / 1000);
+    let targetSec: number | null = null;
+
+    if (expirationTime && expirationTime > 0) {
+      targetSec = expirationTime;
+    } else if (timeRemainingSec && timeRemainingSec > 0) {
+      targetSec = nowSec + timeRemainingSec;
+    } else if (expiresAt) {
+      const parsed = Math.floor(new Date(expiresAt).getTime() / 1000);
+      if (!isNaN(parsed) && parsed > 0) targetSec = parsed;
+    }
+
+    if (!targetSec) {
+      const parsedFromSym = parseExpiryFromSymbol(symbol);
+      if (parsedFromSym) targetSec = parsedFromSym;
+    }
+
+    // Default cadence fallback based on marketInterval (e.g. 5m = 300s, 15m = 900s)
+    if (!targetSec) {
+      const intSec = marketInterval === "15m" ? 900 : marketInterval === "1h" ? 3600 : 300;
+      const nextCycle = intSec - (nowSec % intSec);
+      targetSec = nowSec + nextCycle;
+    }
+
+    targetExpirySecRef.current = targetSec;
+
+    const updatePairCountdown = () => {
+      const currentNowSec = Math.floor(Date.now() / 1000);
+      const target = targetExpirySecRef.current;
+      if (!target) {
+        setPairCountdown("00:00");
+        return;
+      }
+
+      const diffSec = target - currentNowSec;
+      if (diffSec <= 0) {
+        setPairCountdown("00:00");
+        return;
+      }
+
+      const hours = Math.floor(diffSec / 3600);
+      const mins = Math.floor((diffSec % 3600) / 60);
+      const secs = diffSec % 60;
+
+      if (hours > 0) {
+        setPairCountdown(`${hours}h ${mins < 10 ? "0" + mins : mins}m`);
+      } else {
+        setPairCountdown(`${mins < 10 ? "0" + mins : mins}:${secs < 10 ? "0" + secs : secs}`);
+      }
+    };
+
+    updatePairCountdown();
+    const interval = setInterval(updatePairCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [symbol, timeRemainingSec, expirationTime, expiresAt, marketInterval]);
 
   // ─── Pro Zoom & Pan Dragging Engine (Binance / MEXC style) ───────────────────
   const [zoomLevel, setZoomLevel] = useState<number>(1);
@@ -502,23 +572,31 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
           <div className="w-px h-3.5 bg-white/[0.08]" />
 
-          {/* Timeframe Buttons */}
-          <div className="flex items-center gap-0.5 text-[10px]">
-            {(["15m", "1H", "4H", "1D"] as TimeRange[]).map((r) => (
-              <button
-                key={r}
-                onClick={() => {
-                  sound.playClick();
-                  handleResetZoom();
-                  onTimeRangeChange(r);
-                }}
-                className={`px-1.5 py-0.5 rounded-none font-bold transition cursor-pointer ${
-                  timeRange === r ? "text-violet-300 bg-violet-600/30 border border-violet-500/40" : "text-gray-500 hover:text-gray-300"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
+          {/* Timeframe Buttons & Candle Bar Close Timer */}
+          <div className="flex items-center gap-1.5 text-[10px]">
+            <div className="flex items-center gap-0.5">
+              {(["15m", "1H", "4H", "1D"] as TimeRange[]).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => {
+                    sound.playClick();
+                    handleResetZoom();
+                    onTimeRangeChange(r);
+                  }}
+                  className={`px-1.5 py-0.5 rounded-none font-bold transition cursor-pointer ${
+                    timeRange === r ? "text-violet-300 bg-violet-600/30 border border-violet-500/40" : "text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <span
+              className="text-[9px] font-mono text-gray-500 pl-1 border-l border-white/[0.08]"
+              title={`Candle close countdown (${timeRange})`}
+            >
+              ⏱ {candleCountdown}
+            </span>
           </div>
         </div>
       </div>
@@ -976,13 +1054,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
             <span className="text-gray-600">|</span>
 
-                        {/* Countdown Badge */}
+            {/* PAIR Expiry Countdown Badge */}
             <div
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded-none bg-[#0E0E17] border border-white/[0.08] text-[10px] text-violet-300 font-mono"
-              title="Time left in current candle"
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-none bg-[#0E0E17] border border-violet-500/30 text-[10px] text-violet-300 font-mono"
+              title={`Time left until ${symbol} contract round expiry`}
             >
               <Timer className="w-3 h-3 text-violet-400 animate-pulse" />
-              <span>{countdown}</span>
+              <span className="text-gray-400 text-[9px] font-bold">EXP:</span>
+              <span className="font-bold text-white">{pairCountdown}</span>
             </div>
 
 <span className="text-gray-600">|</span>

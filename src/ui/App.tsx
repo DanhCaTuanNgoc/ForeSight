@@ -986,6 +986,10 @@ function ForeSightTerminalApp() {
                     onSetEntryPrice={(p) => setPrefillEntryPrice(p)}
                     onSetTargetExitPrice={(p) => setPrefillTargetExit(p)}
                     showToast={showToast}
+                    timeRemainingSec={activeMarket.timeRemainingSec}
+                    expirationTime={activeMarket.expirationTime}
+                    expiresAt={activeMarket.expiresAt}
+                    marketInterval={activeMarket.interval}
                   />
                 </div>
 

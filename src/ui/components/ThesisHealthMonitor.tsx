@@ -268,7 +268,7 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
               ) : latestPos.status === "SETTLED_LOSS" || (latestPos.status === "SETTLED" && latestPos.isWinner === false) ? (
                 <span className="inline-flex items-center gap-1 text-[9px] text-rose-300 bg-rose-950/70 border border-rose-500/40 px-1.5 py-0.2 font-bold">
                   <XCircle className="w-2.5 h-2.5 text-rose-400" />
-                  EXPIRED LOSS
+                  LOSS
                 </span>
               ) : latestPos.status === "SETTLED_WIN" || (latestPos.status === "SETTLED" && latestPos.isWinner === true) ? (
                 <span className="inline-flex items-center gap-1 text-[9px] text-emerald-300 bg-emerald-950/80 border border-emerald-500/50 px-1.5 py-0.2 font-bold">
@@ -410,12 +410,12 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
                         ) : pos.status === "SETTLED_LOSS" || (pos.status === "SETTLED" && pos.isWinner === false) ? (
                           <span className="inline-flex items-center gap-1 text-[9px] text-rose-300 bg-rose-950/70 border border-rose-500/40 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap">
                             <XCircle className="w-2.5 h-2.5 text-rose-400 shrink-0" />
-                            <span>EXPIRED LOSS</span>
+                            <span>LOSS</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[9px] text-emerald-300 bg-emerald-950/80 border border-emerald-500/50 px-1.5 py-0.2 rounded-none font-bold whitespace-nowrap shadow-sm">
                             <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
-                            <span>SETTLED WIN</span>
+                            <span>WIN</span>
                           </span>
                         )}
                       </div>
