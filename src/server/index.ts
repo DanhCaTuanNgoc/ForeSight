@@ -2,7 +2,9 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import chalk from "chalk";
-import { createPublicClient, http, parseAbi } from "viem";
+import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { makeSomniaChain } from "../core/chain.js";
 import { marketKey, outcomeId, decodeOutcomeId } from "@somnia-chain/markets-sdk";
 import { createExchangeContext, shutdownExchange, type ExchangeContext } from "../core/exchange.js";
 import { MarketWatcher } from "../core/market-watcher.js";
@@ -23,6 +25,7 @@ import {
   updatePositionInDb,
   getPositionsByWalletFromDb,
   getAllPositionsFromDb,
+  cleanupOldMarketData,
 } from "../db/repository.js";
 import path from "path";
 import fs from "fs";
@@ -64,6 +67,8 @@ const copilotStrategy = new AICopilotStrategy();
 const somniaPublicClient = createPublicClient({
   transport: http(process.env.RPC_URL || process.env.SOMNIA_RPC_URL || "https://api.infra.testnet.somnia.network"),
 });
+
+const SOMNIA_TESTNET_TUSDC_ADDRESS = "0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E" as const;
 
 // Disk persistence path for positions ledger
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -1320,6 +1325,30 @@ app.post("/api/positions/reset", async (req, res) => {
 });
 
 /**
+ * POST /api/admin/cleanup
+ * Manually trigger database cleanup for stale snapshots and spikes.
+ * Query / body params: snapshotHours (default 24), spikeHours (default 48)
+ */
+app.post(["/api/admin/cleanup", "/api/cleanup"], async (req, res) => {
+  try {
+    const snapshotHours = Number(req.body?.snapshotHours || req.query.snapshotHours) || 24;
+    const spikeHours = Number(req.body?.spikeHours || req.query.spikeHours) || 48;
+
+    const result = await cleanupOldMarketData(snapshotHours, spikeHours);
+    res.json({
+      success: result.success,
+      deletedSnapshots: result.deletedSnapshots,
+      deletedSpikes: result.deletedSpikes,
+      snapshotRetentionHours: snapshotHours,
+      spikeRetentionHours: spikeHours,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || String(err) });
+  }
+});
+
+/**
  * POST /api/orders
  * Execute an authentic event contract order on Somnia Shannon L1.
  */
@@ -1508,51 +1537,77 @@ app.post("/api/orders", async (req, res) => {
 
 /**
  * POST /api/claim
- * Sweep & claim payout for settled winning positions.
+ * Sweep & claim payout for settled winning positions: Disburses real on-chain tUSDC directly to user's wallet.
  */
 app.post("/api/claim", async (req, res) => {
   try {
     const { walletAddress, txHash: clientTxHash } = req.body;
-    let claimCount = 0;
-    const targetWallet = walletAddress ? walletAddress.toLowerCase() : undefined;
+    if (!walletAddress) {
+      return res.status(400).json({
+        success: false,
+        error: "walletAddress is required to claim winning payouts.",
+      });
+    }
 
-    const nowSec = Math.floor(Date.now() / 1000);
+    const targetWallet = walletAddress.toLowerCase();
+    const winningPositions: any[] = [];
+    let totalPayoutUsdc = 0;
+
     for (const pos of recordedPositions) {
-      if (pos.status === "SETTLED_WIN" || (pos.status === "SETTLED" && (pos as any).isWinner === true)) {
-        if (!targetWallet || (pos.walletAddress && pos.walletAddress.toLowerCase() === targetWallet)) {
-          (pos as any).status = "CLAIMED";
-          claimCount++;
-        }
+      const isWin = pos.status === "SETTLED_WIN" || (pos.status === "SETTLED" && (pos as any).isWinner === true);
+      if (isWin && (!pos.walletAddress || pos.walletAddress.toLowerCase() === targetWallet)) {
+        winningPositions.push(pos);
+        // Winning binary contracts pay $1.00 per share
+        const payout = Number(pos.amount || 0);
+        totalPayoutUsdc += payout;
       }
     }
 
-    if (claimCount === 0) {
+    if (winningPositions.length === 0) {
       return res.status(400).json({
         success: false,
         error: "No claimable winning payouts found for this wallet. Note: Contracts that expired with a loss pay $0.00 collateral.",
       });
     }
 
-    savePersistedPositions(recordedPositions);
-
-    // Sync claimed status to Supabase Cloud Database
-    if (isSupabaseConfigured() && targetWallet) {
-      for (const pos of recordedPositions) {
-        if (pos.walletAddress && pos.walletAddress.toLowerCase() === targetWallet && pos.status === "CLAIMED") {
-          updatePositionInDb(pos.id, { status: "CLAIMED" }).catch(() => {});
-        }
-      }
-    }
-
-    // Call on-chain sweeper if exchange is connected and client didn't sign
+    // 1. Perform Real On-Chain Transfer of tUSDC from Settlement Vault to user's wallet
     let onChainTx: string | undefined = clientTxHash;
-    if (!onChainTx && sweeper && ctx?.canTrade) {
+    const privateKey = ctx?.config?.privateKey || process.env.PRIVATE_KEY;
+
+    if (!onChainTx && privateKey && totalPayoutUsdc > 0) {
       try {
-        const sweepResults = await sweeper.sweepSettledMarkets();
-        const winningClaim = sweepResults.find((r) => r.claimed && r.txHash);
-        if (winningClaim) onChainTx = winningClaim.txHash;
-      } catch (sweepErr) {
-        console.warn("[sweeper error]:", sweepErr);
+        const formattedKey = (privateKey.startsWith("0x") ? privateKey : `0x${privateKey}`) as `0x${string}`;
+        const account = privateKeyToAccount(formattedKey);
+        const chain = makeSomniaChain(ctx.config);
+        const walletClient = createWalletClient({
+          account,
+          chain,
+          transport: http(ctx.config.rpcUrl),
+        });
+
+        // tUSDC decimals is 6
+        const payoutUnits = BigInt(Math.max(1, Math.round(totalPayoutUsdc * 1e6)));
+        console.log(chalk.cyan(`[Claim] 🚀 Disbursing on-chain payout: ${totalPayoutUsdc.toFixed(2)} tUSDC to ${walletAddress}...`));
+
+        const tx = await walletClient.writeContract({
+          address: SOMNIA_TESTNET_TUSDC_ADDRESS,
+          abi: parseAbi(["function transfer(address to, uint256 amount) returns (bool)"]),
+          functionName: "transfer",
+          args: [walletAddress as `0x${string}`, payoutUnits],
+        });
+
+        console.log(chalk.green(`[Claim] ✔ Payout tx broadcast on Somnia L1: ${tx}`));
+        onChainTx = tx;
+
+        // Wait for receipt confirmation to ensure balance is immediately queryable on Somnia Shannon
+        await somniaPublicClient.waitForTransactionReceipt({
+          hash: tx,
+          timeout: 15_000,
+        }).catch((receiptErr) => {
+          console.warn("[Claim] Notice waiting for receipt:", receiptErr?.message);
+        });
+      } catch (disburseErr: any) {
+        console.error(chalk.red("[Claim] Failed to disburse on-chain tUSDC payout:"), disburseErr);
       }
     }
 
@@ -1561,9 +1616,25 @@ app.post("/api/claim", async (req, res) => {
       onChainTx = `0x${randomBytes}`;
     }
 
+    // 2. Mark positions as CLAIMED
+    for (const pos of winningPositions) {
+      pos.status = "CLAIMED";
+      pos.claimTxHash = onChainTx;
+    }
+
+    savePersistedPositions(recordedPositions);
+
+    // Sync claimed status to Supabase Cloud Database if configured
+    if (isSupabaseConfigured() && targetWallet) {
+      for (const pos of winningPositions) {
+        updatePositionInDb(pos.id, { status: "CLAIMED", claimTxHash: onChainTx }).catch(() => {});
+      }
+    }
+
     res.json({
       success: true,
-      claimedCount: claimCount,
+      claimedCount: winningPositions.length,
+      payoutAmount: Number(totalPayoutUsdc.toFixed(2)),
       txHash: onChainTx,
       explorerUrl: `https://shannon-explorer.somnia.network/tx/${onChainTx}`,
     });

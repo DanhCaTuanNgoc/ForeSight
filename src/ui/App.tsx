@@ -499,9 +499,9 @@ function ForeSightTerminalApp() {
     fetchPositions();
   }, [wallet.address, fetchPositions]);
 
-  // Sweep & Claim All Winnings (1-Click MultiCall via ForeSightBatchSweeper)
+  // Sweep & Claim All Winnings (1-Click MultiCall via ForeSight Settlement Vault on Somnia L1)
   const handleClaimAll = async () => {
-    if (!wallet.isConnected) {
+    if (!wallet.isConnected || !wallet.address) {
       wallet.openWalletModal();
       showToast("Please connect your Web3 wallet (MetaMask) to claim payouts on Somnia.", "info");
       return;
@@ -509,38 +509,46 @@ function ForeSightTerminalApp() {
 
     setIsClaiming(true);
     try {
-      // 1. Gather settled winning pool addresses
+      // 1. Gather settled winning positions
       const winningPositions = positions.filter(
-        (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)) && p.poolAddress
+        (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true))
       );
       if (winningPositions.length === 0) {
         showToast("No winning claimable payouts available. Note: Losing rounds expire with $0 payout.", "info");
         setIsClaiming(false);
         return;
       }
-      const settledPools = winningPositions.map((p) => p.poolAddress as string);
 
-      // Request on-chain signing in MetaMask for ForeSightBatchSweeper contract
-      const txResult = await wallet.executeOnChainClaim(settledPools);
-      if (!txResult.success) {
-        showToast(txResult.error || "Claim transaction signing cancelled", "error");
-        return;
-      }
-
-      // 2. Dispatch claimed status to backend with verified TxHash
+      // 2. Dispatch claim request to ForeSight Settlement Vault on Somnia L1
       const res = await fetch(apiUrl("/api/claim"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           walletAddress: wallet.address,
-          txHash: txResult.txHash,
         }),
       });
       const data = await res.json();
       if (data.success) {
         sound.playSuccessChime();
-        const shortHash = txResult.txHash ? `${txResult.txHash.slice(0, 6)}...${txResult.txHash.slice(-4)}` : "";
-        showToast(`Batch Sweeper Claimed on Somnia L1 [${shortHash}]`, "success");
+        const shortHash = data.txHash ? `${data.txHash.slice(0, 6)}...${data.txHash.slice(-4)}` : "";
+        const payoutStr = data.payoutAmount ? `+$${Number(data.payoutAmount).toFixed(2)} tUSDC` : "Payouts";
+        showToast(`🎉 Claimed ${payoutStr} on Somnia L1! [${shortHash}]`, "success");
+
+        // Optimistically update positions in local state to immediately show CLAIMED badge
+        const activeAddr = wallet.address.toLowerCase();
+        setPositions((prev) => {
+          const next = prev.map((p) => {
+            const isWin = p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true);
+            if (isWin && p.walletAddress && p.walletAddress.toLowerCase() === activeAddr) {
+              return { ...p, status: "CLAIMED", claimTxHash: data.txHash };
+            }
+            return p;
+          });
+          saveLocalPositions(activeAddr, next);
+          return next;
+        });
+
+        // Re-fetch positions from server & refresh balances
         await fetchPositions();
         await wallet.refreshBalance();
       } else {

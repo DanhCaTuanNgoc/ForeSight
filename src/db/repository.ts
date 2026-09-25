@@ -133,6 +133,77 @@ export async function getRecentSpikes(
   return (data ?? []) as unknown as SpikeRow[];
 }
 
+/**
+ * Prune stale market snapshots and spikes older than the retention threshold.
+ * Prevents database storage overflow.
+ */
+export async function cleanupOldMarketData(
+  snapshotRetentionHours = 24,
+  spikeRetentionHours = 48,
+): Promise<{ deletedSnapshots: number; deletedSpikes: number; success: boolean }> {
+  if (!isSupabaseConfigured()) {
+    return { deletedSnapshots: 0, deletedSpikes: 0, success: false };
+  }
+
+  const sb = getSupabase();
+  const snapshotCutoff = new Date(Date.now() - snapshotRetentionHours * 3600_000).toISOString();
+  const spikeCutoff = new Date(Date.now() - spikeRetentionHours * 3600_000).toISOString();
+
+  let deletedSnapshots = 0;
+  let deletedSpikes = 0;
+
+  // 1. Try calling the PostgreSQL stored procedure if migration was executed
+  try {
+    const { data: rpcData, error: rpcError } = await (sb as any).rpc("cleanup_old_market_data", {
+      snapshot_retention_hours: snapshotRetentionHours,
+      spike_retention_hours: spikeRetentionHours,
+    });
+
+    if (!rpcError && rpcData && rpcData.success !== false) {
+      return {
+        deletedSnapshots: rpcData.deleted_snapshots ?? 0,
+        deletedSpikes: rpcData.deleted_spikes ?? 0,
+        success: true,
+      };
+    }
+  } catch {
+    // Stored procedure not installed yet, proceed to direct queries
+  }
+
+  // 2. Direct delete fallback via Supabase client
+  try {
+    const { count: sCount, error: sErr } = await (sb as any)
+      .from("market_snapshots")
+      .delete({ count: "exact" })
+      .lt("recorded_at", snapshotCutoff);
+
+    if (!sErr && typeof sCount === "number") {
+      deletedSnapshots = sCount;
+    }
+  } catch (err: any) {
+    console.error("[repo] cleanup market_snapshots error:", err?.message || err);
+  }
+
+  try {
+    const { count: spCount, error: spErr } = await (sb as any)
+      .from("spikes")
+      .delete({ count: "exact" })
+      .lt("detected_at", spikeCutoff);
+
+    if (!spErr && typeof spCount === "number") {
+      deletedSpikes = spCount;
+    }
+  } catch (err: any) {
+    console.error("[repo] cleanup spikes error:", err?.message || err);
+  }
+
+  return {
+    deletedSnapshots,
+    deletedSpikes,
+    success: true,
+  };
+}
+
 // ────────────────────────────────────────────────────────────
 // News Events
 // ────────────────────────────────────────────────────────────

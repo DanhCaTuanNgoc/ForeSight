@@ -25,6 +25,7 @@ interface Position {
   status: "OPEN" | "RESOLVING" | "SETTLED_WIN" | "SETTLED_LOSS" | "SETTLED" | "RESOLVED" | "CLAIMED" | "CLOSED" | "REFUNDED" | "RESTING" | "PENDING" | string;
   orderId?: string;
   txHash?: string;
+  claimTxHash?: string;
   isLiveOnChain?: boolean;
   exitPrice?: number;
   realizedPnl?: number;
@@ -154,8 +155,9 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                 const isSettledWin = p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true);
                 const isSettledLoss = p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false);
 
-                const explorerLink = p.txHash
-                  ? `https://shannon-explorer.somnia.network/tx/${p.txHash}`
+                const txToView = (p.status === "CLAIMED" && p.claimTxHash) ? p.claimTxHash : (p.txHash || p.claimTxHash);
+                const explorerLink = txToView
+                  ? `https://shannon-explorer.somnia.network/tx/${txToView}`
                   : null;
 
                 const d = new Date(p.timestamp || Date.now());
@@ -365,7 +367,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1 rounded-none bg-[#12121C] hover:bg-[#1A1A28] border border-white/[0.08] hover:border-cyan-500/50 text-gray-400 hover:text-cyan-300 transition-colors inline-flex items-center"
-                            title={`Verify on Somnia Explorer (${p.txHash?.slice(0, 6)}...${p.txHash?.slice(-4)})`}
+                            title={p.status === "CLAIMED" ? `Verify Claim Payout on Somnia Explorer (${txToView?.slice(0, 6)}...${txToView?.slice(-4)})` : `Verify on Somnia Explorer (${txToView?.slice(0, 6)}...${txToView?.slice(-4)})`}
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>

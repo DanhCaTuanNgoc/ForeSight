@@ -7,6 +7,7 @@ import {
   Droplets,
   ShieldCheck,
   Trash2,
+  RefreshCw,
 } from "lucide-react";
 import { PositionsTable } from "./PositionsTable.js";
 import { ActivityTable } from "./ActivityTable.js";
@@ -149,7 +150,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
 
   const openPositions = enrichedPositions.filter((p) => p.status === "OPEN" || p.status === "RESTING");
   const claimablePositions = enrichedPositions.filter(
-    (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)) && p.poolAddress
+    (p) => p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)
   );
   const settledPositions = enrichedPositions.filter(
     (p) =>
@@ -304,13 +305,28 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
             </span>
           </div>
           <div className="w-px h-6 bg-white/[0.08]" />
-          <div className="space-y-0.5">
-            <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
-              STT Gas
-            </span>
-            <span className="text-sm sm:text-base font-bold font-mono text-amber-300 tracking-tight block">
-              {isConnected ? (activeBalance ? `${activeBalance}` : "0.00 STT") : "—"}
-            </span>
+          <div className="flex items-center gap-2">
+            <div className="space-y-0.5">
+              <span className="text-[9px] text-gray-400 block uppercase font-mono tracking-wider">
+                STT Gas
+              </span>
+              <span className="text-sm sm:text-base font-bold font-mono text-amber-300 tracking-tight block">
+                {isConnected ? (activeBalance ? `${activeBalance}` : "0.00 STT") : "—"}
+              </span>
+            </div>
+            {isConnected && (
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  wallet.refreshBalance();
+                }}
+                disabled={wallet.isRefreshingBalance}
+                title="Refresh on-chain wallet balance from Somnia Shannon"
+                className="p-1 rounded-none bg-[#12121C] hover:bg-[#1A1A28] border border-white/[0.08] hover:border-emerald-500/50 text-gray-400 hover:text-white transition-all cursor-pointer flex items-center justify-center shrink-0"
+              >
+                <RefreshCw className={`w-3 h-3 ${wallet.isRefreshingBalance ? "animate-spin text-emerald-400" : ""}`} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -441,7 +457,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
                   timestamp: p.timestamp || Date.now(),
                   status: p.status,
                   orderId: p.orderId,
-                  txHash: p.txHash,
+                  txHash: p.claimTxHash || p.txHash,
                   isLiveOnChain: p.isLiveOnChain,
                   isWinner: p.isWinner,
                 }))

@@ -62,6 +62,7 @@ interface WalletContextType {
   isConnecting: boolean;
   balance: string | null;
   tusdcBalance: string | null;
+  isRefreshingBalance: boolean;
   walletName: string | null;
   isWalletModalOpen: boolean;
   openWalletModal: () => void;
@@ -93,6 +94,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [chainId, setChainId] = useState<number | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
   const [tusdcBalance, setTusdcBalance] = useState<string | null>(null);
+  const [isRefreshingBalance, setIsRefreshingBalance] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [walletName, setWalletName] = useState<string | null>(null);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
@@ -114,32 +116,43 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    // 1. Fetch STT Native Gas Balance
-    try {
-      const rawBal = await somniaPublicClient.getBalance({
-        address: address as Address,
-      });
-      const formatted = parseFloat(formatEther(rawBal)).toFixed(4);
-      setBalance(formatted);
-    } catch (err) {
-      console.warn("Error fetching STT balance:", err);
-      setBalance("0.0000");
-    }
+    setIsRefreshingBalance(true);
 
-    // 2. Fetch tUSDC ERC-20 Collateral Balance
+    const queryBalances = async () => {
+      // 1. Fetch STT Native Gas Balance
+      try {
+        const rawBal = await somniaPublicClient.getBalance({
+          address: address as Address,
+        });
+        const formatted = parseFloat(formatEther(rawBal)).toFixed(4);
+        setBalance(formatted);
+      } catch (err) {
+        console.warn("Error fetching STT balance:", err);
+      }
+
+      // 2. Fetch tUSDC ERC-20 Collateral Balance (6 decimals)
+      try {
+        const rawTokenBal = await somniaPublicClient.readContract({
+          address: SOMNIA_TESTNET_TUSDC_ADDRESS,
+          abi: ERC20_ABI,
+          functionName: "balanceOf",
+          args: [address as Address],
+        });
+        const formattedToken = parseFloat(formatUnits(rawTokenBal as bigint, 6)).toFixed(2);
+        setTusdcBalance(formattedToken);
+      } catch (err) {
+        console.warn("Error fetching tUSDC balance:", err);
+      }
+    };
+
     try {
-      const rawTokenBal = await somniaPublicClient.readContract({
-        address: SOMNIA_TESTNET_TUSDC_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: "balanceOf",
-        args: [address as Address],
-      });
-      // tUSDC decimals on Somnia testnet is 6 or 18
-      const formattedToken = parseFloat(formatUnits(rawTokenBal as bigint, 6)).toFixed(2);
-      setTusdcBalance(formattedToken);
-    } catch (err) {
-      console.warn("Error fetching tUSDC balance:", err);
-      setTusdcBalance("0.00");
+      await queryBalances();
+      // Second query pass after 1.5s to bypass any RPC block-indexing lag
+      setTimeout(() => {
+        queryBalances().catch(() => {});
+      }, 1500);
+    } finally {
+      setIsRefreshingBalance(false);
     }
   }, [address]);
 
@@ -590,6 +603,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isConnecting,
         balance,
         tusdcBalance,
+        isRefreshingBalance,
         walletName,
         isWalletModalOpen,
         openWalletModal: () => setIsWalletModalOpen(true),

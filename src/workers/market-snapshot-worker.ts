@@ -10,7 +10,7 @@
 import chalk from "chalk";
 import { MarketWatcher, type EventContractMarket } from "../core/market-watcher.js";
 import { isSupabaseConfigured } from "../db/supabase.js";
-import { insertSnapshots, getLatestSnapshot, insertSpike } from "../db/repository.js";
+import { insertSnapshots, getLatestSnapshot, insertSpike, cleanupOldMarketData } from "../db/repository.js";
 import type { MarketSnapshotInsert, SpikeInsert } from "../db/types.js";
 import type { ExchangeContext } from "../core/exchange.js";
 
@@ -31,33 +31,48 @@ export interface SnapshotWorkerOptions {
   pollIntervalSec?: number;
   spikeThreshold?: number;
   maxMarketsPerTick?: number;
+  cleanupIntervalHours?: number;
+  snapshotRetentionHours?: number;
+  spikeRetentionHours?: number;
 }
 
 export class MarketSnapshotWorker {
   private watcher: MarketWatcher;
   private interval: ReturnType<typeof setInterval> | null = null;
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
   private pollSec: number;
   private threshold: number;
   private maxPerTick: number;
+  private cleanupHours: number;
+  private snapshotRetentionHours: number;
+  private spikeRetentionHours: number;
   private isRunning = false;
   private tickCount = 0;
   private snapshotsWritten = 0;
   private spikesDetected = 0;
+  private totalCleanedSnapshots = 0;
+  private totalCleanedSpikes = 0;
+  private lastCleanupAt: string | null = null;
 
   constructor(ctx: ExchangeContext, opts: SnapshotWorkerOptions = {}) {
     this.watcher = new MarketWatcher(ctx);
     this.pollSec = opts.pollIntervalSec ?? DEFAULT_POLL_INTERVAL_SEC;
     this.threshold = opts.spikeThreshold ?? SPIKE_THRESHOLD;
     this.maxPerTick = opts.maxMarketsPerTick ?? 100;
+    this.cleanupHours = opts.cleanupIntervalHours ?? 6; // Run cleanup every 6 hours by default
+    this.snapshotRetentionHours = opts.snapshotRetentionHours ?? 24; // Keep snapshots for 24h
+    this.spikeRetentionHours = opts.spikeRetentionHours ?? 48; // Keep spikes for 48h
   }
 
-  /** Start the polling loop. */
+  /** Start the polling loop and periodic cleanup. */
   start(): void {
     if (this.isRunning) return;
     this.isRunning = true;
 
     console.log(
-      chalk.cyan(`[SnapshotWorker] Started — polling every ${this.pollSec}s, spike threshold ${(this.threshold * 100).toFixed(0)}%`),
+      chalk.cyan(
+        `[SnapshotWorker] Started — polling every ${this.pollSec}s, spike threshold ${(this.threshold * 100).toFixed(0)}%, cleanup every ${this.cleanupHours}h (retention: ${this.snapshotRetentionHours}h snapshots, ${this.spikeRetentionHours}h spikes)`,
+      ),
     );
 
     // Run first tick immediately
@@ -66,20 +81,74 @@ export class MarketSnapshotWorker {
     this.interval = setInterval(() => {
       this.tick().catch((err) => console.error(chalk.red("[SnapshotWorker] tick error:"), err));
     }, this.pollSec * 1000);
+
+    // Initial cleanup check after 10s warmup
+    setTimeout(() => {
+      if (this.isRunning) {
+        this.runCleanup().catch((err) =>
+          console.error(chalk.red("[SnapshotWorker] initial cleanup error:"), err),
+        );
+      }
+    }, 10_000);
+
+    // Recurring cleanup interval
+    this.cleanupInterval = setInterval(() => {
+      this.runCleanup().catch((err) =>
+        console.error(chalk.red("[SnapshotWorker] recurring cleanup error:"), err),
+      );
+    }, this.cleanupHours * 3600 * 1000);
   }
 
-  /** Stop the polling loop. */
+  /** Stop the polling loop and cleanup timer. */
   stop(): void {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
     }
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
     this.isRunning = false;
     console.log(
       chalk.yellow(
-        `[SnapshotWorker] Stopped after ${this.tickCount} ticks — ${this.snapshotsWritten} snapshots, ${this.spikesDetected} spikes`,
+        `[SnapshotWorker] Stopped after ${this.tickCount} ticks — ${this.snapshotsWritten} snapshots, ${this.spikesDetected} spikes, cleaned ${this.totalCleanedSnapshots} stale snapshots`,
       ),
     );
+  }
+
+  /** Run database cleanup of stale snapshots & spikes */
+  async runCleanup(): Promise<{ deletedSnapshots: number; deletedSpikes: number; success: boolean }> {
+    if (!isSupabaseConfigured()) {
+      return { deletedSnapshots: 0, deletedSpikes: 0, success: false };
+    }
+
+    try {
+      const result = await cleanupOldMarketData(this.snapshotRetentionHours, this.spikeRetentionHours);
+      if (result.success) {
+        this.totalCleanedSnapshots += result.deletedSnapshots;
+        this.totalCleanedSpikes += result.deletedSpikes;
+        this.lastCleanupAt = new Date().toISOString();
+
+        if (result.deletedSnapshots > 0 || result.deletedSpikes > 0) {
+          console.log(
+            chalk.magenta(
+              `[SnapshotWorker] 🧹 DB Pruned: removed ${result.deletedSnapshots} stale snapshots (> ${this.snapshotRetentionHours}h) and ${result.deletedSpikes} spikes (> ${this.spikeRetentionHours}h)`,
+            ),
+          );
+        } else {
+          console.log(
+            chalk.gray(
+              `[SnapshotWorker] 🧹 DB Cleanup checked: no stale data exceeding retention (${this.snapshotRetentionHours}h snapshots / ${this.spikeRetentionHours}h spikes)`,
+            ),
+          );
+        }
+      }
+      return result;
+    } catch (err: any) {
+      console.error(chalk.red("[SnapshotWorker] cleanup execution error:"), err?.message || err);
+      return { deletedSnapshots: 0, deletedSpikes: 0, success: false };
+    }
   }
 
   /** Return current worker stats. */
@@ -90,6 +159,14 @@ export class MarketSnapshotWorker {
       snapshotsWritten: this.snapshotsWritten,
       spikesDetected: this.spikesDetected,
       trackedSymbols: recentPrices.size,
+      cleanup: {
+        lastCleanupAt: this.lastCleanupAt,
+        totalCleanedSnapshots: this.totalCleanedSnapshots,
+        totalCleanedSpikes: this.totalCleanedSpikes,
+        snapshotRetentionHours: this.snapshotRetentionHours,
+        spikeRetentionHours: this.spikeRetentionHours,
+        cleanupIntervalHours: this.cleanupHours,
+      },
     };
   }
 
