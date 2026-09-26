@@ -885,9 +885,6 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
                         AUTOMATED ORDER RUNNER
                       </span>
                     </div>
-                    <span className="text-[10px] text-gray-400 block font-sans">
-                      Multi-round automated execution on Somnia CLOB
-                    </span>
                   </div>
                 </div>
 

@@ -59,7 +59,7 @@ export class MarketSnapshotWorker {
     this.pollSec = opts.pollIntervalSec ?? DEFAULT_POLL_INTERVAL_SEC;
     this.threshold = opts.spikeThreshold ?? SPIKE_THRESHOLD;
     this.maxPerTick = opts.maxMarketsPerTick ?? 100;
-    this.cleanupHours = opts.cleanupIntervalHours ?? 6; // Run cleanup every 6 hours by default
+    this.cleanupHours = opts.cleanupIntervalHours ?? (process.env.CLEANUP_INTERVAL_HOURS ? Number(process.env.CLEANUP_INTERVAL_HOURS) : 5); // Run cleanup every 5 hours by default
     this.snapshotRetentionHours = opts.snapshotRetentionHours ?? 24; // Keep snapshots for 24h
     this.spikeRetentionHours = opts.spikeRetentionHours ?? 48; // Keep spikes for 48h
   }

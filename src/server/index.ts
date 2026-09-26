@@ -2162,6 +2162,9 @@ async function startServer() {
         pollIntervalSec: 10,
         spikeThreshold: 0.10,
         maxMarketsPerTick: 80,
+        cleanupIntervalHours: 5,
+        snapshotRetentionHours: 24,
+        spikeRetentionHours: 48,
       });
       snapshotWorker.start();
 
