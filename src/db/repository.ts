@@ -348,7 +348,7 @@ export async function insertPosition(pos: any): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
   try {
     const sb = getSupabase();
-    const row = {
+    const baseRow: Record<string, any> = {
       id: pos.id,
       symbol: pos.symbol,
       outcome: pos.outcome,
@@ -364,12 +364,28 @@ export async function insertPosition(pos: any): Promise<boolean> {
       realized_pnl: pos.realizedPnl || null,
       realized_roi_percent: pos.realizedRoiPercent || null,
       closed_at: pos.closedAt || null,
-      close_tx_hash: pos.closeTxHash || null,
+      close_tx_hash: pos.claimTxHash || pos.closeTxHash || null,
     };
-    const { error } = await (sb as any).from("user_positions").upsert(row);
+
+    // Try inserting with optional enhanced metadata columns first
+    const fullRow = {
+      ...baseRow,
+      ...(pos.poolAddress ? { pool_address: pos.poolAddress } : {}),
+      ...(pos.nonce !== undefined && pos.nonce !== null ? { nonce: Number(pos.nonce) } : {}),
+      ...(pos.expirationTime ? { expiration_time: Number(pos.expirationTime) } : {}),
+      ...(pos.isWinner !== undefined ? { is_winner: Boolean(pos.isWinner) } : {}),
+      ...(pos.winningOutcome ? { winning_outcome: pos.winningOutcome } : {}),
+      ...(pos.claimTxHash ? { claim_tx_hash: pos.claimTxHash } : {}),
+    };
+
+    let { error } = await (sb as any).from("user_positions").upsert(fullRow);
     if (error) {
-      console.warn("[repo] insertPosition Supabase warn:", error.message);
-      return false;
+      // If error was due to columns not existing in DB, fallback to baseRow
+      const fallback = await (sb as any).from("user_positions").upsert(baseRow);
+      if (fallback.error) {
+        console.warn("[repo] insertPosition Supabase warn:", fallback.error.message);
+        return false;
+      }
     }
     return true;
   } catch (err: any) {
@@ -383,15 +399,89 @@ export async function updatePositionInDb(id: string, updates: any): Promise<bool
   if (!isSupabaseConfigured()) return false;
   try {
     const sb = getSupabase();
-    const { error } = await (sb as any).from("user_positions").update(updates).eq("id", id);
+    const mapped: Record<string, any> = {};
+    if (updates.status !== undefined) mapped.status = updates.status;
+    if (updates.realizedPnl !== undefined || updates.realized_pnl !== undefined) {
+      mapped.realized_pnl = updates.realizedPnl ?? updates.realized_pnl;
+    }
+    if (updates.realizedRoiPercent !== undefined || updates.realized_roi_percent !== undefined) {
+      mapped.realized_roi_percent = updates.realizedRoiPercent ?? updates.realized_roi_percent;
+    }
+    if (updates.exitPrice !== undefined || updates.exit_price !== undefined) {
+      mapped.exit_price = updates.exitPrice ?? updates.exit_price;
+    }
+    if (updates.closedAt !== undefined || updates.closed_at !== undefined) {
+      mapped.closed_at = updates.closedAt ?? updates.closed_at;
+    }
+    if (updates.closeTxHash !== undefined || updates.close_tx_hash !== undefined || updates.claimTxHash !== undefined) {
+      mapped.close_tx_hash = updates.closeTxHash ?? updates.close_tx_hash ?? updates.claimTxHash;
+    }
+    if (updates.isWinner !== undefined || updates.is_winner !== undefined) {
+      mapped.is_winner = updates.isWinner ?? updates.is_winner;
+    }
+    if (updates.winningOutcome !== undefined || updates.winning_outcome !== undefined) {
+      mapped.winning_outcome = updates.winningOutcome ?? updates.winning_outcome;
+    }
+
+    let { error } = await (sb as any).from("user_positions").update(mapped).eq("id", id);
     if (error) {
-      console.warn("[repo] updatePositionInDb Supabase warn:", error.message);
-      return false;
+      // If column mismatch error, retry with core fields only
+      const coreMapped: Record<string, any> = {};
+      if (mapped.status !== undefined) coreMapped.status = mapped.status;
+      if (mapped.realized_pnl !== undefined) coreMapped.realized_pnl = mapped.realized_pnl;
+      if (mapped.realized_roi_percent !== undefined) coreMapped.realized_roi_percent = mapped.realized_roi_percent;
+      if (mapped.close_tx_hash !== undefined) coreMapped.close_tx_hash = mapped.close_tx_hash;
+      const retry = await (sb as any).from("user_positions").update(coreMapped).eq("id", id);
+      if (retry.error) {
+        console.warn("[repo] updatePositionInDb Supabase warn:", retry.error.message);
+        return false;
+      }
     }
     return true;
   } catch {
     return false;
   }
+}
+
+/** Helper to map raw Supabase row to standardized position object */
+function mapPositionRow(r: any): any {
+  const isRefunded = r.status === "REFUNDED" || r.is_refunded === true;
+  const isWin = isRefunded
+    ? false
+    : r.is_winner !== null && r.is_winner !== undefined
+    ? Boolean(r.is_winner)
+    : r.status === "SETTLED_WIN" || (r.realized_pnl && Number(r.realized_pnl) > 0)
+    ? true
+    : r.status === "SETTLED_LOSS"
+    ? false
+    : undefined;
+
+  return {
+    id: r.id,
+    symbol: r.symbol,
+    outcome: r.outcome,
+    amount: Number(r.amount),
+    entryPrice: Number(r.entry_price),
+    timestamp: Number(r.timestamp),
+    status: r.status,
+    walletAddress: r.wallet_address || undefined,
+    orderId: r.order_id || undefined,
+    txHash: r.tx_hash || undefined,
+    isLiveOnChain: Boolean(r.is_live_on_chain),
+    poolAddress: r.pool_address || undefined,
+    nonce: r.nonce !== null && r.nonce !== undefined ? Number(r.nonce) : undefined,
+    expirationTime: r.expiration_time !== null && r.expiration_time !== undefined ? Number(r.expiration_time) : undefined,
+    isWinner: isWin,
+    isRefunded: isRefunded || undefined,
+    winningOutcome: isRefunded ? "REFUNDED" : (r.winning_outcome || undefined),
+    exitPrice: r.exit_price !== null && r.exit_price !== undefined ? Number(r.exit_price) : undefined,
+    realizedPnl: isRefunded ? 0 : (r.realized_pnl !== null && r.realized_pnl !== undefined ? Number(r.realized_pnl) : undefined),
+    realizedRoiPercent: isRefunded ? 0 : (r.realized_roi_percent !== null && r.realized_roi_percent !== undefined ? Number(r.realized_roi_percent) : undefined),
+    closedAt: r.closed_at !== null && r.closed_at !== undefined ? Number(r.closed_at) : undefined,
+    closeTxHash: r.close_tx_hash || undefined,
+    claimTxHash: isRefunded ? undefined : (r.claim_tx_hash || r.close_tx_hash || undefined),
+    refundTxHash: isRefunded ? (r.close_tx_hash || undefined) : undefined,
+  };
 }
 
 /** Fetch positions for a specific wallet from Supabase */
@@ -406,31 +496,14 @@ export async function getPositionsByWalletFromDb(walletAddress: string): Promise
       .order("timestamp", { ascending: false });
 
     if (error || !data) return [];
-    return data.map((r: any) => ({
-      id: r.id,
-      symbol: r.symbol,
-      outcome: r.outcome,
-      amount: Number(r.amount),
-      entryPrice: Number(r.entry_price),
-      timestamp: Number(r.timestamp),
-      status: r.status,
-      walletAddress: r.wallet_address || undefined,
-      orderId: r.order_id || undefined,
-      txHash: r.tx_hash || undefined,
-      isLiveOnChain: Boolean(r.is_live_on_chain),
-      exitPrice: r.exit_price !== null && r.exit_price !== undefined ? Number(r.exit_price) : undefined,
-      realizedPnl: r.realized_pnl !== null && r.realized_pnl !== undefined ? Number(r.realized_pnl) : undefined,
-      realizedRoiPercent: r.realized_roi_percent !== null && r.realized_roi_percent !== undefined ? Number(r.realized_roi_percent) : undefined,
-      closedAt: r.closed_at !== null && r.closed_at !== undefined ? Number(r.closed_at) : undefined,
-      closeTxHash: r.close_tx_hash || undefined,
-    }));
+    return data.map(mapPositionRow);
   } catch {
     return [];
   }
 }
 
 /** Fetch latest public positions across all users from Supabase */
-export async function getAllPositionsFromDb(limit = 50): Promise<any[]> {
+export async function getAllPositionsFromDb(limit = 100): Promise<any[]> {
   if (!isSupabaseConfigured()) return [];
   try {
     const sb = getSupabase();
@@ -441,24 +514,7 @@ export async function getAllPositionsFromDb(limit = 50): Promise<any[]> {
       .limit(limit);
 
     if (error || !data) return [];
-    return data.map((r: any) => ({
-      id: r.id,
-      symbol: r.symbol,
-      outcome: r.outcome,
-      amount: Number(r.amount),
-      entryPrice: Number(r.entry_price),
-      timestamp: Number(r.timestamp),
-      status: r.status,
-      walletAddress: r.wallet_address || undefined,
-      orderId: r.order_id || undefined,
-      txHash: r.tx_hash || undefined,
-      isLiveOnChain: Boolean(r.is_live_on_chain),
-      exitPrice: r.exit_price !== null && r.exit_price !== undefined ? Number(r.exit_price) : undefined,
-      realizedPnl: r.realized_pnl !== null && r.realized_pnl !== undefined ? Number(r.realized_pnl) : undefined,
-      realizedRoiPercent: r.realized_roi_percent !== null && r.realized_roi_percent !== undefined ? Number(r.realized_roi_percent) : undefined,
-      closedAt: r.closed_at !== null && r.closed_at !== undefined ? Number(r.closed_at) : undefined,
-      closeTxHash: r.close_tx_hash || undefined,
-    }));
+    return data.map(mapPositionRow);
   } catch {
     return [];
   }

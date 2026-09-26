@@ -123,16 +123,20 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
   const enrichedPositions = userPositions.map((p) => {
     const expired = isPositionExpired(p, nowSec);
     let effectiveStatus = p.status;
-    if (p.status === "CLAIMED") {
+    if (p.status === "REFUNDED" || (p as any).isRefunded) {
+      effectiveStatus = "REFUNDED";
+    } else if (p.status === "CLAIMED") {
       effectiveStatus = "CLAIMED";
     } else if (p.status === "CLOSED") {
       effectiveStatus = "CLOSED";
-    } else if (p.status === "REFUNDED") {
-      effectiveStatus = "REFUNDED";
+    } else if (p.status === "SETTLED_LOSS") {
+      effectiveStatus = "SETTLED_LOSS";
+    } else if (p.status === "SETTLED_WIN") {
+      effectiveStatus = "SETTLED_WIN";
     } else if (p.status === "RESTING" || p.status === "PENDING") {
-      effectiveStatus = "RESTING";
-    } else if (p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "RESOLVING") {
-      effectiveStatus = p.status;
+      effectiveStatus = expired ? "REFUNDED" : "RESTING";
+    } else if (p.status === "RESOLVING") {
+      effectiveStatus = "RESOLVING";
     } else if (expired) {
       if (p.isWinner === true) effectiveStatus = "SETTLED_WIN";
       else if (p.isWinner === false) effectiveStatus = "SETTLED_LOSS";
@@ -150,7 +154,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
 
   const openPositions = enrichedPositions.filter((p) => p.status === "OPEN" || p.status === "RESTING");
   const claimablePositions = enrichedPositions.filter(
-    (p) => p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)
+    (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)) && p.status !== "REFUNDED" && !(p as any).isRefunded
   );
   const settledPositions = enrichedPositions.filter(
     (p) =>
@@ -170,6 +174,9 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
   );
 
   const totalRealizedPnl = settledPositions.reduce((acc, p) => {
+    if (p.status === "REFUNDED" || (p as any).isRefunded) {
+      return acc;
+    }
     if (typeof p.realizedPnl === "number" && !isNaN(p.realizedPnl)) {
       return acc + p.realizedPnl;
     }
@@ -191,7 +198,7 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
   );
 
   const wonPositionsCount = settledPositions.filter(
-    (p) => p.status === "SETTLED_WIN" || p.status === "CLAIMED" || (p.status === "SETTLED" && p.isWinner === true)
+    (p) => (p.status === "SETTLED_WIN" || p.status === "CLAIMED" || (p.status === "SETTLED" && p.isWinner === true)) && p.status !== "REFUNDED" && !(p as any).isRefunded
   ).length;
   const lostPositionsCount = settledPositions.filter(
     (p) => p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false)
@@ -314,7 +321,9 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
                 {isConnected ? (activeBalance ? `${activeBalance}` : "0.00 STT") : "—"}
               </span>
             </div>
-            {isConnected && (
+            
+          </div>
+          {isConnected && (
               <button
                 onClick={() => {
                   sound.playClick();
@@ -327,7 +336,6 @@ export const ActivityView: React.FC<ActivityViewProps> = ({
                 <RefreshCw className={`w-3 h-3 ${wallet.isRefreshingBalance ? "animate-spin text-emerald-400" : ""}`} />
               </button>
             )}
-          </div>
         </div>
 
         {/* Right: Low-profile Actions */}

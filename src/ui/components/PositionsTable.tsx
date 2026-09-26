@@ -32,6 +32,8 @@ interface Position {
   realizedRoiPercent?: number;
   winningOutcome?: string;
   isWinner?: boolean;
+  isRefunded?: boolean;
+  refundTxHash?: string;
   expirationTime?: number;
 }
 
@@ -152,10 +154,10 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                 const profit = profitNum.toFixed(2);
                 const roiPercent = p.entryPrice > 0 ? (((1 - p.entryPrice) / p.entryPrice) * 100).toFixed(1) : "0.0";
 
-                const isSettledWin = p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true);
+                const isSettledWin = (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)) && !p.isRefunded;
                 const isSettledLoss = p.status === "SETTLED_LOSS" || (p.status === "SETTLED" && p.isWinner === false);
 
-                const txToView = (p.status === "CLAIMED" && p.claimTxHash) ? p.claimTxHash : (p.txHash || p.claimTxHash);
+                const txToView = (p.status === "CLAIMED" && p.claimTxHash) ? p.claimTxHash : (p.status === "REFUNDED" && p.refundTxHash) ? p.refundTxHash : (p.txHash || p.claimTxHash);
                 const explorerLink = txToView
                   ? `https://shannon-explorer.somnia.network/tx/${txToView}`
                   : null;
@@ -367,7 +369,13 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1 rounded-none bg-[#12121C] hover:bg-[#1A1A28] border border-white/[0.08] hover:border-cyan-500/50 text-gray-400 hover:text-cyan-300 transition-colors inline-flex items-center"
-                            title={p.status === "CLAIMED" ? `Verify Claim Payout on Somnia Explorer (${txToView?.slice(0, 6)}...${txToView?.slice(-4)})` : `Verify on Somnia Explorer (${txToView?.slice(0, 6)}...${txToView?.slice(-4)})`}
+                            title={
+                              p.status === "CLAIMED"
+                                ? `Verify Claim Payout on Somnia Explorer (${txToView?.slice(0, 6)}...${txToView?.slice(-4)})`
+                                : p.status === "REFUNDED"
+                                ? `Verify On-Chain Refund on Somnia Explorer (${txToView?.slice(0, 6)}...${txToView?.slice(-4)})`
+                                : `Verify on Somnia Explorer (${txToView?.slice(0, 6)}...${txToView?.slice(-4)})`
+                            }
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>

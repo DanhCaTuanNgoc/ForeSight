@@ -36,6 +36,9 @@ export interface PositionRecord {
   realizedRoiPercent?: number;
   winningOutcome?: string;
   isWinner?: boolean;
+  isRefunded?: boolean;
+  refundTxHash?: string;
+  claimTxHash?: string;
 }
 
 interface ThesisHealthMonitorProps {
@@ -74,16 +77,20 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
   const enrichedPositions = positions.map((p) => {
     const expired = isPositionExpired(p, nowSec);
     let effectiveStatus = p.status;
-    if (p.status === "CLAIMED") {
+    if (p.status === "REFUNDED" || (p as any).isRefunded) {
+      effectiveStatus = "REFUNDED";
+    } else if (p.status === "CLAIMED") {
       effectiveStatus = "CLAIMED";
     } else if (p.status === "CLOSED") {
       effectiveStatus = "CLOSED";
-    } else if (p.status === "REFUNDED" || (p as any).isRefunded) {
-      effectiveStatus = "REFUNDED";
+    } else if (p.status === "SETTLED_LOSS") {
+      effectiveStatus = "SETTLED_LOSS";
+    } else if (p.status === "SETTLED_WIN") {
+      effectiveStatus = "SETTLED_WIN";
     } else if (p.status === "RESTING" || p.status === "PENDING") {
-      effectiveStatus = "RESTING";
-    } else if (p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "RESOLVING") {
-      effectiveStatus = p.status;
+      effectiveStatus = expired ? "REFUNDED" : "RESTING";
+    } else if (p.status === "RESOLVING") {
+      effectiveStatus = "RESOLVING";
     } else if (expired) {
       if (p.isWinner === true) effectiveStatus = "SETTLED_WIN";
       else if (p.isWinner === false) effectiveStatus = "SETTLED_LOSS";
@@ -101,7 +108,7 @@ export const ThesisHealthMonitor: React.FC<ThesisHealthMonitorProps> = ({
 
   const openPositions = enrichedPositions.filter((p) => (p.status === "OPEN" || p.status === "RESTING") && !p.isExpired);
   const claimablePositions = enrichedPositions.filter(
-    (p) => p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)
+    (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true))
   );
   const settledPositions = enrichedPositions.filter(
     (p) => p.status !== "OPEN" && p.status !== "RESTING"

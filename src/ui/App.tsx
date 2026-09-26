@@ -347,13 +347,20 @@ function ForeSightTerminalApp() {
   // 5. Fetch Positions (User scoped + Public verifiable ledger)
   const fetchPositions = useCallback(async () => {
     const resolveStatus = (p: any) => {
+      if (p.status === "REFUNDED" || p.isRefunded) return "REFUNDED";
       if (p.status === "CLAIMED") return "CLAIMED";
       if (p.status === "CLOSED") return "CLOSED";
-      if (p.status === "REFUNDED" || p.isRefunded || p.txHash === "0x58f77beab8dc966f8faca8f71c2f529dee14f06e6fc3105471695598d8a48ef0") return "REFUNDED";
-      if (p.status === "RESTING" || p.status === "PENDING") return "RESTING";
-      if (p.status === "SETTLED_WIN" || p.status === "SETTLED_LOSS" || p.status === "RESOLVING") return p.status;
+      if (p.status === "SETTLED_LOSS") return "SETTLED_LOSS";
+      if (p.status === "SETTLED_WIN") return "SETTLED_WIN";
+      if (p.status === "RESTING" || p.status === "PENDING") {
+        if (isPositionExpired(p)) return "REFUNDED";
+        return "RESTING";
+      }
+      if (p.status === "RESOLVING") return "RESOLVING";
       if (isPositionExpired(p)) {
-        return p.isWinner === true ? "SETTLED_WIN" : p.isWinner === false ? "SETTLED_LOSS" : "RESOLVING";
+        if (p.isWinner === true) return "SETTLED_WIN";
+        if (p.isWinner === false) return "SETTLED_LOSS";
+        return "RESOLVING";
       }
       return p.status || "OPEN";
     };
@@ -511,7 +518,7 @@ function ForeSightTerminalApp() {
     try {
       // 1. Gather settled winning positions
       const winningPositions = positions.filter(
-        (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true))
+        (p) => (p.status === "SETTLED_WIN" || (p.status === "SETTLED" && p.isWinner === true)) && !p.isRefunded
       );
       if (winningPositions.length === 0) {
         showToast("No winning claimable payouts available. Note: Losing rounds expire with $0 payout.", "info");
@@ -630,6 +637,11 @@ function ForeSightTerminalApp() {
     const currentMarket = activeMarket;
     const targetPool = poolAddress || currentMarket?.poolAddress;
     const targetExpiry = expirationTime || currentMarket?.expirationTime;
+
+    if (!targetPool) {
+      showToast("Cannot place order: Market pool contract is not deployed or unavailable for this market.", "error");
+      return;
+    }
 
     setIsSubmittingOrder(true);
     setSubmitStep("idle");

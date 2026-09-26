@@ -137,7 +137,59 @@ const recordedPositions: Array<{
   isWinner?: boolean;
   closedAt?: number;
   closeTxHash?: string;
+  claimTxHash?: string;
+  nonce?: number;
+  expirationTime?: number;
 }> = loadPersistedPositions();
+
+/** Synchronize in-memory positions ledger with Supabase Cloud DB */
+export async function hydratePositionsFromDb(): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+  try {
+    const dbPositions = await getAllPositionsFromDb(200);
+    let addedCount = 0;
+    for (const dbPos of dbPositions) {
+      if (!dbPos?.id) continue;
+      if (
+        dbPos.id.startsWith("pos-demo-") ||
+        dbPos.orderId === "ord-btc-demo-live" ||
+        dbPos.txHash === "0x999f033fbddf512b93eb3b480f4b2f37521377c4eb11b77401eadafabb98e1a7" ||
+        dbPos.status === "FAILED"
+      ) {
+        continue;
+      }
+
+      const existingIndex = recordedPositions.findIndex((p) => p.id === dbPos.id);
+      if (existingIndex === -1) {
+        recordedPositions.push(dbPos);
+        addedCount++;
+      } else {
+        if (dbPos.status === "CLAIMED") {
+          recordedPositions[existingIndex].status = "CLAIMED";
+        }
+        if (dbPos.realizedPnl !== undefined && recordedPositions[existingIndex].realizedPnl === undefined) {
+          recordedPositions[existingIndex].realizedPnl = dbPos.realizedPnl;
+        }
+        if (dbPos.poolAddress && !recordedPositions[existingIndex].poolAddress) {
+          recordedPositions[existingIndex].poolAddress = dbPos.poolAddress;
+        }
+      }
+    }
+
+    if (addedCount > 0) {
+      recordedPositions.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      fs.writeFileSync(POSITIONS_FILE, JSON.stringify(recordedPositions, null, 2), "utf-8");
+      console.log(chalk.green(`[Storage] Hydrated ${addedCount} positions from Supabase Cloud DB into memory & disk cache.`));
+    }
+    return addedCount;
+  } catch (err: any) {
+    console.warn("[Storage] Notice during Supabase positions hydration:", err?.message || err);
+    return 0;
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // LIVE MARKET RESOLVER
@@ -1017,23 +1069,38 @@ export async function resolvePositionOnChain(
 ) {
   if (!outcome) return { status: "RESOLVING", isWinner: false };
 
+  // Explicitly preserve REFUNDED status for unfilled/cancelled orders
+  if (pos?.status === "REFUNDED" || (pos as any)?.isRefunded) {
+    return {
+      status: "REFUNDED" as const,
+      winningOutcome: "REFUNDED",
+      isWinner: false,
+      realizedPnl: 0,
+      realizedRoiPercent: 0,
+      nonce: pos?.nonce,
+      poolAddress: poolAddress || pos?.poolAddress,
+      isRefunded: true,
+    };
+  }
+
   let targetPool = poolAddress || pos?.poolAddress;
   let targetNonce: bigint | undefined = pos?.nonce ? BigInt(pos.nonce) : undefined;
+  let orderReceipt: any = null;
 
-  // 1. Determine exact on-chain round nonce from transaction receipt & archive contract read
-  if (targetNonce === undefined && pos?.txHash) {
+  // 1. Determine exact on-chain round nonce & execution status from transaction receipt
+  if (pos?.txHash) {
     try {
-      const receipt = await somniaPublicClient.getTransactionReceipt({
+      orderReceipt = await somniaPublicClient.getTransactionReceipt({
         hash: pos.txHash as `0x${string}`,
       });
 
-      if (receipt) {
-        if (!targetPool && receipt.to) {
-          targetPool = receipt.to;
+      if (orderReceipt) {
+        if (!targetPool && orderReceipt.to) {
+          targetPool = orderReceipt.to;
         }
 
         // Strategy A: Decode outcome token ID from receipt logs if minted directly
-        for (const log of receipt.logs) {
+        for (const log of orderReceipt.logs) {
           if (log.topics && log.topics[3]) {
             try {
               const rawId = BigInt(log.topics[3]);
@@ -1051,24 +1118,44 @@ export async function resolvePositionOnChain(
         }
 
         // Strategy B: If resting maker order, query pool marketNonce at transaction blockNumber
-        if (targetNonce === undefined && targetPool && receipt.blockNumber) {
+        if (targetNonce === undefined && targetPool && orderReceipt.blockNumber) {
           try {
             const blockNonce = await somniaPublicClient.readContract({
               address: targetPool as `0x${string}`,
               abi: parseAbi(["function marketNonce() view returns (uint64)"]),
               functionName: "marketNonce",
-              blockNumber: receipt.blockNumber,
+              blockNumber: orderReceipt.blockNumber,
             });
             if (blockNonce) {
               targetNonce = BigInt(blockNonce);
             }
           } catch (archiveErr: any) {
-            console.warn(`[Resolution] Archive read notice for pool ${targetPool} at block ${receipt.blockNumber}:`, archiveErr?.message);
+            console.warn(`[Resolution] Archive read notice for pool ${targetPool} at block ${orderReceipt.blockNumber}:`, archiveErr?.message);
           }
         }
       }
     } catch (txErr: any) {
       console.warn(`[Resolution] Tx receipt retrieval notice for ${pos.txHash}:`, txErr?.message);
+    }
+  }
+
+  // Check if order was rested (unfilled) on orderbook and never matched:
+  // Somnia CLOB topics: OrderRested (0xcdd45acd...), OrderFilled (0xc87f4223...)
+  if (orderReceipt) {
+    const hasFilled = orderReceipt.logs.some((l: any) => l.topics[0] === "0xc87f4223e9e7c4e4f39f9b34fc9d64d78cdb95d9035b3748cbde59521261a399");
+    const hasRested = orderReceipt.logs.some((l: any) => l.topics[0] === "0xcdd45acd62788abc10f79d86fac34df2a63e1a3b20f061c5bcf431ff6a09b866");
+    if (hasRested && !hasFilled) {
+      // Unfilled resting order expired and was refunded by cancelExpiredOrders
+      return {
+        status: "REFUNDED" as const,
+        winningOutcome: "REFUNDED",
+        isWinner: false,
+        realizedPnl: 0,
+        realizedRoiPercent: 0,
+        nonce: targetNonce ? Number(targetNonce) : undefined,
+        poolAddress: targetPool,
+        isRefunded: true,
+      };
     }
   }
 
@@ -1117,13 +1204,14 @@ export async function resolvePositionOnChain(
 
     if (s.voided) {
       const res = {
-        status: "REFUNDED",
+        status: "REFUNDED" as const,
         winningOutcome: "VOID",
         isWinner: false,
         realizedPnl: 0,
         realizedRoiPercent: 0,
         nonce: nonceNum,
         poolAddress: targetPool,
+        isRefunded: true,
       };
       resolutionCache.set(cacheKey, res);
       return res;
@@ -1171,6 +1259,7 @@ app.get("/api/positions", async (req, res) => {
         p.status === "OPEN" ||
         p.status === "SETTLED" ||
         p.status === "RESOLVING" ||
+        p.status === "RESTING" ||
         missingNonce
       );
 
@@ -1184,7 +1273,7 @@ app.get("/api/positions", async (req, res) => {
           (p as any).poolAddress = res.poolAddress;
           stateChanged = true;
         }
-        if (res.status !== "RESOLVING" || p.status === "OPEN" || p.status === "SETTLED") {
+        if (res.status !== "RESOLVING" || p.status === "OPEN" || p.status === "SETTLED" || p.status === "RESTING") {
           if (
             p.status !== res.status ||
             (p as any).winningOutcome !== res.winningOutcome ||
@@ -1194,6 +1283,7 @@ app.get("/api/positions", async (req, res) => {
             p.status = res.status as any;
             (p as any).winningOutcome = res.winningOutcome;
             (p as any).isWinner = res.isWinner;
+            (p as any).isRefunded = (res as any).isRefunded;
             p.realizedPnl = res.realizedPnl;
             p.realizedRoiPercent = res.realizedRoiPercent;
             stateChanged = true;
@@ -1202,6 +1292,8 @@ app.get("/api/positions", async (req, res) => {
                 status: res.status,
                 realized_pnl: res.realizedPnl,
                 realized_roi_percent: res.realizedRoiPercent,
+                is_winner: res.isWinner,
+                winning_outcome: res.winningOutcome,
               }).catch(() => {});
             }
           }
@@ -1387,15 +1479,34 @@ app.post("/api/orders", async (req, res) => {
       }
 
       try {
+        const tx = await somniaPublicClient.getTransaction({
+          hash: clientTxHash as `0x${string}`,
+        }).catch(() => null);
         const receipt = await somniaPublicClient.getTransactionReceipt({
           hash: clientTxHash as `0x${string}`,
-        });
+        }).catch(() => null);
+
         if (receipt && receipt.status === "reverted") {
           return res.status(400).json({
             success: false,
             error: "On-chain transaction reverted (TradingNotActive or round expired). Order not placed.",
             txHash: clientTxHash,
           });
+        }
+
+        if (tx) {
+          const methodId = tx.input?.slice(0, 10).toLowerCase();
+          // Reject ERC20 approve transactions (e.g. approve(address,uint256) = 0x095ea7b3)
+          if (methodId === "0x095ea7b3") {
+            return res.status(400).json({
+              success: false,
+              error: "Submitted transaction is an ERC-20 token approval, not a DreamDEX market trade order.",
+              txHash: clientTxHash,
+            });
+          }
+          if (receipt?.to) {
+            effectivePool = receipt.to;
+          }
         }
       } catch (receiptErr: any) {
         console.warn("[Orders] Transaction receipt check notice:", receiptErr?.message || receiptErr);
@@ -1502,6 +1613,27 @@ app.post("/api/orders", async (req, res) => {
       }
     }
 
+    let initialStatus: "OPEN" | "RESTING" | "SETTLED" = isExpiredNow ? ("SETTLED" as const) : ("OPEN" as const);
+    let isFilled = false;
+    if (txHash) {
+      try {
+        const receipt = await somniaPublicClient.getTransactionReceipt({
+          hash: txHash as `0x${string}`,
+        }).catch(() => null);
+        if (receipt) {
+          const hasFilled = receipt.logs.some((l: any) => l.topics[0] === "0xc87f4223e9e7c4e4f39f9b34fc9d64d78cdb95d9035b3748cbde59521261a399");
+          const hasRested = receipt.logs.some((l: any) => l.topics[0] === "0xcdd45acd62788abc10f79d86fac34df2a63e1a3b20f061c5bcf431ff6a09b866");
+          if (hasRested && !hasFilled) {
+            initialStatus = "RESTING";
+            isFilled = false;
+          } else if (hasFilled) {
+            initialStatus = isExpiredNow ? "SETTLED" : "OPEN";
+            isFilled = true;
+          }
+        }
+      } catch {}
+    }
+
     const newPosition = {
       id: `pos-${now}-${Math.random().toString(36).slice(2, 6)}`,
       symbol: effectiveSymbol,
@@ -1511,7 +1643,8 @@ app.post("/api/orders", async (req, res) => {
       entryPrice: safePrice,
       timestamp: now,
       expirationTime: expirySec,
-      status: isExpiredNow ? ("SETTLED" as const) : ("OPEN" as const),
+      status: initialStatus,
+      isFilled,
       walletAddress: walletAddress || undefined,
       orderId,
       txHash,
@@ -1550,10 +1683,31 @@ app.post("/api/claim", async (req, res) => {
     }
 
     const targetWallet = walletAddress.toLowerCase();
+
+    // Ensure memory is synchronized with latest database records for target wallet
+    if (isSupabaseConfigured()) {
+      try {
+        const dbList = await getPositionsByWalletFromDb(targetWallet);
+        for (const item of dbList) {
+          if (!item?.id) continue;
+          const existing = recordedPositions.find((p) => p.id === item.id);
+          if (existing) {
+            if (item.status === "CLAIMED") existing.status = "CLAIMED";
+            if (item.status === "SETTLED_WIN" && existing.status !== "CLAIMED") existing.status = "SETTLED_WIN";
+          } else {
+            recordedPositions.push(item);
+          }
+        }
+      } catch (err: any) {
+        console.warn("[Claim] Notice syncing Supabase before claim:", err?.message);
+      }
+    }
+
     const winningPositions: any[] = [];
     let totalPayoutUsdc = 0;
 
     for (const pos of recordedPositions) {
+      if (pos.status === "REFUNDED" || (pos as any).isRefunded) continue;
       const isWin = pos.status === "SETTLED_WIN" || (pos.status === "SETTLED" && (pos as any).isWinner === true);
       if (isWin && (!pos.walletAddress || pos.walletAddress.toLowerCase() === targetWallet)) {
         winningPositions.push(pos);
@@ -2000,6 +2154,9 @@ async function startServer() {
 
     if (isSupabaseConfigured()) {
       console.log(chalk.green("✔ Supabase connected — starting data workers"));
+
+      // Synchronize all orders and positions from Supabase into memory & disk cache
+      await hydratePositionsFromDb().catch(() => {});
 
       snapshotWorker = new MarketSnapshotWorker(ctx, {
         pollIntervalSec: 10,

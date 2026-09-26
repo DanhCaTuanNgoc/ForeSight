@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { createPublicClient, http, formatEther, formatUnits, type Address } from "viem";
 import {
   FORESIGHT_BATCH_SWEEPER_ADDRESS,
-  encodeTradeApproval,
   encodeBatchSweepCall,
   encodeErc20Approve,
   encodePlaceBinaryOrderCall,
@@ -455,23 +454,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         // 4. Encode and dispatch placeBinaryOrder to DreamDEX BinaryPool
-        let calldata: `0x${string}`;
-        let targetContract: Address;
-
-        if (params.poolAddress) {
-          calldata = encodePlaceBinaryOrderCall({
-            kind,
-            priceRaw,
-            quantityRaw,
-            expireTimestampNs,
-            orderType: 0, // Limit / Rest
-          });
-          targetContract = poolAddr;
-        } else {
-          // Fallback if market does not have poolAddress
-          calldata = encodeTradeApproval(requiredCollateralRaw);
-          targetContract = SOMNIA_TESTNET_TUSDC_ADDRESS;
+        if (!params.poolAddress) {
+          return {
+            success: false,
+            error: `Market pool contract is unavailable or not deployed for ${params.symbol}. Cannot place on-chain order.`,
+          };
         }
+
+        const calldata = encodePlaceBinaryOrderCall({
+          kind,
+          priceRaw,
+          quantityRaw,
+          expireTimestampNs,
+          orderType: 0, // Limit / Rest
+        });
+        const targetContract = poolAddr;
 
         // Prompt MetaMask transaction confirmation popup on Somnia Shannon Testnet
         params.onStep?.("signing");
