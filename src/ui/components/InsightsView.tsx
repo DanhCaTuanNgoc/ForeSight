@@ -208,6 +208,11 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
   // Manual Re-Analysis
   const handleExplicitReDebate = useCallback(async (sym: string) => {
     setDebateLoading(true);
+    console.log(
+      `%c[MARKET CONSENSUS & STRATEGY EVALUATION] %cCalling /api/debate/${encodeURIComponent(sym)} for ${sym}/tUSDC...`,
+      "background: #3b0764; color: #d8b4fe; font-weight: bold; padding: 2px 4px; border: 1px solid #c084fc;",
+      "color: #f3e8ff; font-weight: bold;"
+    );
     try {
       const res = await fetch(apiUrl(`/api/debate/${encodeURIComponent(sym)}`));
       if (res.ok) {
@@ -215,9 +220,41 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
         const resDebate = data.debate || data;
         debateCache[sym] = resDebate;
         setDebate(resDebate);
+        console.log(
+          `%c[MARKET CONSENSUS & STRATEGY EVALUATION] %cReceived Debate Output for ${sym}:`,
+          "background: #064e3b; color: #34d399; font-weight: bold; padding: 2px 4px; border: 1px solid #10b981;",
+          "color: #a7f3d0;",
+          {
+            symbol: sym,
+            engineUsed: resDebate.engineUsed,
+            bullModel: resDebate.bullModel,
+            bearModel: resDebate.bearModel,
+            bullCase: {
+              headline: resDebate.bullCase?.headline,
+              confidence: `${Math.round((resDebate.bullCase?.confidence || 0) * 100)}%`,
+              targetProbability: `${Math.round((resDebate.bullCase?.targetProbability || 0) * 100)}%`,
+              supportLevel: resDebate.bullCase?.supportLevel,
+              keyArguments: resDebate.bullCase?.keyArguments,
+              catalysts: resDebate.bullCase?.catalysts,
+            },
+            bearCase: {
+              headline: resDebate.bearCase?.headline,
+              confidence: `${Math.round((resDebate.bearCase?.confidence || 0) * 100)}%`,
+              targetProbability: `${Math.round((resDebate.bearCase?.targetProbability || 0) * 100)}%`,
+              resistanceLevel: resDebate.bearCase?.resistanceLevel,
+              thetaDecayRisk: resDebate.bearCase?.thetaDecayRisk,
+              keyArguments: resDebate.bearCase?.keyArguments,
+              riskFactors: resDebate.bearCase?.riskFactors,
+            },
+            summary: resDebate.summary,
+            sourcesCount: resDebate.sources?.length,
+          }
+        );
+      } else {
+        console.warn(`[MARKET CONSENSUS] Fetch /api/debate/${sym} returned HTTP ${res.status}`);
       }
-    } catch {
-      // Keep existing debate if refresh fails
+    } catch (err) {
+      console.warn(`[MARKET CONSENSUS] Error fetching debate for ${sym}:`, err);
     } finally {
       setDebateLoading(false);
     }
@@ -239,6 +276,11 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
     }
 
     let isCancelled = false;
+    console.log(
+      `%c[MARKET CONSENSUS & STRATEGY EVALUATION] %cAuto-fetching debate for ${selectedSymbol}/tUSDC...`,
+      "background: #3b0764; color: #d8b4fe; font-weight: bold; padding: 2px 4px; border: 1px solid #c084fc;",
+      "color: #f3e8ff; font-weight: bold;"
+    );
     fetch(apiUrl(`/api/debate/${encodeURIComponent(selectedSymbol)}`))
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -246,9 +288,25 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
           const resDebate = data.debate || data;
           debateCache[selectedSymbol] = resDebate;
           setDebate(resDebate);
+          console.log(
+            `%c[MARKET CONSENSUS & STRATEGY EVALUATION] %cAuto-fetch Debate Output for ${selectedSymbol}:`,
+            "background: #064e3b; color: #34d399; font-weight: bold; padding: 2px 4px; border: 1px solid #10b981;",
+            "color: #a7f3d0;",
+            {
+              symbol: selectedSymbol,
+              engineUsed: resDebate.engineUsed,
+              bullModel: resDebate.bullModel,
+              bearModel: resDebate.bearModel,
+              bullCase: resDebate.bullCase,
+              bearCase: resDebate.bearCase,
+              summary: resDebate.summary,
+            }
+          );
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn(`[MARKET CONSENSUS] Auto-fetch debate error for ${selectedSymbol}:`, err);
+      });
 
     return () => {
       isCancelled = true;

@@ -1,10 +1,10 @@
 -- ============================================================
--- DreamDEX Intelligence Layer — Data Retention & Cleanup Job
--- Automatically prunes stale market_snapshots and spikes
--- to prevent database storage overflow.
+-- 004_hourly_market_cleanup.sql
+-- Configure hourly data cleanup job for market_snapshots and spikes.
+-- Retains 1 hour of history and triggers every hour at minute 0.
 -- ============================================================
 
--- 1. Create cleanup function (Safe to run directly or via pg_cron)
+-- 1. Update cleanup function defaults to 1 hour
 CREATE OR REPLACE FUNCTION cleanup_old_market_data(
   snapshot_retention_hours INT DEFAULT 1,
   spike_retention_hours INT DEFAULT 1
@@ -41,24 +41,24 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$ LANGUAGE plpgsql;
 
--- 2. Configure pg_cron scheduler (if pg_cron extension is available on Supabase)
+-- 2. Configure pg_cron scheduler for hourly execution
 DO $$
 BEGIN
   -- Attempt to enable pg_cron if allowed
   CREATE EXTENSION IF NOT EXISTS pg_cron;
 
-  -- Remove existing jobs if already registered to avoid duplication
+  -- Remove existing daily or hourly jobs if already registered
   PERFORM cron.unschedule(jobid)
   FROM cron.job
   WHERE jobname IN ('daily-market-data-cleanup', 'hourly-market-data-cleanup');
 
-  -- Schedule hourly cleanup at minute 0 of every hour (prune snapshots > 1h, spikes > 1h)
+  -- Schedule hourly cleanup at minute 0 of every hour
   PERFORM cron.schedule(
     'hourly-market-data-cleanup',
     '0 * * * *',
     'SELECT cleanup_old_market_data(1, 1);'
   );
 EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'pg_cron not available or insufficient permissions. Fallback backend worker cleanup will handle pruning.';
+  RAISE NOTICE 'pg_cron not available or insufficient permissions. Backend Node.js worker cleanup will handle pruning.';
 END;
 $$;

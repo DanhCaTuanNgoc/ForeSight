@@ -1419,12 +1419,12 @@ app.post("/api/positions/reset", async (req, res) => {
 /**
  * POST /api/admin/cleanup
  * Manually trigger database cleanup for stale snapshots and spikes.
- * Query / body params: snapshotHours (default 24), spikeHours (default 48)
+ * Query / body params: snapshotHours (default 1), spikeHours (default 1)
  */
 app.post(["/api/admin/cleanup", "/api/cleanup"], async (req, res) => {
   try {
-    const snapshotHours = Number(req.body?.snapshotHours || req.query.snapshotHours) || 24;
-    const spikeHours = Number(req.body?.spikeHours || req.query.spikeHours) || 48;
+    const snapshotHours = Number(req.body?.snapshotHours || req.query.snapshotHours) || 1;
+    const spikeHours = Number(req.body?.spikeHours || req.query.spikeHours) || 1;
 
     const result = await cleanupOldMarketData(snapshotHours, spikeHours);
     res.json({
@@ -2056,10 +2056,12 @@ app.get("/api/strategies/:wallet", async (req, res) => {
 app.get("/api/debate/:symbol", async (req, res) => {
   try {
     const symbol = decodeURIComponent(req.params.symbol);
+    console.log(chalk.cyan(`\n[API /api/debate] >>> Received request for symbol: '${symbol}'`));
     const markets = await getCoreSomniaMarkets();
     const market = findMarket(markets, symbol);
 
     if (!market) {
+      console.warn(chalk.yellow(`[API /api/debate] Market '${symbol}' not found among active markets.`));
       return res.status(404).json({ error: `Market ${symbol} not found.` });
     }
 
@@ -2162,9 +2164,9 @@ async function startServer() {
         pollIntervalSec: 10,
         spikeThreshold: 0.10,
         maxMarketsPerTick: 80,
-        cleanupIntervalHours: 5,
-        snapshotRetentionHours: 24,
-        spikeRetentionHours: 48,
+        cleanupIntervalHours: process.env.CLEANUP_INTERVAL_HOURS ? Number(process.env.CLEANUP_INTERVAL_HOURS) : 1,
+        snapshotRetentionHours: process.env.SNAPSHOT_RETENTION_HOURS ? Number(process.env.SNAPSHOT_RETENTION_HOURS) : 1,
+        spikeRetentionHours: process.env.SPIKE_RETENTION_HOURS ? Number(process.env.SPIKE_RETENTION_HOURS) : 1,
       });
       snapshotWorker.start();
 

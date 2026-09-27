@@ -260,6 +260,23 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     prevMarketRef.current = currentSym;
   }, [activeMarket?.symbol, roundId, initialTimeSec]);
 
+  // Comprehensive Console Logging for Strike Price Dynamics & Execution Cycle
+  const lastDynamicsLogRef = useRef<number>(0);
+  useEffect(() => {
+    const now = Date.now();
+    if (now - lastDynamicsLogRef.current > 5000) {
+      lastDynamicsLogRef.current = now;
+      const deltaPct = strikePrice > 0 ? ((spotPrice - strikePrice) / strikePrice) * 100 : 0;
+      const deltaBps = Math.round(deltaPct * 100);
+      const isAbove = spotPrice >= strikePrice;
+      console.log(
+        `%c[STRIKE PRICE DYNAMICS & EXECUTION CYCLE] %cSymbol: ${activeSymbol}/tUSDC | Spot: $${spotPrice > 10 ? spotPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : spotPrice.toFixed(4)} | Target Strike: $${strikePrice > 10 ? strikePrice.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : strikePrice.toFixed(4)} | Delta: ${isAbove ? "+" : ""}${deltaPct.toFixed(3)}% (${deltaBps} bps) | State: ${isAbove ? "ABOVE (YES OUTCOME)" : "BELOW (NO OUTCOME)"} | Cycle: ${countdownSec}s (${roundId})`,
+        "background: #1e1b4b; color: #38bdf8; font-weight: bold; padding: 2px 4px; border: 1px solid #6366f1;",
+        "color: #e0e7ff; font-weight: 500;"
+      );
+    }
+  }, [activeSymbol, spotPrice, strikePrice, countdownSec, roundId]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdownSec((prev) => {

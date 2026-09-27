@@ -138,8 +138,8 @@ export async function getRecentSpikes(
  * Prevents database storage overflow.
  */
 export async function cleanupOldMarketData(
-  snapshotRetentionHours = 24,
-  spikeRetentionHours = 48,
+  snapshotRetentionHours = 1,
+  spikeRetentionHours = 1,
 ): Promise<{ deletedSnapshots: number; deletedSpikes: number; success: boolean }> {
   if (!isSupabaseConfigured()) {
     return { deletedSnapshots: 0, deletedSpikes: 0, success: false };

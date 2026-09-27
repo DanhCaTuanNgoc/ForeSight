@@ -8,6 +8,7 @@
  * 2. Deterministic Scenario Math: Exact ROI, PnL, Breakeven & Take-Profit curves
  */
 
+import chalk from "chalk";
 import { getNewsByTimeWindow, getLatestNews } from "../../db/repository.js";
 import { getVerifiedNewsForAsset } from "../news/verified-rag-catalog.js";
 import type { EventContractMarket } from "../../core/market-watcher.js";
@@ -216,6 +217,7 @@ async function callLiveLLM(
   sources: DebateSource[]
 ): Promise<Partial<DualDebateResult> | null> {
   if (process.env.DISABLE_LIVE_LLM === "true") {
+    console.log(chalk.yellow(`[DualDebate AI] Live LLM generation is explicitly disabled via DISABLE_LIVE_LLM=true`));
     return null; // Explicit hard kill-switch
   }
 
@@ -227,12 +229,16 @@ async function callLiveLLM(
     : undefined;
   const groqKey = process.env.GROQ_API_KEY?.trim();
 
+  console.log(chalk.blue(`[DualDebate AI] Detecting LLM API keys: Gemini=${geminiKey ? "PRESENT" : "MISSING"}, OpenRouter=${openRouterKey ? "PRESENT" : "MISSING"}, Groq=${groqKey ? "PRESENT" : "MISSING"}`));
+
   if (!geminiKey && !openRouterKey && !groqKey) {
+    console.log(chalk.gray(`[DualDebate AI] No LLM keys configured -> Falling back to Deterministic Heuristic RAG engine.`));
     return null; // Zero API consumption: fallback to local deterministic quantitative synthesizer
   }
 
   // ─── CASE 1: DUAL FRONTIER LLM ARENA (Gemini 2.5 Flash vs OpenRouter LLaMA 3.3 70B) ───
   if (geminiKey && openRouterKey) {
+    console.log(chalk.magenta(`[DualDebate AI] Calling Dual Frontier LLM Arena: Bull=Gemini 2.5 Flash, Bear=OpenRouter LLaMA 3.3 70B for ${asset}`));
     try {
       const bullPrompt = `You are Alpha Bull AI on Somnia L1.
 Market: ${asset} Event Contract (${interval} cadence), Current Implied Odds: ${Math.round(mid * 100)}%.
@@ -325,6 +331,10 @@ Return strictly valid JSON:
         const bullData = geminiResult.value;
         const bearData = openRouterResult.value;
 
+        console.log(chalk.green(`[DualDebate AI] Dual Frontier LLM generated successfully!`));
+        console.log(chalk.green(`  -> Alpha Bull [Gemini 2.5 Flash]: "${bullData.headline}" (Confidence: ${Math.round((bullData.confidence || 0.8) * 100)}%, Target: ${Math.round((bullData.targetProbability || 0.75) * 100)}%)`));
+        console.log(chalk.green(`  -> Macro Bear [LLaMA 3.3 70B]: "${bearData.headline}" (Confidence: ${Math.round((bearData.confidence || 0.7) * 100)}%, Target: ${Math.round((bearData.targetProbability || 0.35) * 100)}%)`));
+
         return {
           engineUsed: "dual_frontier_llm" as any,
           bullModel: "Google Gemini 2.5 Flash",
@@ -355,6 +365,8 @@ Return strictly valid JSON:
           },
           summary: `Dual Frontier Arena: Google Gemini 2.5 Flash defends Bull upside (${Math.round((bullData.confidence || 0.8) * 100)}%), while Meta LLaMA 3.3 70B defends Bear downside (${Math.round((bearData.confidence || 0.7) * 100)}%).`,
         };
+      } else {
+        console.warn(chalk.yellow(`[DualDebate AI] Dual Frontier call partially failed (Gemini: ${geminiResult.status}, OpenRouter: ${openRouterResult.status}). Falling back to Single LLM...`));
       }
     } catch (err: any) {
       console.warn("[Dual Frontier Arena Partial Error, falling back to Single LLM]:", err?.message || err);
@@ -454,8 +466,17 @@ Output strictly valid JSON with this format:
       }
     }
 
-    if (!rawText) return null;
+    if (!rawText) {
+      console.warn(chalk.yellow(`[DualDebate AI] Single LLM call returned empty response text.`));
+      return null;
+    }
     const parsed = JSON.parse(rawText);
+
+    const modelName = geminiKey ? "Google Gemini 2.5 Flash" : openRouterKey ? "Meta LLaMA 3.3 70B" : "Groq LLaMA 3.1 8B";
+    console.log(chalk.green(`[DualDebate AI] Single LLM (${modelName}) generated successfully!`));
+    console.log(chalk.green(`  -> Bull Headline: "${parsed.bullHeadline}" (Confidence: ${Math.round((Number(parsed.bullConfidence) || 0.8) * 100)}%)`));
+    console.log(chalk.green(`  -> Bear Headline: "${parsed.bearHeadline}" (Confidence: ${Math.round((Number(parsed.bearConfidence) || 0.7) * 100)}%)`));
+    console.log(chalk.green(`  -> Summary: "${parsed.summary}"`));
 
     return {
       engineUsed: "live_llm",
@@ -526,6 +547,9 @@ export async function generateDualDebate(params: {
   const baseSpot = baseSpotMap[cleanAsset] || 1000;
   const deltaMove = cleanAsset === "BTC" ? 220 : cleanAsset === "ETH" ? 18 : cleanAsset === "SOL" ? 2.4 : 0.035;
 
+  console.log(chalk.magenta(`\n[DualDebate] >>> STARTING MARKET CONSENSUS & STRATEGY EVALUATION`));
+  console.log(chalk.magenta(`[DualDebate] Symbol: ${market.symbol} | Asset: ${cleanAsset} | Implied Odds: ${Math.round(mid * 100)}%`));
+
   // Retrieve RAG news around the spike window (or latest news)
   let sources: DebateSource[] = [];
   try {
@@ -572,9 +596,19 @@ export async function generateDualDebate(params: {
     }
   }
 
+  console.log(chalk.cyan(`[DualDebate RAG] Loaded ${sources.length} news context sources:`));
+  sources.slice(0, 3).forEach((s, idx) => console.log(chalk.gray(`  [RAG ${idx + 1}] ${s.title} (${s.source})`)));
+
   // Attempt Live LLM Generation first
+  console.log(chalk.blue(`[DualDebate] Executing AI generation via callLiveLLM...`));
   const liveResult = await callLiveLLM(asset, mid, market.interval || "15m", sources);
   if (liveResult && liveResult.bullCase && liveResult.bearCase) {
+    console.log(chalk.green(`[DualDebate] Final Output (${liveResult.engineUsed || "live_llm"}):`));
+    console.log(chalk.green(`  -> Bull Confidence: ${Math.round((liveResult.bullCase.confidence || 0) * 100)}% | Target: ${Math.round((liveResult.bullCase.targetProbability || 0) * 100)}%`));
+    console.log(chalk.green(`  -> Bear Confidence: ${Math.round((liveResult.bearCase.confidence || 0) * 100)}% | Target: ${Math.round((liveResult.bearCase.targetProbability || 0) * 100)}%`));
+    console.log(chalk.green(`  -> Executive Summary: ${liveResult.summary}`));
+    console.log(chalk.magenta(`[DualDebate] <<< COMPLETED FOR ${market.symbol}\n`));
+
     return {
       symbol: market.symbol,
       asset,
@@ -590,6 +624,8 @@ export async function generateDualDebate(params: {
       summary: liveResult.summary || `Live Dual AI generated perspective for ${asset}.`,
     };
   }
+
+  console.log(chalk.yellow(`[DualDebate] Live LLM skipped or unavailable -> Synthesizing via Deterministic Heuristic RAG engine.`));
 
   // Deterministic Dynamic Heuristic Synthesis with institutional anchors
   const bullConfidence = Math.min(0.92, Math.max(0.35, Number((mid * 0.75 + 0.20).toFixed(2))));
@@ -639,6 +675,12 @@ export async function generateDualDebate(params: {
   const directionSummary = mid >= 0.55
     ? `Consensus tilts Bullish (${Math.round(mid * 100)}% YES), but Macro Bear warns of aggressive theta decay if ${asset} fails to cross ${formatNum(baseSpot + deltaMove)}.`
     : `Consensus favors Contrarian Bear (${Math.round((1 - mid) * 100)}% NO); Alpha Bull requires immediate volume expansion above ${formatNum(baseSpot)}.`;
+
+  console.log(chalk.yellow(`[DualDebate] Final Output (heuristic_rag):`));
+  console.log(chalk.yellow(`  -> Bull Confidence: ${Math.round(bullCase.confidence * 100)}% | Target: ${Math.round(bullCase.targetProbability * 100)}%`));
+  console.log(chalk.yellow(`  -> Bear Confidence: ${Math.round(bearCase.confidence * 100)}% | Target: ${Math.round(bearCase.targetProbability * 100)}%`));
+  console.log(chalk.yellow(`  -> Executive Summary: ${directionSummary}`));
+  console.log(chalk.magenta(`[DualDebate] <<< COMPLETED FOR ${market.symbol}\n`));
 
   return {
     symbol: market.symbol,
