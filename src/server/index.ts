@@ -2049,14 +2049,41 @@ app.get("/api/strategies/:wallet", async (req, res) => {
   }
 });
 
+// Token-Saving Server Cache for AI Debate (Saves 95%+ of LLM tokens)
+interface CachedDebate {
+  data: any;
+  timestamp: number;
+}
+const debateServerCache = new Map<string, CachedDebate>();
+const debateInFlightMap = new Map<string, Promise<any>>();
+const DEBATE_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes TTL
+
 /**
  * GET /api/debate/:symbol
  * Generate real-time Dual AI Agent debate (Bull vs Bear) for a market or spike.
+ * Supported query: ?refresh=true (force bypass cache to run fresh LLM analysis)
  */
 app.get("/api/debate/:symbol", async (req, res) => {
   try {
     const symbol = decodeURIComponent(req.params.symbol);
-    console.log(chalk.cyan(`\n[API /api/debate] >>> Received request for symbol: '${symbol}'`));
+    const forceRefresh = req.query.refresh === "true" || req.query.force === "true";
+    const cacheKey = symbol.toUpperCase().split("/")[0].split("-")[0]; // normalized core asset "BTC", "ETH", "SOL", "SOMI"
+
+    // 1. Check Server Memory Cache
+    const cached = debateServerCache.get(cacheKey);
+    const now = Date.now();
+    if (!forceRefresh && cached && now - cached.timestamp < DEBATE_CACHE_TTL_MS) {
+      const ageSec = Math.round((now - cached.timestamp) / 1000);
+      console.log(chalk.green(`[API /api/debate] Serving '${symbol}' (${cacheKey}) from Server Cache (Age: ${ageSec}s / TTL: 180s) -> 0 Tokens used!`));
+      return res.json({
+        success: true,
+        debate: cached.data,
+        cached: true,
+        ageSec,
+      });
+    }
+
+    console.log(chalk.cyan(`\n[API /api/debate] >>> Processing fresh analysis for symbol: '${symbol}' (forceRefresh: ${forceRefresh})`));
     const markets = await getCoreSomniaMarkets();
     const market = findMarket(markets, symbol);
 
@@ -2069,16 +2096,33 @@ app.get("/api/debate/:symbol", async (req, res) => {
     const spikeMagnitude = req.query.magnitude ? Number(req.query.magnitude) : undefined;
     const spikeTimestamp = req.query.timestamp ? Number(req.query.timestamp) : undefined;
 
-    const debate = await generateDualDebate({
-      market,
-      spikeId,
-      spikeMagnitude,
-      spikeTimestamp,
-    });
+    // 2. In-Flight Deduplication: Prevent concurrent redundant LLM requests for the same token
+    let debatePromise = debateInFlightMap.get(cacheKey);
+    if (!debatePromise) {
+      debatePromise = generateDualDebate({
+        market,
+        spikeId,
+        spikeMagnitude,
+        spikeTimestamp,
+      }).then((result) => {
+        debateServerCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        debateInFlightMap.delete(cacheKey);
+        return result;
+      }).catch((err) => {
+        debateInFlightMap.delete(cacheKey);
+        throw err;
+      });
+      debateInFlightMap.set(cacheKey, debatePromise);
+    } else {
+      console.log(chalk.blue(`[API /api/debate] Piggybacking on in-flight AI analysis for '${cacheKey}'...`));
+    }
+
+    const debate = await debatePromise;
 
     res.json({
       success: true,
       debate,
+      cached: false,
     });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || String(err) });

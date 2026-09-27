@@ -221,7 +221,10 @@ async function callLiveLLM(
     return null; // Explicit hard kill-switch
   }
 
-  const geminiKey = (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10 && process.env.DISABLE_GEMINI !== "true")
+  const isGeminiDisabled = ["true", "1", "yes"].includes(
+    String(process.env.DISABLE_GEMINI || process.env.disable_gemini || "").trim().toLowerCase()
+  );
+  const geminiKey = (!isGeminiDisabled && process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10)
     ? process.env.GEMINI_API_KEY.trim()
     : undefined;
   const openRouterKey = (process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY.trim().length > 10)
@@ -236,8 +239,8 @@ async function callLiveLLM(
     return null; // Zero API consumption: fallback to local deterministic quantitative synthesizer
   }
 
-  // ─── CASE 1: DUAL FRONTIER LLM ARENA (Gemini 2.5 Flash vs OpenRouter LLaMA 3.3 70B) ───
-  if (geminiKey && openRouterKey) {
+  // ─── OPTIONAL: DUAL FRONTIER ARENA (Only if explicitly enabled via ENABLE_DUAL_FRONTIER=true) ───
+  if (process.env.ENABLE_DUAL_FRONTIER === "true" && geminiKey && openRouterKey) {
     console.log(chalk.magenta(`[DualDebate AI] Calling Dual Frontier LLM Arena: Bull=Gemini 2.5 Flash, Bear=OpenRouter LLaMA 3.3 70B for ${asset}`));
     try {
       const bullPrompt = `You are Alpha Bull AI on Somnia L1.
@@ -299,7 +302,10 @@ Return strictly valid JSON:
           }),
           signal: AbortSignal.timeout(15000),
         }).then(async (r) => {
-          if (!r.ok) throw new Error(`Gemini Error ${r.status}`);
+          if (!r.ok) {
+            const errData: any = await r.json().catch(() => null);
+            throw new Error(`HTTP ${r.status} - ${errData?.error?.message || r.statusText}`);
+          }
           const data: any = await r.json();
           return JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text);
         }),
@@ -321,7 +327,10 @@ Return strictly valid JSON:
           }),
           signal: AbortSignal.timeout(15000),
         }).then(async (r) => {
-          if (!r.ok) throw new Error(`OpenRouter Error ${r.status}`);
+          if (!r.ok) {
+            const errData: any = await r.json().catch(() => null);
+            throw new Error(`HTTP ${r.status} - ${errData?.error?.message || r.statusText}`);
+          }
           const data: any = await r.json();
           return JSON.parse(data?.choices?.[0]?.message?.content);
         }),
@@ -366,39 +375,45 @@ Return strictly valid JSON:
           summary: `Dual Frontier Arena: Google Gemini 2.5 Flash defends Bull upside (${Math.round((bullData.confidence || 0.8) * 100)}%), while Meta LLaMA 3.3 70B defends Bear downside (${Math.round((bearData.confidence || 0.7) * 100)}%).`,
         };
       } else {
-        console.warn(chalk.yellow(`[DualDebate AI] Dual Frontier call partially failed (Gemini: ${geminiResult.status}, OpenRouter: ${openRouterResult.status}). Falling back to Single LLM...`));
+        const geminiErr = geminiResult.status === "rejected" ? (geminiResult.reason?.message || String(geminiResult.reason)) : "fulfilled";
+        const openRouterErr = openRouterResult.status === "rejected" ? (openRouterResult.reason?.message || String(openRouterResult.reason)) : "fulfilled";
+        console.warn(chalk.yellow(`[DualDebate AI] Dual Frontier call failed:`));
+        console.warn(chalk.yellow(`  -> Gemini: ${geminiErr}`));
+        console.warn(chalk.yellow(`  -> OpenRouter: ${openRouterErr}`));
+        console.warn(chalk.yellow(`  Falling back to Single LLM...`));
       }
     } catch (err: any) {
       console.warn("[Dual Frontier Arena Partial Error, falling back to Single LLM]:", err?.message || err);
     }
   }
 
-  // ─── CASE 2: Single LLM Fallback (Gemini, OpenRouter, or Groq) ─────────
-  const prompt = `You are ForeSight Dual AI Arena on Somnia L1.
-Market: ${asset} Event Contract (${interval} cadence), Current Implied Probability: ${Math.round(mid * 100)}%.
-Recent Real-Time News Context:
-${sources.map((s, i) => `[${i + 1}] ${s.title} (${s.source})`).join("\n")}
+  // ─── CASE 2: Single LLM (Google Gemini Flash Lite / OpenRouter / Groq) ─────────
+  const compactNews = sources.slice(0, 2).map((s, i) => `[${i + 1}] ${s.title}`).join("\n");
+  const prompt = `You are ForeSight Institutional Dual AI on Somnia L1.
+Market: ${asset} Event Contract (${interval}), Current Implied Probability: ${Math.round(mid * 100)}%.
+News Context:
+${compactNews}
 
-Synthesize two opposing institutional perspectives for this prediction market with concrete technical figures and price anchors.
-Output strictly valid JSON with this format:
+Synthesize two opposing concise institutional perspectives (Alpha Bull vs Macro Bear) for this prediction contract.
+Output strictly valid JSON:
 {
-  "bullHeadline": "short summary headline for bull case",
-  "bullConfidence": 0.85,
-  "bullTarget": 0.80,
+  "bullHeadline": "concise institutional bull headline",
+  "bullConfidence": 0.82,
+  "bullTarget": 0.78,
   "bullSupport": "$98,250 Support Cushion",
-  "bullInvalidation": "Loss of $97,800 Level",
+  "bullInvalidation": "Loss of $97,800",
   "bullOrderbookRatio": "1.85x Bid Depth",
-  "bullKeyArguments": ["arg 1 with numbers", "arg 2 with numbers", "arg 3 with news link"],
+  "bullKeyArguments": ["concise argument 1 with price level", "concise argument 2 with momentum", "concise argument 3"],
   "bullCatalysts": ["catalyst 1", "catalyst 2"],
-  "bearHeadline": "short summary headline for bear case",
+  "bearHeadline": "concise institutional bear headline",
   "bearConfidence": 0.75,
   "bearTarget": 0.35,
   "bearResistance": "$98,800 Supply Wall",
   "bearInvalidation": "Breakout above $99,100",
   "bearThetaRisk": "Accelerating theta decay under 6m",
-  "bearKeyArguments": ["risk 1 with price wall", "risk 2 with theta decay math", "risk 3 with reversal risk"],
+  "bearKeyArguments": ["concise risk 1 with price wall", "concise risk 2 with theta decay", "concise risk 3"],
   "bearRiskFactors": ["risk 1", "risk 2"],
-  "summary": "1 sentence executive market direction summary"
+  "summary": "1 sentence executive market consensus summary"
 }`;
 
   try {
@@ -408,13 +423,18 @@ Output strictly valid JSON with this format:
     let rawText = "";
 
     if (geminiKey) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+      console.log(chalk.cyan(`[DualDebate AI] Calling Single LLM (Google Gemini 2.5 Flash Lite) for ${asset}...`));
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${geminiKey}`;
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json" },
+          generationConfig: {
+            responseMimeType: "application/json",
+            maxOutputTokens: 600,
+            temperature: 0.3,
+          },
         }),
         signal: controller.signal,
       });
@@ -422,6 +442,9 @@ Output strictly valid JSON with this format:
       if (res.ok) {
         const data = (await res.json()) as any;
         rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      } else {
+        const errData: any = await res.json().catch(() => null);
+        console.warn(chalk.yellow(`[DualDebate AI] Single Gemini Flash Lite call returned HTTP ${res.status}: ${errData?.error?.message || res.statusText}`));
       }
     } else if (openRouterKey) {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -472,7 +495,7 @@ Output strictly valid JSON with this format:
     }
     const parsed = JSON.parse(rawText);
 
-    const modelName = geminiKey ? "Google Gemini 2.5 Flash" : openRouterKey ? "Meta LLaMA 3.3 70B" : "Groq LLaMA 3.1 8B";
+    const modelName = geminiKey ? "Google Gemini 2.5 Flash Lite" : openRouterKey ? "Meta LLaMA 3.3 70B" : "Groq LLaMA 3.1 8B";
     console.log(chalk.green(`[DualDebate AI] Single LLM (${modelName}) generated successfully!`));
     console.log(chalk.green(`  -> Bull Headline: "${parsed.bullHeadline}" (Confidence: ${Math.round((Number(parsed.bullConfidence) || 0.8) * 100)}%)`));
     console.log(chalk.green(`  -> Bear Headline: "${parsed.bearHeadline}" (Confidence: ${Math.round((Number(parsed.bearConfidence) || 0.7) * 100)}%)`));
@@ -480,11 +503,11 @@ Output strictly valid JSON with this format:
 
     return {
       engineUsed: "live_llm",
-      bullModel: geminiKey ? "Google Gemini 2.5 Flash" : "Meta LLaMA 3.3 70B",
-      bearModel: geminiKey ? "Google Gemini 2.5 Flash" : "Meta LLaMA 3.3 70B",
+      bullModel: modelName,
+      bearModel: modelName,
       bullCase: {
         agentName: "Alpha Bull AI",
-        modelUsed: geminiKey ? "Google Gemini 2.5 Flash" : "Meta LLaMA 3.3 70B",
+        modelUsed: modelName,
         headline: parsed.bullHeadline,
         confidence: Math.min(0.95, Math.max(0.1, Number(parsed.bullConfidence) || 0.8)),
         targetProbability: Math.min(0.99, Math.max(0.01, Number(parsed.bullTarget) || 0.75)),
@@ -496,7 +519,7 @@ Output strictly valid JSON with this format:
       },
       bearCase: {
         agentName: "Macro Bear AI",
-        modelUsed: geminiKey ? "Google Gemini 2.5 Flash" : "Meta LLaMA 3.3 70B",
+        modelUsed: modelName,
         headline: parsed.bearHeadline,
         confidence: Math.min(0.95, Math.max(0.1, Number(parsed.bearConfidence) || 0.7)),
         targetProbability: Math.min(0.99, Math.max(0.01, Number(parsed.bearTarget) || 0.35)),

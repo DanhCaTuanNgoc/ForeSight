@@ -214,14 +214,14 @@ export const InsightsView: React.FC<InsightsViewProps> = ({
       "color: #f3e8ff; font-weight: bold;"
     );
     try {
-      const res = await fetch(apiUrl(`/api/debate/${encodeURIComponent(sym)}`));
+      const res = await fetch(apiUrl(`/api/debate/${encodeURIComponent(sym)}?refresh=true`));
       if (res.ok) {
         const data = await res.json();
         const resDebate = data.debate || data;
         debateCache[sym] = resDebate;
         setDebate(resDebate);
         console.log(
-          `%c[MARKET CONSENSUS & STRATEGY EVALUATION] %cReceived Debate Output for ${sym}:`,
+          `%c[MARKET CONSENSUS & STRATEGY EVALUATION] %cReceived Debate Output for ${sym} (Cached: ${!!data.cached}):`,
           "background: #064e3b; color: #34d399; font-weight: bold; padding: 2px 4px; border: 1px solid #10b981;",
           "color: #a7f3d0;",
           {
