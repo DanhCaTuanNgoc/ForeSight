@@ -5,7 +5,7 @@
 
 # ForeSight
 ### *Decision Support & Autonomous Execution Terminal for DreamDEX on Somnia L1*
-
+### *Top ten winners from the Somnia x dreamDEX Event Contracts Hackathon.*
 <br/>
 
 **Detect the move. Challenge the thesis. Model the trajectory. Execute on-chain.**
